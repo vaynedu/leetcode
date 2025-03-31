@@ -1,0 +1,81 @@
+> Problem: [3233. 统计不是特殊数字的数字数量](https://leetcode.cn/problems/find-the-count-of-numbers-which-are-not-special/description/)
+
+[TOC]
+
+# 思路
+
+> 问题转换+求范围内质数。
+
+# 解题过程
+
+> 1、特殊数字定义：除本身外，只包含1，和一个质数。因此相当于质数的平方。
+> 2、数据预处理，判断范围内的质数。质数范围：假设右边界r是特殊数字，必然存在一个质数Math.sqrt(r)，即为质数范围最大值。
+> 3、问题转换。将lr区间单个枚举判断，改为根据范围内质数算出特殊数字，判断是否落在区间内。
+> 4、求差，结果=总数-特殊数字个数。
+
+# 复杂度
+
+- 时间复杂度: $O(nlogn)$
+- 空间复杂度: $O(n)$
+
+# 执行结果
+
+![捕获.JPG](https://pic.leetcode.cn/1724212879-qyoXRc-%E6%8D%95%E8%8E%B7.JPG)
+
+# Code
+
+* []
+
+```Java
+class Solution {
+    public int nonSpecialCount(int l, int r) {
+        // 1、特殊数字定义：除本身外，只包含1，和一个质数。因此相当于质数的平方
+
+        // 2、数据预处理，判断范围内的质数
+        // 质数范围：假设右边界r是特殊数字，必然存在一个质数Math.sqrt(r)，即为质数范围最大值
+        int n = (int) Math.sqrt(r) + 1;
+        boolean[] ls = getPrimeInRange(n);
+        
+        // 3、问题转换。将lr区间单个枚举判断，改为根据范围内质数算出特殊数字，判断是否落在区间内
+        // 统计特殊数字个数
+        int cnt = 0;
+        for (int i = 0; i < ls.length ;i++) {
+            if (!ls[i]) {
+                continue;
+            }
+            // 当前i为质数，num为特殊数字
+            int num = i * i;
+            // 判断特殊数字是否落在lr区间内
+            if (num > r) {
+                break;
+            } else if (num < l) {
+                continue;
+            } else {
+                cnt++;
+            }
+        }
+
+        // 4、求差，结果=总数-特殊数字个数
+        int total = r - l + 1;
+        return total - cnt;
+    }
+    
+    // 判断范围内的质数
+    private static boolean[] getPrimeInRange(int n) {
+        // 使用数组存储该位是否为质数
+        boolean[] isPrime = new boolean[n];
+        Arrays.fill(isPrime, true);
+        isPrime[1] = false;
+        for (int i = 2; i * i < n; i++) {
+            if (isPrime[i]) {
+                // 原数是质数，在范围n内累乘迭代，结果均为非质数
+                for (int j = i * i; j < n; j += i) {
+                    isPrime[j] = false;
+                }
+            }
+        }
+        return isPrime;
+    }
+}
+```
+
