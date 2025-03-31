@@ -1,9 +1,8 @@
-package leetcode
+package two_solution
 
 // 设计哈希集合
 
 import (
-	"container/list"
 	"fmt"
 	"testing"
 )
@@ -51,51 +50,37 @@ import (
 // Related Topics 设计 数组 哈希表 链表 哈希函数 👍 362 👎 0
 
 // leetcode submit region begin(Prohibit modification and deletion)
-const base = 769
-
 type MyHashSet struct {
-	data []list.List
+	Data []bool // 使用布尔数组存储键值的存在状态
 }
 
+// 构造函数
 func Constructor() MyHashSet {
 	return MyHashSet{
-		data: make([]list.List, base),
+		Data: make([]bool, 1e6+1), // 初始化布尔数组，大小为 10^6 + 1
 	}
 }
 
+// Add 方法：向哈希集合中插入值 key
 func (this *MyHashSet) Add(key int) {
-	hash := this.Hash(key)
-	for i := this.data[hash].Front(); i != nil; i = i.Next() {
-		if i.Value.(int) == key {
-			return
-		}
+	if key >= 0 && key <= 1e6 { // 确保 key 在有效范围内
+		this.Data[key] = true
 	}
-	this.data[hash].PushBack(key)
-
 }
 
+// Remove 方法：将给定值 key 从哈希集合中删除
 func (this *MyHashSet) Remove(key int) {
-	hash := this.Hash(key)
-	for i := this.data[hash].Front(); i != nil; i = i.Next() {
-		if i.Value.(int) == key {
-			this.data[hash].Remove(i)
-			return
-		}
+	if key >= 0 && key <= 1e6 { // 确保 key 在有效范围内
+		this.Data[key] = false
 	}
 }
 
+// Contains 方法：返回哈希集合中是否存在这个值 key
 func (this *MyHashSet) Contains(key int) bool {
-	hash := this.Hash(key)
-	for i := this.data[hash].Front(); i != nil; i = i.Next() {
-		if i.Value.(int) == key {
-			return true
-		}
+	if key >= 0 && key <= 1e6 { // 确保 key 在有效范围内
+		return this.Data[key]
 	}
 	return false
-}
-
-func (this *MyHashSet) Hash(key int) int {
-	return key % base
 }
 
 /**
