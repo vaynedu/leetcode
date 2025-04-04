@@ -3,7 +3,6 @@ package leetcode
 // 二叉树的层序遍历
 
 import (
-	"container/list"
 	"reflect"
 	"testing"
 )
@@ -62,29 +61,28 @@ func levelOrder(root *TreeNode) [][]int {
 	}
 	ans := make([][]int, 0)
 
-	queue := list.New()
-	queue.PushBack(root)
-	for queue.Len() > 0 {
-		size := queue.Len()
-		levelAns := make([]int, 0)
+	queue := make([]*TreeNode, 0)
+	queue = append(queue, root)
+	for len(queue) > 0 {
+		size := len(queue)
+		level := make([]int, 0)
 		for size > 0 {
-			value := queue.Remove(queue.Front()).(*TreeNode)
+			value := queue[0]
 			if value.Left != nil {
-				queue.PushBack(value.Left)
+				queue = append(queue, value.Left)
 			}
 			if value.Right != nil {
-				queue.PushBack(value.Right)
+				queue = append(queue, value.Right)
 			}
-			levelAns = append(levelAns, value.Val)
+			queue = queue[1:]
+			level = append(level, value.Val)
 			size--
 		}
-		if len(levelAns) > 0 {
-			ans = append(ans, levelAns)
+		if len(level) > 0 {
+			ans = append(ans, level)
 		}
 	}
-
 	return ans
-
 }
 
 //leetcode submit region end(Prohibit modification and deletion)
