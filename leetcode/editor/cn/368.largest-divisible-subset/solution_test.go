@@ -53,45 +53,44 @@ func largestDivisibleSubset(nums []int) []int {
 		return []int{}
 	}
 
-	// Step 1: Sort the array
+	n := len(nums)
+
+	// Step 1 排序
 	sort.Ints(nums)
 
-	// Step 2: Initialize dp and prev arrays
-	n := len(nums)
+	// Step 2 创建dp数组，dp[i]表示以nums[i]结尾的子集
 	dp := make([]int, n)
-	prev := make([]int, n)
-	for i := range dp {
+	for i := 0; i < n; i++ {
 		dp[i] = 1
-		prev[i] = -1
 	}
 
-	// Step 3: Dynamic Programming
+	// Step 3 创建pre数组，pre[i]表示以nums[i]结尾的子集的前一个元素
+	pre := make([]int, n)
+	for i := 0; i < n; i++ {
+		pre[i] = -1
+	}
+
+	// Step 4 遍历nums，计算dp数组
 	maxIndex := 0
 	for i := 1; i < n; i++ {
 		for j := 0; j < i; j++ {
 			if nums[i]%nums[j] == 0 && dp[j]+1 > dp[i] {
 				dp[i] = dp[j] + 1
-				prev[i] = j
+				pre[i] = j
+			}
+			if dp[i] > dp[maxIndex] {
+				maxIndex = i
 			}
 		}
-		if dp[i] > dp[maxIndex] {
-			maxIndex = i
-		}
 	}
 
-	// Step 4: Reconstruct the largest divisible subset
-	result := []int{}
-	for maxIndex != -1 {
-		result = append(result, nums[maxIndex])
-		maxIndex = prev[maxIndex]
+	// Step 5 根据pre数组构建结果集
+	res := make([]int, 0)
+	for i := maxIndex; i >= 0; i = pre[i] {
+		res = append([]int{nums[i]}, res...)
 	}
 
-	// Reverse the result to get the correct order
-	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
-		result[i], result[j] = result[j], result[i]
-	}
-
-	return result
+	return res
 }
 
 //leetcode submit region end(Prohibit modification and deletion)
