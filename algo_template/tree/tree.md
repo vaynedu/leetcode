@@ -27,5 +27,5 @@
 | [783.二叉搜索树节点最小距离](https://leetcode.cn/problems/minimum-distance-between-bst-nodes/description/)                             | [783.二叉搜索树节点最小距离](../../leetcode/editor/cn/783.minimum-distance-between-bst-nodes/solution_test.go)                             | 中序遍历，最小差值              |    |
 | [98.验证二叉搜索树](https://leetcode.cn/problems/validate-binary-search-tree/description/)                                         | [98.验证二叉搜索树](../../leetcode/editor/cn/98.validate-binary-search-tree/solution_test.go)                                          | 递归，中序遍历判断              |    |
 | [114.二叉树展开为链表](https://leetcode.cn/problems/flatten-binary-tree-to-linked-list/description/)                                | [114.二叉树展开为链表](../../leetcode/editor/cn/114.flatten-binary-tree-to-linked-list/solution_test.go)                                | 递归，右子树接到左子树末尾          |    |
-
+| [99.恢复二叉搜索树](https://leetcode.cn/problems/recover-binary-search-tree/description/)                                          | [99.恢复二叉搜索树](../../leetcode/editor/cn/99.recover-binary-search-tree/solution_test.go)                                           | 中序遍历，记录前一个节点，判断是否交换    |    |
 # 代码模板
