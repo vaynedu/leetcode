@@ -78,20 +78,13 @@ import (
 
 // leetcode submit region begin(Prohibit modification and deletion)
 func minOperations(nums []int, k int) int {
-	minValue := 100
 	n := len(nums)
-	for i := 0; i < n; i++ {
-		if nums[i] < minValue {
-			minValue = nums[i]
-		}
-	}
-	if k > minValue {
-		return -1
-	}
 	// 说明当前数组一定有解法，找当前的重复数字就行
 	duplicateNumMap := make(map[int]struct{})
 	for i := 0; i < n; i++ {
-		if nums[i] != k {
+		if nums[i] < k {
+			return -1
+		} else if nums[i] > k {
 			duplicateNumMap[nums[i]] = struct{}{}
 		}
 	}
