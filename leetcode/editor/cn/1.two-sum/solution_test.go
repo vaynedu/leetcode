@@ -56,11 +56,43 @@ import (
 
 // leetcode submit region begin(Prohibit modification and deletion)
 func twoSum(nums []int, target int) []int {
-	return []int{}
+	m := make(map[int]int)
+	for i, num := range nums {
+		complement := target - num
+		if j, ok := m[complement]; ok {
+			return []int{j, i}
+		}
+		m[num] = i
+	}
+	return nil
 }
 
 //leetcode submit region end(Prohibit modification and deletion)
 
 func TestTwoSum(t *testing.T) {
-	fmt.Println("come on baby !!!")
+	nums := []int{2, 7, 11, 15}
+	target := 9
+	result := twoSum(nums, target)
+	expected := []int{0, 1}
+	if result[0] != expected[0] || result[1] != expected[1] {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+
+	nums2 := []int{3, 2, 4}
+	target2 := 6
+	result2 := twoSum(nums2, target2)
+	expected2 := []int{1, 2}
+	if result2[0] != expected2[0] || result2[1] != expected2[1] {
+		t.Errorf("Expected %v, got %v", expected2, result2)
+	}
+
+	nums3 := []int{3, 3}
+	target3 := 6
+	result3 := twoSum(nums3, target3)
+	expected3 := []int{0, 1}
+	if result3[0] != expected3[0] || result3[1] != expected3[1] {
+		t.Errorf("Expected %v, got %v", expected3, result3)
+	}
+
+	fmt.Println("All tests passed!")
 }
