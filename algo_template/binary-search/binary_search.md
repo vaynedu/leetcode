@@ -1,42 +1,33 @@
-# 二分查找（Binary Search）
+# 二分查找速查手册
 
-## 一、核心思想
-
-二分查找通过**每次将搜索范围缩小一半**来快速定位目标，时间复杂度 O(log N)。
+## 一、选择决策树
 
 ```
-前提：数组必须有序
-
-      L           M           R
-      ↓           ↓           ↓
-    [1, 3, 5, 7, 9, 11, 13]
-    
-    target = 7
-    mid = 5 < 7 → L = mid + 1
-         L   M           R
-         ↓   ↓           ↓
-    [1, 3, 5, 7, 9, 11, 13]
-    
-    mid = 9 > 7 → R = mid - 1
-         L   M   R
-         ↓   ↓   ↓
-    [1, 3, 5, 7, 9, 11, 13]
-    
-    mid = 7 == 7 → 找到！
+看到题目
+  │
+  ├─ 有序数组找 target ──→ 标准二分（704）
+  │
+  ├─ 找 "第一个/最后一个 满足条件的位置" ──→ 左侧边界 或 右侧边界
+  │
+  ├─ 有序数组旋转了 ──→ 旋转数组二分（33/81/153/154）
+  │     ├─ 无重复：nums[left] <= nums[mid]
+  │     └─ 有重复：nums[left]==nums[mid]==nums[right] → left++
+  │
+  ├─ 二维矩阵（行首>上行尾）──→ 坐标映射一维二分（74）
+  │
+  └─ 求平方根/完全平方数 ──→ 特殊边界二分（69/367）
 ```
 
 ---
 
-## 二、三种模板
+## 二、三种基础模板
 
-### 模板1: 标准二分（左闭右闭 [L, R]）
-
-**适用场景**：查找**存在且唯一**的元素
+### 模板1：标准二分（左闭右闭 [left, right]）
 
 ```go
 func binarySearch(nums []int, target int) int {
-    left, right := 0, len(nums)-1  // ★ 左闭右闭
-    for left <= right {            // ★ <=
+    left, right := 0, len(nums)-1  // [left, right]
+    for left <= right {             // 注意是 <=
         mid := left + (right-left)/2
         if nums[mid] == target {
             return mid
@@ -49,47 +40,190 @@ func binarySearch(nums []int, target int) int {
     return -1
 }
 ```
-
-**代表题目**：704. 二分查找
+**适用**：找存在且唯一的 target（704）
 
 ---
 
-### 模板2: 左侧边界（左闭右开 [L, R)）
-
-**适用场景**：找第一个 >= target 的位置
+### 模板2：左侧边界（左闭右开 [left, right)）
 
 ```go
 func lowerBound(nums []int, target int) int {
-    left, right := 0, len(nums)   // ★ 右开
-    for left < right {             // ★ <
+    left, right := 0, len(nums)      // [left, right)
+    for left < right {               // 注意是 <
         mid := left + (right-left)/2
         if nums[mid] < target {
             left = mid + 1
         } else {
-            right = mid            // ★ 不减1
+            right = mid              // 保持 left 不动，收缩 right
         }
     }
-    return left                    // ★ 返回 left
+    return left                      // left == right 时退出
 }
 ```
-
-**代表题目**：
-- 35. 搜索插入位置
-- 278. 第一个错误的版本
+**适用**：找第一个 >= target 的位置（35、34左侧）
 
 ---
 
-### 模板3: 右侧边界（左闭右开 [L, R)）
-
-**适用场景**：找最后一个 <= target 的位置
+### 模板3：右侧边界（左闭右开 [left, right)）
 
 ```go
 func upperBound(nums []int, target int) int {
-    left, right := 0, len(nums)   // 右开
+    left, right := 0, len(nums)      // [left, right)
     for left < right {
         mid := left + (right-left)/2
         if nums[mid] <= target {
-            left = mid + 1        // ★ <= 时 left = mid + 1
+            left = mid + 1           // 找 > target，所以要越过 <= 的
+        } else {
+            right = mid
+        }
+    }
+    return left                      // 第一个 > target 的位置
+}
+```
+**适用**：找最后一个 <= target 的位置（34右侧）
+
+---
+
+## 三、旋转数组四姐妹
+
+### 33/81：搜索旋转排序数组
+
+```go
+func search(nums []int, target int) int {
+    left, right := 0, len(nums)-1
+    for left <= right {
+        mid := left + (right-left)/2
+        if nums[mid] == target {
+            return mid
+        }
+        // 左半边有序
+        if nums[left] <= nums[mid] {
+            if nums[left] <= target && target < nums[mid] {
+                right = mid - 1
+            } else {
+                left = mid + 1
+            }
+        } else { // 右半边有序
+            if nums[mid] < target && target <= nums[right] {
+                left = mid + 1
+            } else {
+                right = mid - 1
+            }
+        }
+    }
+    return -1
+}
+```
+
+**81题多一步去重**：
+```go
+// 当无法判断哪半有序时，收缩左边界
+if nums[left] == nums[mid] && nums[mid] == nums[right] {
+    left++
+}
+```
+
+### 153/154：找旋转数组最小值
+
+```go
+func findMin(nums []int) int {
+    left, right := 0, len(nums)-1
+    for left < right {
+        mid := left + (right-left)/2
+        if nums[mid] > nums[right] {
+            left = mid + 1     // 最小值在右半边
+        } else if nums[mid] < nums[right] {
+            right = mid        // 最小值在左半边（含mid）
+        } else {              // nums[mid] == nums[right]，154多这一步
+            right--            // 无法判断，收缩右边界
+        }
+    }
+    return nums[left]
+}
+```
+
+---
+
+## 四、两个特殊变种
+
+### 74：搜索二维矩阵
+
+```go
+func searchMatrix(matrix [][]int, target int) bool {
+    m, n := len(matrix), len(matrix[0])
+    left, right := 0, m*n-1
+    for left <= right {
+        mid := left + (right-left)/2
+        row, col := mid/n, mid%n   // 关键映射
+        if matrix[row][col] == target {
+            return true
+        } else if matrix[row][col] < target {
+            left = mid + 1
+        } else {
+            right = mid - 1
+        }
+    }
+    return false
+}
+```
+
+### 69/367：平方根系列
+
+```go
+func mySqrt(x int) int {
+    if x < 2 {
+        return x
+    }
+    left, right := 1, x/2
+    for left <= right {
+        mid := left + (right-left)/2
+        if mid <= x/mid {           // 防止溢出，用 x/mid
+            left = mid + 1
+        } else {
+            right = mid - 1
+        }
+    }
+    return right                     // right 是最大的满足 mid<=x/mid 的
+}
+```
+
+---
+
+## 五、通用口诀
+
+```
+标准二分：left <= right，左闭右闭，target找到就返回
+左边界：left < right，左闭右开，找 >= target
+右边界：left < right，左闭右开，找 > target
+旋转数组：先判断哪半有序，再判断 target 在不在有序的那半
+防溢出：不用 mid*mid，用 x/mid 或 x/mid >= mid
+```
+
+---
+
+## 六、34题完整答案（两次二分）
+
+```go
+func searchRange(nums []int, target int) []int {
+    if len(nums) == 0 {
+        return []int{-1, -1}
+    }
+    // 找左侧边界
+    left := lowerBound(nums, target)
+    if left == len(nums) || nums[left] != target {
+        return []int{-1, -1}
+    }
+    // 找右侧边界：target+1 的左侧边界 - 1
+    right := lowerBound(nums, target+1) - 1
+    return []int{left, right}
+}
+
+func lowerBound(nums []int, target int) int {
+    left, right := 0, len(nums)
+    for left < right {
+        mid := left + (right-left)/2
+        if nums[mid] < target {
+            left = mid + 1
         } else {
             right = mid
         }
@@ -100,71 +234,17 @@ func upperBound(nums []int, target int) int {
 
 ---
 
-## 三、模板选择决策树
+## 七、一图总结
 
 ```
-二分查找问题
-    │
-    ├─ 找精确值（元素存在且唯一）
-    │   └─ 模板1：left <= right, left = mid+1, right = mid-1
-    │
-    ├─ 找左边界（第一个 >= target）
-    │   └─ 模板2：left < right, left = mid+1, right = mid
-    │
-    ├─ 找右边界（最后一个 <= target）
-    │   └─ 模板3：left < right, left = mid+1, right = mid
-    │
-    └─ 旋转数组
-        └─ 先判断哪半边有序，再决定搜索范围
+┌─────────────────────────────────────────────────────────┐
+│                    二分查找速查卡                         │
+├──────────────┬──────────────────┬──────────────────────┤
+│ 标准二分     │ left <= right    │ 找存在的 target      │
+│ 左边界       │ left < right, [) │ 第一个 >= target     │
+│ 右边界       │ left < right, [) │ 第一个 > target      │
+│ 旋转数组     │ 先判断哪半有序    │ 33/81/153/154       │
+│ 矩阵映射     │ index → (row,col)│ 74 搜索二维矩阵      │
+│ 防溢出       │ x/mid 替代 mid*mid│ 69/367 平方根      │
+└──────────────┴──────────────────┴──────────────────────┘
 ```
-
----
-
-## 四、通用口诀
-
-```
-二分查找三要素
-左闭右闭或右开
-mid 防溢要记牢
-等不等号决定边界
-缩小范围不断收敛
-直至找到目标值
-或返回 -1 表不存在
-```
-
----
-
-## 五、易错点汇总
-
-| 题目 | 易错点 |
-|------|--------|
-| 704 二分查找 | while 条件是 `<=` 不是 `<` |
-| 35 搜索插入位置 | 返回 left（第一个 >= target）|
-| 69 平方根 | mid*mid 会溢出，用 `mid <= x/mid` |
-| 33 搜索旋转数组 | 先判断哪半边有序 |
-| 162 寻找峰值 | nums[mid] < nums[mid+1] 时往右走 |
-
----
-
-## 六、题目速查表
-
-| 难度 | 题号 | 名称 | 模板 |
-|------|------|------|------|
-| 简单 | 704 | 二分查找 | 模板1 |
-| 简单 | 35 | 搜索插入位置 | 模板2 |
-| 简单 | 278 | 第一个错误的版本 | 模板2 |
-| 简单 | 69 | x 的平方根 | 边界 |
-| 简单 | 367 | 有效的完全平方数 | 边界 |
-| 中等 | 33 | 搜索旋转排序数组 | 旋转 |
-| 中等 | 153 | 寻找旋转排序数组中的最小值 | 旋转 |
-| 中等 | 162 | 寻找峰值 | 峰值 |
-
----
-
-## 七、复杂度总结
-
-| 类型 | 时间 | 空间 |
-|------|------|------|
-| 标准二分 | O(log N) | O(1) |
-| 边界二分 | O(log N) | O(1) |
-| 旋转数组 | O(log N) | O(1) |
