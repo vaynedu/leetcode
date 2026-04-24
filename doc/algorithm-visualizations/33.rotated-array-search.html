@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>旋转排序数组二分查找 · 图解 · LeetCode 33</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+    --eliminate: rgba(28,25,23,0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Geist', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
+    padding: 64px 32px 96px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  /* Header */
+  .eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.25rem; font-weight: 400;
+    margin: 0 0 12px; line-height: 1.15;
+  }
+  .subtitle {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 1.125rem;
+    color: var(--muted); margin: 0 0 48px;
+  }
+  /* Section */
+  section {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 8px; padding: 32px;
+    margin-bottom: 32px;
+  }
+  section h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem; font-weight: 400;
+    margin: 0 0 8px;
+  }
+  .section-sub {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; color: var(--muted);
+    margin: 0 0 24px; line-height: 1.6;
+  }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  /* Array cells */
+  .array-row {
+    display: flex; gap: 4px;
+    align-items: center; justify-content: center;
+    margin: 16px 0; flex-wrap: wrap;
+  }
+  .cell {
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    background: #ffffff;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 20px; font-weight: 500;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  .cell.sm { width: 40px; height: 40px; font-size: 16px; }
+  .cell.eliminated {
+    background: var(--eliminate);
+    border-color: var(--rule);
+    color: var(--soft);
+    text-decoration: line-through;
+  }
+  .cell.sorted-half {
+    background: var(--accent-tint);
+  }
+  .cell.mid {
+    background: var(--accent-strong) !important;
+    border-color: var(--accent);
+    border-width: 2px;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  .cell.hit {
+    background: var(--accent);
+    color: var(--paper);
+    border-color: var(--accent);
+    animation: celebrate 1.8s ease-in-out infinite;
+  }
+  .pivot {
+    width: 2px; height: 72px;
+    background: var(--accent);
+    margin: 0 8px; position: relative;
+  }
+  .pivot.sm { height: 48px; }
+  .pivot::after {
+    content: '断崖';
+    position: absolute;
+    top: -20px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; letter-spacing: 0.12em;
+    color: var(--accent); white-space: nowrap;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(181,82,58,0); }
+  }
+  @keyframes celebrate {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  /* Pointer row */
+  .pointer-row {
+    display: flex; gap: 4px;
+    justify-content: center;
+    margin-top: 4px; flex-wrap: wrap;
+  }
+  .ptr-slot {
+    width: 56px; height: 28px;
+    display: flex; flex-direction: column; align-items: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; color: var(--muted);
+  }
+  .ptr-slot.sm { width: 40px; }
+  .ptr-slot .arr { font-size: 12px; line-height: 1; color: var(--ink); }
+  .ptr-slot .label { font-weight: 600; letter-spacing: 0.08em; }
+  .ptr-slot.M .arr, .ptr-slot.M .label { color: var(--accent); }
+  /* Step */
+  .step {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+  .step-head {
+    display: flex; align-items: baseline;
+    gap: 12px; margin-bottom: 8px;
+  }
+  .step-num {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; font-weight: 600; letter-spacing: 0.18em;
+    background: var(--ink); color: var(--paper);
+    padding: 4px 8px; border-radius: 3px;
+  }
+  .step-range {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--muted);
+  }
+  .decision {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-top: 16px;
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; line-height: 1.6;
+    color: var(--ink);
+  }
+  .decision .kv {
+    padding: 8px 12px;
+    background: rgba(28,25,23,0.03);
+    border-left: 2px solid var(--muted);
+    border-radius: 0 4px 4px 0;
+  }
+  .decision .kv.focal {
+    border-left-color: var(--accent);
+    background: var(--accent-tint);
+  }
+  .decision code {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+  }
+  .decision strong {
+    color: var(--accent); font-weight: 600;
+  }
+  /* Rotation viz */
+  .rotation-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 16px;
+    margin-top: 24px;
+  }
+  .rot-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    text-align: center; margin-bottom: 12px;
+  }
+  .arrow-rotate {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px; color: var(--accent);
+    text-align: center;
+  }
+  .arrow-rotate .sub {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; color: var(--muted);
+    display: block; letter-spacing: 0.18em;
+    margin-top: 4px;
+  }
+  /* Insight cases */
+  .cases {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-top: 16px;
+  }
+  .case-panel {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .case-title {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; font-weight: 600;
+    color: var(--ink); margin: 0 0 4px;
+  }
+  .case-cond {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .conclusion {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; color: var(--accent);
+    margin: 12px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+    font-weight: 500;
+  }
+  /* Summary cards */
+  .summary {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 0.9fr;
+    gap: 16px; margin-top: 32px;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .card-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 0 0 8px;
+  }
+  .card h3 {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; font-weight: 600;
+    margin: 0 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .dot.ink { background: var(--ink); }
+  .dot.accent { background: var(--accent); }
+  .dot.muted { background: var(--muted); }
+  .card p {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; color: var(--ink);
+    line-height: 1.6; margin: 0;
+  }
+  .card code {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+    background: rgba(28,25,23,0.05);
+    padding: 1px 5px; border-radius: 3px;
+  }
+  .card strong { color: var(--accent); font-weight: 600; }
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 16px; margin-top: 48px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; color: var(--soft);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  /* Entry animations */
+  section, .summary, footer {
+    animation: fadeIn 0.6s ease-out backwards;
+  }
+  section:nth-of-type(1) { animation-delay: 0.1s; }
+  section:nth-of-type(2) { animation-delay: 0.25s; }
+  section:nth-of-type(3) { animation-delay: 0.4s; }
+  .summary { animation-delay: 0.55s; }
+  footer { animation-delay: 0.7s; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="eyebrow">LEETCODE 33 · SEARCH IN ROTATED SORTED ARRAY</p>
+      <h1>旋转排序数组的二分查找</h1>
+      <p class="subtitle">切一刀 → 判断哪半完整 → 看 target 在不在完整那半</p>
+    </header>
+
+    <!-- Section 1 -->
+    <section>
+      <h2>① 什么是旋转数组</h2>
+      <p class="section-sub">升序数组在某一点"旋转"之后，变成 <strong>两段升序 + 一个断崖</strong>。整个数组只有 <strong>一个</strong> 断崖。</p>
+      <div class="rotation-flow">
+        <div>
+          <div class="rot-label">Original · 升序</div>
+          <div class="array-row">
+            <div class="cell sm">0</div><div class="cell sm">1</div><div class="cell sm">2</div>
+            <div class="cell sm">4</div><div class="cell sm">5</div><div class="cell sm">6</div>
+            <div class="cell sm">7</div>
+          </div>
+        </div>
+        <div class="arrow-rotate">→<span class="sub">Rotate @ 3</span></div>
+        <div>
+          <div class="rot-label">Rotated · 两段升序</div>
+          <div class="array-row">
+            <div class="cell sm">4</div><div class="cell sm">5</div><div class="cell sm">6</div>
+            <div class="cell sm">7</div>
+            <div class="pivot sm"></div>
+            <div class="cell sm">0</div><div class="cell sm">1</div><div class="cell sm">2</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section>
+      <h2>② 关键洞察：必有一半完整有序</h2>
+      <p class="section-sub">任意 <code>mid</code> 切一刀后，<strong>[L..M]</strong> 或 <strong>[M..R]</strong> 中必有一段没被断崖切到 —— 那段就是普通有序数组，用它的首尾就能夹住 target。</p>
+      <div class="cases">
+        <!-- Case 1: mid in left segment -->
+        <div class="case-panel">
+          <p class="case-title">情况 ① &nbsp;mid 落在左段</p>
+          <p class="case-cond">nums[L] ≤ nums[M]</p>
+          <div class="array-row" style="gap:2px;margin:12px 0">
+            <div class="cell sm sorted-half">4</div>
+            <div class="cell sm sorted-half">5</div>
+            <div class="cell sm sorted-half mid">6</div>
+            <div class="cell sm">7</div>
+            <div class="pivot sm" style="margin:0 4px"></div>
+            <div class="cell sm">0</div>
+            <div class="cell sm">1</div>
+            <div class="cell sm">2</div>
+          </div>
+          <div class="pointer-row" style="gap:2px">
+            <div class="ptr-slot sm L"><span class="arr">↑</span><span class="label">L</span></div>
+            <div class="ptr-slot sm"></div>
+            <div class="ptr-slot sm M"><span class="arr">↑</span><span class="label">M</span></div>
+            <div class="ptr-slot sm"></div>
+            <div style="width:10px"></div>
+            <div class="ptr-slot sm"></div>
+            <div class="ptr-slot sm"></div>
+            <div class="ptr-slot sm R"><span class="arr">↑</span><span class="label">R</span></div>
+          </div>
+          <p class="conclusion">[L..M] 完整有序（断崖在右）</p>
+        </div>
+        <!-- Case 2: mid in right segment -->
+        <div class="case-panel">
+          <p class="case-title">情况 ② &nbsp;mid 落在右段</p>
+          <p class="case-cond">nums[L] > nums[M]</p>
+          <div class="array-row" style="gap:2px;margin:12px 0">
+            <div class="cell sm">4</div>
+            <div class="cell sm">5</div>
+            <div class="cell sm">6</div>
+            <div class="cell sm">7</div>
+            <div class="pivot sm" style="margin:0 4px"></div>
+            <div class="cell sm sorted-half">0</div>
+            <div class="cell sm sorted-half mid">1</div>
+            <div class="cell sm sorted-half">2</div>
+          </div>
+          <div class="pointer-row" style="gap:2px">
+            <div class="ptr-slot sm L"><span class="arr">↑</span><span class="label">L</span></div>
+            <div class="ptr-slot sm"></div>
+            <div class="ptr-slot sm"></div>
+            <div class="ptr-slot sm"></div>
+            <div style="width:10px"></div>
+            <div class="ptr-slot sm"></div>
+            <div class="ptr-slot sm M"><span class="arr">↑</span><span class="label">M</span></div>
+            <div class="ptr-slot sm R"><span class="arr">↑</span><span class="label">R</span></div>
+          </div>
+          <p class="conclusion">[M..R] 完整有序（断崖在左）</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section>
+      <h2>③ 完整 Trace</h2>
+      <p class="section-sub">在 <code>[4, 5, 6, 7, 0, 1, 2]</code> 中查找 <strong>target = 0</strong>。高亮段是"完整有序那半"，划线的是本轮被淘汰的。</p>
+
+      <!-- Step 1 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">Step 1</span>
+          <span class="step-range">L=0 &nbsp; M=3 &nbsp; R=6</span>
+        </div>
+        <div class="array-row">
+          <div class="cell sorted-half">4</div>
+          <div class="cell sorted-half">5</div>
+          <div class="cell sorted-half">6</div>
+          <div class="cell sorted-half mid">7</div>
+          <div class="cell">0</div>
+          <div class="cell">1</div>
+          <div class="cell">2</div>
+        </div>
+        <div class="pointer-row">
+          <div class="ptr-slot L"><span class="arr">↑</span><span class="label">L</span></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot M"><span class="arr">↑</span><span class="label">M</span></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot R"><span class="arr">↑</span><span class="label">R</span></div>
+        </div>
+        <div class="decision">
+          <div class="kv"><code>nums[L]=4 ≤ nums[M]=7</code> &nbsp;→&nbsp; 左半 <code>[4..7]</code> <strong>有序</strong></div>
+          <div class="kv focal"><code>target=0 ∈ [4, 7)?</code> &nbsp;→&nbsp; <strong>否</strong>，丢左半，<code>L = M+1 = 4</code></div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">Step 2</span>
+          <span class="step-range">L=4 &nbsp; M=5 &nbsp; R=6</span>
+        </div>
+        <div class="array-row">
+          <div class="cell eliminated">4</div>
+          <div class="cell eliminated">5</div>
+          <div class="cell eliminated">6</div>
+          <div class="cell eliminated">7</div>
+          <div class="cell sorted-half">0</div>
+          <div class="cell sorted-half mid">1</div>
+          <div class="cell">2</div>
+        </div>
+        <div class="pointer-row">
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot L"><span class="arr">↑</span><span class="label">L</span></div>
+          <div class="ptr-slot M"><span class="arr">↑</span><span class="label">M</span></div>
+          <div class="ptr-slot R"><span class="arr">↑</span><span class="label">R</span></div>
+        </div>
+        <div class="decision">
+          <div class="kv"><code>nums[L]=0 ≤ nums[M]=1</code> &nbsp;→&nbsp; 左半 <code>[0..1]</code> <strong>有序</strong></div>
+          <div class="kv focal"><code>target=0 ∈ [0, 1)?</code> &nbsp;→&nbsp; <strong>是</strong>，丢右半，<code>R = M-1 = 4</code></div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">Step 3</span>
+          <span class="step-range">L=4 &nbsp; M=4 &nbsp; R=4</span>
+        </div>
+        <div class="array-row">
+          <div class="cell eliminated">4</div>
+          <div class="cell eliminated">5</div>
+          <div class="cell eliminated">6</div>
+          <div class="cell eliminated">7</div>
+          <div class="cell hit">0</div>
+          <div class="cell eliminated">1</div>
+          <div class="cell eliminated">2</div>
+        </div>
+        <div class="pointer-row">
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot M"><span class="arr">↑</span><span class="label">L=M=R</span></div>
+          <div class="ptr-slot"></div>
+          <div class="ptr-slot"></div>
+        </div>
+        <div class="decision">
+          <div class="kv focal"><code>nums[M]=0 == target</code> ✓ &nbsp;<strong>返回 index = 4</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary cards -->
+    <div class="summary">
+      <div class="card">
+        <p class="card-eyebrow">Step 1 · 切</p>
+        <h3><span class="dot ink"></span>先切一刀</h3>
+        <p>取 <code>mid = L + (R-L)/2</code>。若 <code>nums[mid] == target</code>，直接返回。</p>
+      </div>
+      <div class="card">
+        <p class="card-eyebrow">Step 2 · 判</p>
+        <h3><span class="dot accent"></span>判断哪半有序</h3>
+        <p><code>nums[L] ≤ nums[M]</code> 则左半有序，否则右半有序。<strong>必有一半有序。</strong></p>
+      </div>
+      <div class="card">
+        <p class="card-eyebrow">Step 3 · 夹</p>
+        <h3><span class="dot muted"></span>用有序半夹 target</h3>
+        <p>看 target 在不在有序那半的首尾之间：在 → 去那半；不在 → 去另一半。</p>
+      </div>
+    </div>
+
+    <footer>Time · O(log n) &nbsp;·&nbsp; Space · O(1) &nbsp;·&nbsp; Only one pivot per array</footer>
+  </div>
+</body>
+</html>
