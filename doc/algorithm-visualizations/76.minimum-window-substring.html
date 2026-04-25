@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>最小覆盖子串 · 图解 · LeetCode 76</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+    --eliminate: rgba(28,25,23,0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Geist', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
+    padding: 64px 32px 96px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.25rem; font-weight: 400;
+    margin: 0 0 12px; line-height: 1.15;
+  }
+  .subtitle {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 1.125rem;
+    color: var(--muted); margin: 0 0 48px;
+  }
+  section {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 8px; padding: 32px;
+    margin-bottom: 32px;
+  }
+  section h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem; font-weight: 400;
+    margin: 0 0 8px;
+  }
+  .section-sub {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; color: var(--muted);
+    margin: 0 0 24px; line-height: 1.6;
+  }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- s string top row ---- */
+  .s-row {
+    display: flex; gap: 4px;
+    align-items: center; justify-content: center;
+    margin: 16px 0 4px; flex-wrap: wrap;
+  }
+  .s-cell {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 16px; font-weight: 500;
+    color: var(--muted);
+    position: relative;
+  }
+  .s-cell.in-window {
+    color: var(--ink);
+  }
+  .s-cell.abc-match {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .s-cell span.idx {
+    position: absolute;
+    bottom: -14px;
+    font-size: 7px; color: var(--soft);
+    font-family: 'Geist Mono', monospace;
+  }
+  .s-cell.abc-match span.idx { color: var(--accent); }
+
+  /* ---- window bracket row ---- */
+  .bracket-row {
+    display: flex; gap: 4px;
+    justify-content: center;
+    margin: 0 0 4px; flex-wrap: wrap;
+  }
+  .bracket-slot {
+    width: 40px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--soft);
+  }
+  .bracket-slot.L::before { content: '['; color: var(--accent); font-size: 16px; }
+  .bracket-slot.mid::before { content: '·'; color: var(--muted); }
+  .bracket-slot.R::before { content: ']'; color: var(--accent); font-size: 16px; }
+
+  /* ---- window content row ---- */
+  .win-row {
+    display: flex; gap: 4px;
+    align-items: center; justify-content: center;
+    margin: 8px 0; flex-wrap: wrap;
+  }
+  .win-cell {
+    width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: #ffffff;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 18px; font-weight: 500;
+    position: relative;
+  }
+  .win-cell.in-window {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+  }
+  .win-cell.abc {
+    background: var(--accent-strong);
+    border-color: var(--accent);
+    border-width: 2px;
+  }
+  .win-cell span.count {
+    position: absolute;
+    bottom: 2px; right: 4px;
+    font-size: 8px; color: var(--muted);
+  }
+  .win-cell.abc span.count { color: var(--accent); }
+
+  /* ---- need row ---- */
+  .need-row {
+    display: flex; gap: 4px;
+    justify-content: center;
+    margin: 4px 0 16px; flex-wrap: wrap;
+  }
+  .need-slot {
+    width: 48px; height: 28px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center;
+    background: rgba(28,25,23,0.04);
+    border-radius: 4px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; color: var(--muted);
+  }
+  .need-slot span { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+  /* ---- window state ---- */
+  .win-state {
+    display: flex; gap: 12px;
+    justify-content: center;
+    margin: 8px 0 16px; flex-wrap: wrap;
+  }
+  .state-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .state-badge.expand {
+    background: rgba(28,25,23,0.06);
+    color: var(--muted);
+    border: 1px solid var(--rule);
+  }
+  .state-badge.shrink {
+    background: var(--accent-tint);
+    color: var(--accent);
+    border: 1px solid rgba(181,82,58,0.3);
+  }
+  .state-badge.done {
+    background: rgba(28,25,23,0.08);
+    color: var(--ink);
+    border: 1px solid rgba(28,25,23,0.15);
+  }
+
+  /* ---- counters ---- */
+  .counters {
+    display: flex; gap: 16px;
+    justify-content: center;
+    margin: 8px 0; flex-wrap: wrap;
+  }
+  .counter {
+    display: flex; gap: 8px;
+    align-items: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+  }
+  .counter-label { color: var(--muted); }
+  .counter-val { color: var(--ink); font-weight: 600; }
+  .counter-val.highlight { color: var(--accent); }
+
+  /* ---- step card ---- */
+  .step {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+  .step-head {
+    display: flex; align-items: baseline;
+    gap: 12px; margin-bottom: 12px;
+  }
+  .step-num {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; font-weight: 600; letter-spacing: 0.18em;
+    background: var(--ink); color: var(--paper);
+    padding: 4px 8px; border-radius: 3px;
+  }
+  .step-range {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--muted);
+  }
+  .step-action {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .step-action strong { color: var(--accent); }
+  .decision {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 12px;
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; line-height: 1.6;
+    color: var(--ink);
+  }
+  .decision .kv {
+    padding: 8px 12px;
+    background: rgba(28,25,23,0.03);
+    border-left: 2px solid var(--muted);
+    border-radius: 0 4px 4px 0;
+  }
+  .decision .kv.focal {
+    border-left-color: var(--accent);
+    background: var(--accent-tint);
+  }
+  .decision code {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+  }
+  .decision strong { color: var(--accent); font-weight: 600; }
+
+  /* ---- phase label ---- */
+  .phase {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 9px; letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .phase.expand { background: rgba(28,25,23,0.06); color: var(--muted); }
+  .phase.shrink { background: var(--accent-tint); color: var(--accent); }
+  .phase.done { background: rgba(28,25,23,0.08); color: var(--ink); }
+
+  /* ---- window highlight ---- */
+  .win-highlight {
+    padding: 6px 12px;
+    background: var(--accent-strong);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--accent);
+    display: inline-block;
+    margin-top: 8px;
+  }
+
+  /* ---- summary cards ---- */
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px; margin-top: 32px;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .card-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 0 0 8px;
+  }
+  .card h3 {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; font-weight: 600;
+    margin: 0 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+  .dot.ink { background: var(--ink); }
+  .dot.accent { background: var(--accent); }
+  .dot.muted { background: var(--muted); }
+  .card p { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--ink); line-height: 1.6; margin: 0; }
+  .card code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .card strong { color: var(--accent); font-weight: 600; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 16px; margin-top: 48px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; color: var(--soft);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  /* Entry animations */
+  section, .summary, footer { animation: fadeIn 0.6s ease-out backwards; }
+  section:nth-of-type(1) { animation-delay: 0.1s; }
+  section:nth-of-type(2) { animation-delay: 0.25s; }
+  section:nth-of-type(3) { animation-delay: 0.4s; }
+  .summary { animation-delay: 0.55s; }
+  footer { animation-delay: 0.7s; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <p class="eyebrow">LEETCODE 76 · MINIMUM WINDOW SUBSTRING</p>
+    <h1>最小覆盖子串</h1>
+    <p class="subtitle">右扩左缩 → valid 驱动收缩 → 维护全局最优</p>
+  </header>
+
+  <!-- Section 1: 概念 -->
+  <section>
+    <h2>① 什么是变长窗口</h2>
+    <p class="section-sub">变长窗口 = 窗口大小**不固定**，先扩张到满足条件，再尽可能收缩找最优。和固定窗口最大的区别是：<strong>valid 驱动左边界收缩</strong>。</p>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:24px;">
+      <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:20px;">
+        <p style="font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin:0 0 12px; letter-spacing:0.12em; text-transform:uppercase;">固定窗口</p>
+        <p style="font-family:'Geist',sans-serif; font-size:12px; color:var(--ink); margin:0 0 8px;">窗口大小固定，滑动时左右指针<strong>同步移动</strong></p>
+        <div style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted);">右移 → 左移 → 右移 → 左移</div>
+      </div>
+      <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:20px;">
+        <p style="font-family:'Geist Mono',monospace; font-size:10px; color:var(--accent); margin:0 0 12px; letter-spacing:0.12em; text-transform:uppercase;">变长窗口（本题）</p>
+        <p style="font-family:'Geist',sans-serif; font-size:12px; color:var(--ink); margin:0 0 8px;">窗口大小变化，<strong>右扩到底</strong>，再逐步左缩找最优</p>
+        <div style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--accent);">R→→→→→→→ 然后 L↘ L↘ L↘</div>
+      </div>
+    </div>
+
+    <p class="section-sub" style="margin-top:20px; margin-bottom:0;">
+      <code>t = "ABC"</code> &nbsp;→&nbsp; <code>need = {A:1, B:1, C:1}</code>
+    </p>
+    <div class="need-row">
+      <div class="need-slot"><span>A</span>need=1</div>
+      <div class="need-slot"><span>B</span>need=1</div>
+      <div class="need-slot"><span>C</span>need=1</div>
+    </div>
+  </section>
+
+  <!-- Section 2: 生命周期 -->
+  <section>
+    <h2>② 窗口的生命周期</h2>
+    <p class="section-sub">s = <code>"ADOBECODEBANC"</code>，t = <code>"ABC"</code></p>
+
+    <!-- Phase 1: R扩张 -->
+    <div class="phase expand">Phase 1 · R 不断右扩</div>
+    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:20px; margin-bottom:16px;">
+      <div class="s-row">
+        <div class="s-cell in-window">A<span class="idx">0</span></div>
+        <div class="s-cell">D<span class="idx">1</span></div>
+        <div class="s-cell">O<span class="idx">2</span></div>
+        <div class="s-cell">B<span class="idx">3</span></div>
+        <div class="s-cell">E<span class="idx">4</span></div>
+        <div class="s-cell in-window abc-match">C<span class="idx">5</span></div>
+        <div class="s-cell">O<span class="idx">6</span></div>
+        <div class="s-cell">D<span class="idx">7</span></div>
+        <div class="s-cell">E<span class="idx">8</span></div>
+        <div class="s-cell">B<span class="idx">9</span></div>
+        <div class="s-cell">A<span class="idx">10</span></div>
+        <div class="s-cell">N<span class="idx">11</span></div>
+        <div class="s-cell">C<span class="idx">12</span></div>
+      </div>
+      <div class="bracket-row">
+        <div class="bracket-slot L"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot R"></div>
+        <div class="bracket-slot"></div><div class="bracket-slot"></div><div class="bracket-slot"></div>
+        <div class="bracket-slot"></div><div class="bracket-slot"></div><div class="bracket-slot"></div>
+      </div>
+      <div class="win-row">
+        <div class="win-cell in-window abc"><span>A</span><span class="count">×1</span></div>
+        <div class="win-cell in-window"><span>D</span></div>
+        <div class="win-cell in-window"><span>O</span></div>
+        <div class="win-cell in-window"><span>B</span></div>
+        <div class="win-cell in-window"><span>E</span></div>
+        <div class="win-cell in-window abc"><span>C</span><span class="count">×1</span></div>
+      </div>
+      <div class="win-state">
+        <div class="state-badge expand">R 扩到 index=5</div>
+        <div class="state-badge expand">valid=3，窗口已覆盖 t</div>
+      </div>
+      <div class="decision">
+        <div class="kv focal">valid == len(need) → 开始收缩！</div>
+      </div>
+    </div>
+
+    <!-- Phase 2: L收缩 -->
+    <div class="phase shrink">Phase 2 · L 逐步收缩，找最优</div>
+    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:20px; margin-bottom:16px;">
+      <div class="s-row">
+        <div class="s-cell" style="text-decoration:line-through; opacity:0.3;">A<span class="idx">0</span></div>
+        <div class="s-cell">D<span class="idx">1</span></div>
+        <div class="s-cell">O<span class="idx">2</span></div>
+        <div class="s-cell">B<span class="idx">3</span></div>
+        <div class="s-cell">E<span class="idx">4</span></div>
+        <div class="s-cell in-window abc-match">C<span class="idx">5</span></div>
+        <div class="s-cell">O<span class="idx">6</span></div>
+        <div class="s-cell">D<span class="idx">7</span></div>
+        <div class="s-cell">E<span class="idx">8</span></div>
+        <div class="s-cell">B<span class="idx">9</span></div>
+        <div class="s-cell">A<span class="idx">10</span></div>
+        <div class="s-cell">N<span class="idx">11</span></div>
+        <div class="s-cell">C<span class="idx">12</span></div>
+      </div>
+      <div class="bracket-row">
+        <div class="bracket-slot"></div>
+        <div class="bracket-slot L"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot R"></div>
+        <div class="bracket-slot"></div><div class="bracket-slot"></div><div class="bracket-slot"></div>
+        <div class="bracket-slot"></div><div class="bracket-slot"></div><div class="bracket-slot"></div>
+      </div>
+      <div class="win-row">
+        <div class="win-cell" style="opacity:0.3; text-decoration:line-through;"><span>D</span></div>
+        <div class="win-cell in-window"><span>O</span></div>
+        <div class="win-cell in-window"><span>B</span></div>
+        <div class="win-cell in-window"><span>E</span></div>
+        <div class="win-cell in-window abc"><span>C</span><span class="count">×1</span></div>
+      </div>
+      <div class="win-state">
+        <div class="state-badge shrink">L = 1，窗口 = "DOBEC"</div>
+        <div class="state-badge shrink">valid=2 &lt; 3，停止收缩</div>
+      </div>
+      <div class="win-highlight">min = "ADOBEC" (len=6)</div>
+    </div>
+
+    <!-- Phase 3: 继续扩张 -->
+    <div class="phase expand">Phase 3 · R 继续扩张</div>
+    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:20px; margin-bottom:16px;">
+      <div class="s-row">
+        <div class="s-cell" style="opacity:0.3;">A<span class="idx">0</span></div>
+        <div class="s-cell">D<span class="idx">1</span></div>
+        <div class="s-cell">O<span class="idx">2</span></div>
+        <div class="s-cell">B<span class="idx">3</span></div>
+        <div class="s-cell">E<span class="idx">4</span></div>
+        <div class="s-cell in-window abc-match">C<span class="idx">5</span></div>
+        <div class="s-cell">O<span class="idx">6</span></div>
+        <div class="s-cell">D<span class="idx">7</span></div>
+        <div class="s-cell">E<span class="idx">8</span></div>
+        <div class="s-cell in-window abc-match">B<span class="idx">9</span></div>
+        <div class="s-cell in-window abc-match">A<span class="idx">10</span></div>
+        <div class="s-cell">N<span class="idx">11</span></div>
+        <div class="s-cell">C<span class="idx">12</span></div>
+      </div>
+      <div class="bracket-row">
+        <div class="bracket-slot"></div>
+        <div class="bracket-slot L"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot R"></div>
+        <div class="bracket-slot"></div><div class="bracket-slot"></div><div class="bracket-slot"></div>
+      </div>
+      <div class="win-row">
+        <div class="win-cell" style="opacity:0.3;"><span>D</span></div>
+        <div class="win-cell in-window"><span>O</span></div>
+        <div class="win-cell in-window"><span>B</span></div>
+        <div class="win-cell in-window"><span>E</span></div>
+        <div class="win-cell in-window abc"><span>C</span><span class="count">×1</span></div>
+        <div class="win-cell in-window"><span>O</span></div>
+        <div class="win-cell in-window"><span>D</span></div>
+        <div class="win-cell in-window"><span>E</span></div>
+        <div class="win-cell in-window abc"><span>B</span><span class="count">×2</span></div>
+        <div class="win-cell in-window abc"><span>A</span><span class="count">×1</span></div>
+      </div>
+      <div class="win-state">
+        <div class="state-badge expand">R 扩到 index=10</div>
+        <div class="state-badge expand">window={A:1, B:2, C:1} → valid=3</div>
+        <div class="state-badge expand">再次满足，开始收缩</div>
+      </div>
+    </div>
+
+    <!-- Phase 4: 最优解 -->
+    <div class="phase shrink">Phase 4 · 收缩到最优解 "BANC"</div>
+    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:20px; margin-bottom:16px;">
+      <div class="s-row">
+        <div class="s-cell" style="opacity:0.3;">A<span class="idx">0</span></div>
+        <div class="s-cell" style="opacity:0.3;">D<span class="idx">1</span></div>
+        <div class="s-cell" style="opacity:0.3;">O<span class="idx">2</span></div>
+        <div class="s-cell" style="opacity:0.3;">B<span class="idx">3</span></div>
+        <div class="s-cell" style="opacity:0.3;">E<span class="idx">4</span></div>
+        <div class="s-cell" style="opacity:0.3;">C<span class="idx">5</span></div>
+        <div class="s-cell" style="opacity:0.3;">O<span class="idx">6</span></div>
+        <div class="s-cell" style="opacity:0.3;">D<span class="idx">7</span></div>
+        <div class="s-cell" style="opacity:0.3;">E<span class="idx">8</span></div>
+        <div class="s-cell in-window abc-match">B<span class="idx">9</span></div>
+        <div class="s-cell in-window abc-match">A<span class="idx">10</span></div>
+        <div class="s-cell">N<span class="idx">11</span></div>
+        <div class="s-cell in-window abc-match">C<span class="idx">12</span></div>
+      </div>
+      <div class="bracket-row">
+        <div class="bracket-slot"></div><div class="bracket-slot"></div><div class="bracket-slot"></div>
+        <div class="bracket-slot"></div><div class="bracket-slot"></div><div class="bracket-slot"></div>
+        <div class="bracket-slot"></div><div class="bracket-slot"></div><div class="bracket-slot"></div>
+        <div class="bracket-slot L"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot mid"></div>
+        <div class="bracket-slot R"></div>
+      </div>
+      <div class="win-row">
+        <div class="win-cell in-window abc"><span>B</span><span class="count">×1</span></div>
+        <div class="win-cell in-window abc"><span>A</span><span class="count">×1</span></div>
+        <div class="win-cell in-window"><span>N</span></div>
+        <div class="win-cell in-window abc"><span>C</span><span class="count">×1</span></div>
+      </div>
+      <div class="win-state">
+        <div class="state-badge shrink">L=9，窗口="BANC" (len=4)</div>
+        <div class="state-badge shrink">收缩后 B 数量不足，valid=2</div>
+      </div>
+      <div class="win-highlight" style="background:var(--accent-strong); font-size:14px; padding:8px 16px;">✓ min = "BANC" (len=4) ← 最终答案</div>
+    </div>
+  </section>
+
+  <!-- Section 3: 完整Step Trace -->
+  <section>
+    <h2>③ 完整 Step Trace</h2>
+    <p class="section-sub">need = <code>{A:1, B:1, C:1}</code>，valid=3 时才满足条件</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">L=0 &nbsp; R=0 &nbsp;→&nbsp; R=6</span>
+      </div>
+      <div class="step-action">R 不断右扩：<strong>A(×1✓) → D → O → B(×1✓) → E → C(×1✓)</strong></div>
+      <div class="counters">
+        <div class="counter"><span class="counter-label">window:</span><span class="counter-val">{A:1,B:1,C:1}</span></div>
+        <div class="counter"><span class="counter-label">valid:</span><span class="counter-val highlight">3</span></div>
+        <div class="counter"><span class="counter-label">窗口:</span><span class="counter-val">"ADOBEC"</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">valid == len(need) → 满足条件，进入收缩</div>
+        <div class="kv focal">记录 minLen=6，minStr="ADOBEC"</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">L=0 → 1</span>
+      </div>
+      <div class="step-action">收缩 L=0（A 移出窗口）：<strong>A 数量从1→0，valid 3→2</strong></div>
+      <div class="counters">
+        <div class="counter"><span class="counter-label">window:</span><span class="counter-val">{A:0,B:1,C:1}</span></div>
+        <div class="counter"><span class="counter-label">valid:</span><span class="counter-val">2</span></div>
+        <div class="counter"><span class="counter-label">窗口:</span><span class="counter-val">"DOBEC"</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">valid(2) &lt; len(need)(3) → <strong>停止收缩</strong></div>
+        <div class="kv">R 继续右扩</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">R=6 → 10</span>
+      </div>
+      <div class="step-action">R 扩：A(×1✓)B(×2)C(×1)，valid 回到 3</div>
+      <div class="counters">
+        <div class="counter"><span class="counter-label">window:</span><span class="counter-val">{A:1,B:2,C:1}</span></div>
+        <div class="counter"><span class="counter-label">valid:</span><span class="counter-val highlight">3</span></div>
+        <div class="counter"><span class="counter-label">窗口:</span><span class="counter-val">"DOBECODEBA"</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv focal">valid == len(need) → 再次收缩</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">L=1 → 4</span>
+      </div>
+      <div class="step-action">收缩 L=1→2→3→4：D,O,B,E 依次移出，valid 始终=3</div>
+      <div class="counters">
+        <div class="counter"><span class="counter-label">L=4时:</span><span class="counter-val">window={A:1,B:1,C:1}</span></div>
+        <div class="counter"><span class="counter-label">valid:</span><span class="counter-val highlight">3</span></div>
+        <div class="counter"><span class="counter-label">窗口:</span><span class="counter-val">"ODEBA"</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv focal">minLen=5 &lt; 6 → 更新 minStr="ODEBA"</div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">L=4 → 5</span>
+      </div>
+      <div class="step-action">收缩 L=4（B 移出）：B 数量从1→0，<strong>valid 3→2</strong></div>
+      <div class="counters">
+        <div class="counter"><span class="counter-label">window:</span><span class="counter-val">{A:1,B:0,C:1}</span></div>
+        <div class="counter"><span class="counter-label">valid:</span><span class="counter-val">2</span></div>
+        <div class="counter"><span class="counter-label">窗口:</span><span class="counter-val">"ODEBA"</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">valid(2) &lt; len(need)(3) → <strong>停止收缩</strong></div>
+        <div class="kv">R 继续右扩</div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 6</span>
+        <span class="step-range">R=10 → 13 (结束)</span>
+      </div>
+      <div class="step-action">R 扩：C(×2)，valid 回到 3 → 收缩 L=5→9 → 得到 "BANC"</div>
+      <div class="counters">
+        <div class="counter"><span class="counter-label">window:</span><span class="counter-val">{A:1,B:0,C:1}</span></div>
+        <div class="counter"><span class="counter-label">R=12:</span><span class="counter-val highlight">valid=3</span></div>
+        <div class="counter"><span class="counter-label">L=9→10:</span><span class="counter-val highlight">min="BANC" len=4</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv focal">4 &lt; 5 → <strong>min = "BANC" (最终答案)</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心机制</p>
+      <h3><span class="dot accent"></span>valid 驱动收缩</h3>
+      <p>valid == len(need) 时才满足条件，此时尝试左缩。<br>左缩时若某个字符数量等于 need，valid--，停止收缩。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">窗口内容</p>
+      <h3><span class="dot ink"></span>双 HashMap</h3>
+      <p><code>need</code> 记录 t 中每个字符需要的次数<br><code>window</code> 记录窗口内每个字符出现的次数<br>只有 <code>window[c] == need[c]</code> 时 valid 才加一</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">时间复杂度</p>
+      <h3><span class="dot muted"></span>O(n)</h3>
+      <p>R 最多移动 n 次，L 也最多移动 n 次。<br>每个字符最多被访问两次（一次R，一次L）。</p>
+    </div>
+  </div>
+
+  <footer>Time · O(n) &nbsp;·&nbsp; Space · O(1) · fixed alphabet (26+26)</footer>
+</div>
+</body>
+</html>
