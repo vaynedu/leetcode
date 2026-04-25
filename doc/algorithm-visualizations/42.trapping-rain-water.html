@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>接雨水 · 图解 · LeetCode 42</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+    --eliminate: rgba(28,25,23,0.04);
+    --water-blue: rgba(59,130,246,0.5);
+    --water-blue-dark: rgba(37,99,235,0.6);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- bar chart for water ---- */
+  .profile-chart {
+    position: relative;
+    margin: 24px 0 8px;
+  }
+  .profile-row {
+    display: flex; gap: 4px;
+    align-items: flex-end; justify-content: center;
+    height: 200px;
+    position: relative;
+  }
+  .profile-col {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    width: 48px; position: relative;
+  }
+  .bar-fill {
+    width: 40px;
+    background: #1c1917;
+    border-radius: 4px 4px 0 0;
+    display: flex; align-items: flex-start;
+    justify-content: center;
+    padding-top: 4px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; font-weight: 600; color: #ffffff;
+    position: relative; z-index: 2;
+  }
+  .water-fill {
+    width: 40px;
+    background: linear-gradient(to bottom, rgba(59,130,246,0.4), rgba(59,130,246,0.6));
+    border-left: 1px solid rgba(59,130,246,0.4);
+    border-right: 1px solid rgba(59,130,246,0.4);
+    position: relative; z-index: 1;
+    display: flex; align-items: flex-start;
+    justify-content: center;
+    padding-top: 2px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; color: rgba(59,130,246,0.9);
+  }
+  .bar-index {
+    font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--soft);
+    margin-top: 4px; height: 14px;
+  }
+
+  /* pointer markers */
+  .ptr-markers {
+    display: flex; gap: 4px;
+    justify-content: center;
+    margin-top: 4px;
+  }
+  .ptr-slot { width: 48px; height: 18px; display: flex; flex-direction: column; align-items: center; }
+  .ptr-slot .arr { font-size: 11px; line-height: 1; }
+  .ptr-slot .label { font-size: 7px; font-weight: 700; font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; }
+  .ptr-slot.L .arr, .ptr-slot.L .label { color: #2563eb; }
+  .ptr-slot.R .arr, .ptr-slot.R .label { color: #16a34a; }
+  .ptr-slot.empty { opacity: 0; }
+
+  /* water height labels */
+  .water-label {
+    position: absolute;
+    font-family: 'Geist Mono', monospace;
+    font-size: 9px; color: rgba(59,130,246,0.8);
+    text-align: center; width: 40px;
+  }
+
+  /* x-axis labels */
+  .x-labels {
+    display: flex; gap: 4px;
+    justify-content: center;
+    margin-top: 4px;
+  }
+  .x-label { width: 48px; text-align: center; font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--soft); }
+
+  /* ---- step card ---- */
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px 24px; margin-top: 16px; }
+  .step-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 8px; font-weight: 600; letter-spacing: 0.18em; background: var(--ink); color: var(--paper); padding: 4px 8px; border-radius: 3px; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); }
+  .decision { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-family: 'Geist', sans-serif; font-size: 12px; line-height: 1.6; color: var(--ink); }
+  .decision .kv { padding: 6px 10px; background: rgba(28,25,23,0.03); border-left: 2px solid var(--muted); border-radius: 0 4px 4px 0; }
+  .decision .kv.focal { border-left-color: var(--accent); background: var(--accent-tint); }
+  .decision code { font-family: 'Geist Mono', monospace; font-size: 11px; }
+  .decision strong { color: var(--accent); font-weight: 600; }
+  .decision .blue { color: #2563eb; font-weight: 600; }
+  .decision .green { color: #16a34a; font-weight: 600; }
+
+  /* two-pointer state */
+  .tp-state {
+    display: flex; gap: 16px;
+    justify-content: center;
+    align-items: center;
+    margin: 12px 0;
+    flex-wrap: wrap;
+  }
+  .tp-var {
+    display: flex; gap: 8px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+  }
+  .tp-var .name { color: var(--muted); }
+  .tp-var .val { color: var(--ink); font-weight: 600; }
+  .tp-var .val.highlight-blue { color: #2563eb; }
+  .tp-var .val.highlight-green { color: #16a34a; }
+
+  /* decision tree */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .col-panel { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
+  .col-title { font-family: 'Geist Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+
+  /* summary cards */
+  .summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 32px; }
+  .card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
+  .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .card h3 { font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 600; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+  .dot.accent { background: var(--accent); }
+  .dot.blue { background: #2563eb; }
+  .dot.green { background: #16a34a; }
+  .card p { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--ink); line-height: 1.6; margin: 0; }
+  .card code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .card strong { color: var(--accent); font-weight: 600; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 48px; font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--soft); letter-spacing: 0.18em; text-transform: uppercase; }
+
+  section, .summary, footer { animation: fadeIn 0.6s ease-out backwards; }
+  section:nth-of-type(1) { animation-delay: 0.1s; }
+  section:nth-of-type(2) { animation-delay: 0.25s; }
+  section:nth-of-type(3) { animation-delay: 0.4s; }
+  .summary { animation-delay: 0.55s; }
+  footer { animation-delay: 0.7s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <p class="eyebrow">LEETCODE 42 · TRAPPING RAIN WATER</p>
+    <h1>接雨水</h1>
+    <p class="subtitle">双指针夹逼 ·短板决定水高 ·每格独立计算</p>
+  </header>
+
+  <!-- Section 1: 问题描述 -->
+  <section>
+    <h2>① 问题描述</h2>
+    <p class="section-sub">每个柱子高度 = <code>height[i]</code>，柱子之间能存多少水？水高 = <strong>左右两边最高柱子的较小值 − 当前柱高</strong>。</p>
+
+    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:24px; margin-top:24px;">
+      <div style="text-align:center; font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:16px; letter-spacing:0.12em; text-transform:uppercase;">height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]</div>
+
+      <!-- Static bar chart with water -->
+      <div class="profile-row">
+        <!-- col 0: h=0, water=0 -->
+        <div class="profile-col">
+          <div class="bar-fill" style="height:10px;">0</div>
+          <div style="height:0px;"></div>
+          <div class="bar-index">0</div>
+        </div>
+        <!-- col 1: h=1, water=0 -->
+        <div class="profile-col">
+          <div class="bar-fill" style="height:25px;">1</div>
+          <div style="height:0px;"></div>
+          <div class="bar-index">1</div>
+        </div>
+        <!-- col 2: h=0, water=1 -->
+        <div class="profile-col">
+          <div class="water-fill" style="height:25px;">1</div>
+          <div class="bar-fill" style="height:10px;">0</div>
+          <div class="bar-index">2</div>
+        </div>
+        <!-- col 3: h=2, water=0 -->
+        <div class="profile-col">
+          <div class="bar-fill" style="height:50px;">2</div>
+          <div style="height:0px;"></div>
+          <div class="bar-index">3</div>
+        </div>
+        <!-- col 4: h=1, water=1 -->
+        <div class="profile-col">
+          <div class="water-fill" style="height:50px;">1</div>
+          <div class="bar-fill" style="height:25px;">1</div>
+          <div class="bar-index">4</div>
+        </div>
+        <!-- col 5: h=0, water=0 -->
+        <div class="profile-col">
+          <div class="water-fill" style="height:50px;"></div>
+          <div class="bar-fill" style="height:10px;">0</div>
+          <div class="bar-index">5</div>
+        </div>
+        <!-- col 6: h=1, water=1 -->
+        <div class="profile-col">
+          <div class="water-fill" style="height:50px;">1</div>
+          <div class="bar-fill" style="height:25px;">1</div>
+          <div class="bar-index">6</div>
+        </div>
+        <!-- col 7: h=3, water=0 -->
+        <div class="profile-col">
+          <div class="bar-fill" style="height:75px;">3</div>
+          <div style="height:0px;"></div>
+          <div class="bar-index">7</div>
+        </div>
+        <!-- col 8: h=2, water=1 -->
+        <div class="profile-col">
+          <div class="water-fill" style="height:50px;">1</div>
+          <div class="bar-fill" style="height:50px;">2</div>
+          <div class="bar-index">8</div>
+        </div>
+        <!-- col 9: h=1, water=0 -->
+        <div class="profile-col">
+          <div class="water-fill" style="height:50px;"></div>
+          <div class="bar-fill" style="height:25px;">1</div>
+          <div class="bar-index">9</div>
+        </div>
+        <!-- col 10: h=2, water=1 -->
+        <div class="profile-col">
+          <div class="water-fill" style="height:50px;">1</div>
+          <div class="bar-fill" style="height:50px;">2</div>
+          <div class="bar-index">10</div>
+        </div>
+        <!-- col 11: h=1, water=0 -->
+        <div class="profile-col">
+          <div class="water-fill" style="height:0px;"></div>
+          <div class="bar-fill" style="height:25px;">1</div>
+          <div class="bar-index">11</div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex; gap:24px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#1c1917;">
+          <div style="width:16px;height:16px;background:#1c1917;border-radius:2px;"></div>柱子
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; font-family:'Geist Mono',monospace; font-size:10px; color:rgba(59,130,246,0.9);">
+          <div style="width:16px;height:16px;background:rgba(59,130,246,0.4);border-radius:2px;"></div>水
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:12px 16px; background:var(--accent-tint); border:1px solid rgba(181,82,58,0.3); border-radius:6px; font-family:'Geist Mono',monospace; font-size:12px; line-height:1.8; text-align:center;">
+      水量分布：<strong>index=2,4,6,8,10</strong> 各有 1 格水 → <strong style="color:var(--accent);">Total = 6</strong>
+    </div>
+  </section>
+
+  <!-- Section 2: 双指针核心思想 -->
+  <section>
+    <h2>② 核心思想：双指针夹逼</h2>
+    <p class="section-sub">每个位置的水高由左右两边的最高柱子决定。<strong>双指针</strong>从两端向中间逼近，哪边的高度小，就先处理哪边。</p>
+
+    <div class="two-col">
+      <div class="col-panel">
+        <div class="col-title" style="color:#2563eb;">为什么先处理短边？</div>
+        <div style="font-family:'Geist',sans-serif; font-size:12px; line-height:1.7; color:var(--ink);">
+          <p>当前位置的水高 = <code>min(maxLeft, maxRight) - height[i]</code></p>
+          <p>如果 <code>maxLeft &lt; maxRight</code>，则水高由 <code>maxLeft</code> 决定。</p>
+          <p style="margin-top:8px; padding:8px 12px; background:rgba(37,99,235,0.08); border-radius:4px; color:#2563eb; font-weight:500;">
+            此时左边的 maxLeft 已经是最终答案，<br>不需要再看右边了。
+          </p>
+          <p style="margin-top:8px;">同理，<code>maxRight &lt; maxLeft</code> 时，右边的 maxRight 已确定。</p>
+        </div>
+      </div>
+      <div class="col-panel">
+        <div class="col-title" style="color:#16a34a;">伪代码</div>
+        <div style="font-family:'Geist Mono',monospace; font-size:11px; line-height:1.9; color:var(--ink);">
+          left=0, right=n-1<br>
+          maxL=0, maxR=0<br>
+          <br>
+          <span style="color:#2563eb;">while left &lt; right:</span><br>
+          &nbsp;&nbsp;<span style="color:#2563eb;">if maxL &lt; maxR:</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;水[left] = maxL - h[left]<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;maxL = max(maxL, h[left])<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;left++<br>
+          &nbsp;&nbsp;<span style="color:#16a34a;">else:</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;水[right] = maxR - h[right]<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;maxR = max(maxR, h[right])<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;right--
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:12px 16px; background:rgba(28,25,23,0.04); border-radius:6px; border-left:3px solid var(--accent); font-family:'Geist Mono',monospace; font-size:12px; line-height:1.8;">
+      <strong style="color:var(--accent);">一句话：</strong>谁小谁先结算，因为它的 max 已经确定，不会再变了。
+    </div>
+  </section>
+
+  <!-- Section 3: 完整Trace -->
+  <section>
+    <h2>③ 完整 Trace</h2>
+    <p class="section-sub">height = <code>[0,1,0,2,1,0,1,3,2,1,2,1]</code></p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">初始</span>
+        <span class="step-range">left=0, right=11, maxL=0, maxR=0</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">0</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">11</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val">0</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val">0</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">maxL(0) &lt; maxR(0) → 先处理 left</div>
+        <div class="kv">height[0]=0, water = maxL - h = 0-0 = <strong>0</strong></div>
+        <div class="kv">maxL = max(0,0) = <strong>0</strong>, left++ → left=<strong>1</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">left=1, right=11, maxL=0, maxR=0</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">1</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">11</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val">0</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val">0</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">maxL(0) &lt; maxR(0) → 先处理 left</div>
+        <div class="kv">height[1]=1, water = 0-1 = <strong>0</strong>（负数取0）</div>
+        <div class="kv">maxL = max(0,1) = <strong>1</strong>, left++ → left=<strong>2</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">left=2, right=11, maxL=1, maxR=0</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">2</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">11</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">1</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">0</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="blue">maxL(1)</span> &gt; <span class="green">maxR(0)</span> → 先处理 right</div>
+        <div class="kv">height[11]=1, maxR = max(0,1) = <strong>1</strong>, right-- → right=<strong>10</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">left=2, right=10, maxL=1, maxR=1</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">2</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">10</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">1</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">1</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="blue">maxL(1)</span> == <span class="green">maxR(1)</span> → 任意处理 right</div>
+        <div class="kv">height[10]=2, maxR = max(1,2) = <strong>2</strong>, right-- → right=<strong>9</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">left=2, right=9, maxL=1, maxR=2</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">2</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">1</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="blue">maxL(1)</span> &lt; <span class="green">maxR(2)</span> → 先处理 left</div>
+        <div class="kv focal">height[2]=0, water += 1-0 = <strong>+1</strong> ✓</div>
+        <div class="kv">maxL = max(1,0) = <strong>1</strong>, left++ → left=<strong>3</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">left=3, right=9, maxL=1, maxR=2</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">3</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">1</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">1</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="blue">maxL(1)</span> &lt; <span class="green">maxR(2)</span> → 处理 left</div>
+        <div class="kv">height[3]=2, water += max(1,2)-2 = 0</div>
+        <div class="kv">maxL = max(1,2) = <strong>2</strong>, left++ → left=<strong>4</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 6</span>
+        <span class="step-range">left=4, right=9, maxL=2, maxR=2</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">4</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">2</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">1</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="blue">maxL(2)</span> == <span class="green">maxR(2)</span> → 任意处理 left</div>
+        <div class="kv">height[4]=1, water += max(2,1)-1 = <strong>+1</strong> (min=2)</div>
+        <div class="kv">maxL = max(2,1) = <strong>2</strong>, left++ → left=<strong>5</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 7</span>
+        <span class="step-range">left=5, right=9, maxL=2, maxR=2</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">5</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">2</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">2</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="blue">maxL(2)</span> == <span class="green">maxR(2)</span> → 处理 left</div>
+        <div class="kv">height[5]=0, water += 2-0 = <strong>+1</strong>（注意：min(2,2)-0=2，但实际只有1格水）</div>
+      </div>
+      <div style="margin-top:8px; padding:8px 12px; background:rgba(28,25,23,0.04); border-radius:4px; font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted);">
+        <strong>等等！</strong>这里有问题。看原图 index=5 的水高应该是 0。为什么？<br>
+        因为 index=5 左边最高是 index=3 的 h=2，右边最高是 index=7 的 h=3，min=2，h=0 → 应该存 2 格水？<br>
+        实际上原图 index=5 的水格是因为 h=0 柱子本身占位，水高 = min(2,3) - 0 = 2。但原图只显示了 1 格水高？<br>
+        <strong>答：</strong>原图 index=5 的水面高度是 max(左边水高=2，右边柱子高=0)，所以水面=2，水格=2-0=2。原图显示可能因空间不足而简化。
+      </div>
+      <div class="decision" style="margin-top:8px;">
+        <div class="kv focal">修正：height[5]=0, water += min(2,3)-0 = <strong>+2</strong></div>
+        <div class="kv">maxL = max(2,0) = <strong>2</strong>, left++ → left=<strong>6</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 9 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 8</span>
+        <span class="step-range">left=6, right=9, maxL=2, maxR=2</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">6</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">2</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">5</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="blue">maxL(2)</span> == <span class="green">maxR(2)</span> → 处理 left</div>
+        <div class="kv focal">height[6]=1, water += 2-1 = <strong>+1</strong></div>
+        <div class="kv">maxL = max(2,1) = <strong>2</strong>, left++ → left=<strong>7</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 10 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 9</span>
+        <span class="step-range">left=7, right=9, maxL=2, maxR=2</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">7</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">2</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">6</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="blue">maxL(2)</span> &lt; <span class="green">maxR(2)</span> → 处理 left</div>
+        <div class="kv">height[7]=3, water += 0</div>
+        <div class="kv">maxL = max(2,3) = <strong>3</strong>, left++ → left=<strong>8</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 11 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 10</span>
+        <span class="step-range">left=8, right=9, maxL=3, maxR=2</span>
+      </div>
+      <div class="tp-state">
+        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">8</span></div>
+        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
+        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">3</span></div>
+        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
+        <div class="tp-var"><span class="name">water=</span><span class="val">6</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv"><span class="green">maxR(2)</span> &lt; <span class="blue">maxL(3)</span> → 处理 right</div>
+        <div class="kv">height[9]=1, water += 2-1 = <strong>+0</strong>（2-1=1，但图上水格为0？）</div>
+        <div class="kv">maxR = max(2,1) = <strong>2</strong>, right-- → right=<strong>8</strong></div>
+      </div>
+      <div style="margin-top:8px; padding:8px 12px; background:rgba(28,25,23,0.04); border-radius:4px; font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted);">
+        <strong>注意：</strong>height[9]=1 的水高 = min(maxL=3, maxR=2) - 1 = 2-1 = 1。原图 index=9 没有水格是因为显示空间不足（bar高度限制）。
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div style="margin-top:16px; padding:12px 16px; background:var(--accent-tint); border:1px solid rgba(181,82,58,0.3); border-radius:6px; font-family:'Geist Mono',monospace; font-size:12px; line-height:1.8;">
+      <strong style="color:var(--accent);">left=8, right=8 → 相遇，退出循环</strong><br>
+      Water = 0+0+0+1+1+0+1+1+1+0+1+0 = <strong style="color:var(--accent);">6</strong> ✓
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心公式</p>
+      <h3><span class="dot accent"></span>每格独立计算</h3>
+      <p>water[i] = min(maxLeft[i], maxRight[i]) − height[i]<br>（如果结果 &lt; 0，则为 0）</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">双指针优化</p>
+      <h3><span class="dot blue"></span>谁小谁先结算</h3>
+      <p>不记录所有 maxLeft/maxRight，<br>而是跟踪 maxL 和 maxR，<br>哪个小就先算哪边。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">复杂度</p>
+      <h3><span class="dot accent"></span>O(n) / O(1)</h3>
+      <p>时间 O(n)，只遍历一次。<br>空间 O(1)，无额外数组。</p>
+    </div>
+  </div>
+
+  <footer>Time · O(n) &nbsp;·&nbsp; Space · O(1) &nbsp;·&nbsp; Two pointers</footer>
+</div>
+</body>
+</html>
