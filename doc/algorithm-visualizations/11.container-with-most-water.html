@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>装水容器 · 图解 · LeetCode 11</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+    --eliminate: rgba(28,25,23,0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Geist', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
+    padding: 64px 32px 96px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.25rem; font-weight: 400;
+    margin: 0 0 12px; line-height: 1.15;
+  }
+  .subtitle {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 1.125rem;
+    color: var(--muted); margin: 0 0 48px;
+  }
+  section {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 8px; padding: 32px;
+    margin-bottom: 32px;
+  }
+  section h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem; font-weight: 400;
+    margin: 0 0 8px;
+  }
+  .section-sub {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; color: var(--muted);
+    margin: 0 0 24px; line-height: 1.6;
+  }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- bar chart (container viz) ---- */
+  .chart-area {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    height: 240px;
+    margin: 24px 0 8px;
+    position: relative;
+  }
+  .bar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+  }
+  .bar {
+    width: 48px;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 6px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; font-weight: 600;
+    color: #ffffff;
+    transition: all 0.4s ease;
+    position: relative;
+  }
+  .bar.left-bar { background: #2563eb; }
+  .bar.right-bar { background: #16a34a; }
+  .bar.neutral { background: rgba(28,25,23,0.15); color: var(--muted); }
+  .bar.water {
+    background: linear-gradient(to bottom, rgba(59,130,246,0.4), rgba(59,130,246,0.6));
+  }
+  .bar.water-blue { background: linear-gradient(to bottom, rgba(37,99,235,0.5), rgba(37,99,235,0.7)); }
+  .bar.water-green { background: linear-gradient(to bottom, rgba(22,163,74,0.5), rgba(22,163,74,0.7)); }
+
+  .bar-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    margin-top: 4px;
+  }
+  .bar-index {
+    position: absolute;
+    bottom: -18px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; color: var(--soft);
+  }
+
+  /* water surface line */
+  .water-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: rgba(59,130,246,0.5);
+    border-top: 1px dashed rgba(59,130,246,0.4);
+  }
+
+  /* width arrow */
+  .width-arrow {
+    position: absolute;
+    top: -30px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .width-arrow::before {
+    content: '←';
+    margin-right: 4px;
+  }
+  .width-arrow::after {
+    content: '→';
+    margin-left: 4px;
+  }
+
+  /* pointer labels */
+  .ptr-labels {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  .ptr-tag {
+    width: 48px;
+    height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .ptr-tag.L { background: rgba(37,99,235,0.15); color: #2563eb; border: 1px solid rgba(37,99,235,0.3); }
+  .ptr-tag.R { background: rgba(22,163,74,0.15); color: #16a34a; border: 1px solid rgba(22,163,74,0.3); }
+
+  /* area highlight */
+  .area-label {
+    position: absolute;
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 600;
+    background: var(--paper);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(181,82,58,0.3);
+    white-space: nowrap;
+  }
+
+  /* x-axis */
+  .x-axis {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .x-tick {
+    width: 48px;
+    text-align: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; color: var(--soft);
+  }
+
+  /* ---- step card ---- */
+  .step {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+  .step-head {
+    display: flex; align-items: baseline;
+    gap: 12px; margin-bottom: 12px;
+  }
+  .step-num {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; font-weight: 600; letter-spacing: 0.18em;
+    background: var(--ink); color: var(--paper);
+    padding: 4px 8px; border-radius: 3px;
+  }
+  .step-range {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--muted);
+  }
+  .decision {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 12px;
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; line-height: 1.6;
+    color: var(--ink);
+  }
+  .decision .kv {
+    padding: 8px 12px;
+    background: rgba(28,25,23,0.03);
+    border-left: 2px solid var(--muted);
+    border-radius: 0 4px 4px 0;
+  }
+  .decision .kv.focal {
+    border-left-color: var(--accent);
+    background: var(--accent-tint);
+  }
+  .decision code { font-family: 'Geist Mono', monospace; font-size: 12px; }
+  .decision strong { color: var(--accent); font-weight: 600; }
+  .decision .blue { color: #2563eb; font-weight: 600; }
+  .decision .green { color: #16a34a; font-weight: 600; }
+
+  /* decision tree */
+  .decision-tree {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-top: 16px;
+  }
+  .tree-panel {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .tree-title {
+    font-family: 'Geist Mono', monospace;
+    font-size: 9px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 0 0 12px;
+  }
+
+  /* summary cards */
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px; margin-top: 32px;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid var(--rule);
+    border-radius: 6px; padding: 20px;
+  }
+  .card-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 0 0 8px;
+  }
+  .card h3 {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; font-weight: 600;
+    margin: 0 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+  .dot.accent { background: var(--accent); }
+  .dot.blue { background: #2563eb; }
+  .dot.green { background: #16a34a; }
+  .card p { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--ink); line-height: 1.6; margin: 0; }
+  .card code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .card strong { color: var(--accent); font-weight: 600; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 16px; margin-top: 48px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 8px; color: var(--soft);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  /* animations */
+  section, .summary, footer { animation: fadeIn 0.6s ease-out backwards; }
+  section:nth-of-type(1) { animation-delay: 0.1s; }
+  section:nth-of-type(2) { animation-delay: 0.25s; }
+  section:nth-of-type(3) { animation-delay: 0.4s; }
+  .summary { animation-delay: 0.55s; }
+  footer { animation-delay: 0.7s; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <p class="eyebrow">LEETCODE 11 · CONTAINER WITH MOST WATER</p>
+    <h1>装水容器</h1>
+    <p class="subtitle">双指针左右夹逼 · 短板决定高度 · 移动短边指针</p>
+  </header>
+
+  <!-- Section 1: 问题描述 -->
+  <section>
+    <h2>① 问题描述</h2>
+    <p class="section-sub">每根柱子的高度 = <code>height[i]</code>，两柱子之间的水容量 = <strong>宽度 × 短板高度</strong>。找最大容量。</p>
+
+    <!-- Static initial visualization -->
+    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:24px; margin-top:24px;">
+      <div style="text-align:center; font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:16px; letter-spacing:0.12em; text-transform:uppercase;">height = [1, 8, 6, 2, 5, 4, 8, 3, 7]</div>
+      <div class="chart-area" id="chart-init">
+        <!-- bars injected by JS or static below -->
+      </div>
+      <!-- Static bars -->
+      <div style="display:flex; align-items:flex-end; justify-content:center; gap:6px; height:240px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:30px;background:#2563eb;border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">1</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">0</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:200px;background:#2563eb;border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">8</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">1</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:150px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">6</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">2</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:50px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">2</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">3</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:125px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">5</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">4</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:100px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">4</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">5</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:200px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">8</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">6</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:75px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">3</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">7</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:48px;height:175px;background:#16a34a;border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">7</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:8px;color:#78716c;">8</div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:center; gap:6px; margin-top:4px;">
+        <div style="display:flex; align-items:center; gap:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#2563eb;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#2563eb;"></div>left = 1 (h=8)
+        </div>
+        <div style="width:1px;height:16px;background:var(--rule);"></div>
+        <div style="display:flex; align-items:center; gap:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#16a34a;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#16a34a;"></div>right = 8 (h=7)
+        </div>
+      </div>
+    </div>
+
+    <div class="decision" style="margin-top:16px;">
+      <div class="kv" style="flex:1;">
+        宽度 = <code>right - left</code> = 8 − 1 = <strong>7</strong>
+      </div>
+      <div class="kv" style="flex:1;">
+        高度 = <code>min(height[left], height[right])</code> = min(8, 7) = <strong>7</strong>
+      </div>
+      <div class="kv focal" style="flex:1;">
+        面积 = 7 × 7 = <strong>49</strong> ← 最大面积
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 为什么移动短边 -->
+  <section>
+    <h2>② 核心思想：为什么移动短边？</h2>
+    <p class="section-sub">面积由 <strong>宽度</strong> 和 <strong>短板高度</strong> 共同决定。宽度只会随着指针内移而减小，所以要想面积更大，必须让 <strong>短板变高</strong>。</p>
+
+    <div class="decision-tree">
+      <div class="tree-panel">
+        <div class="tree-title" style="color:#2563eb;">如果移动长边 →</div>
+        <div style="font-family:'Geist',sans-serif; font-size:12px; line-height:1.7; color:var(--ink);">
+          <p>假设 height[left] &lt; height[right]</p>
+          <p>宽度 = right − left（必定减小）</p>
+          <p>高度 ≤ height[left]（短板还是 left）</p>
+          <p style="margin-top:8px; padding:8px 12px; background:var(--accent-tint); border-radius:4px; color:var(--accent); font-weight:500;">
+            宽度↓ × 高度不变或↓<br>→ 面积不可能变大
+          </p>
+        </div>
+      </div>
+      <div class="tree-panel">
+        <div class="tree-title" style="color:#16a34a;">如果移动短边 →</div>
+        <div style="font-family:'Geist',sans-serif; font-size:12px; line-height:1.7; color:var(--ink);">
+          <p>height[left] &lt; height[right]</p>
+          <p>新 left 可能是更高的柱子</p>
+          <p>宽度减小，但高度可能增加</p>
+          <p style="margin-top:8px; padding:8px 12px; background:rgba(22,163,74,0.08); border-radius:4px; color:#16a34a; font-weight:500;">
+            高度↑ × 宽度↓<br>→ 有可能找到更大面积
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px; padding:12px 16px; background:rgba(28,25,23,0.04); border-radius:6px; border-left:3px solid var(--accent); font-family:'Geist Mono',monospace; font-size:12px; line-height:1.8;">
+      <strong style="color:var(--accent);">一句话：</strong>宽度已经注定要减小，只有让短板变高才有可能打破当前面积的上限。<br>
+      所以：<span style="color:#2563eb; font-weight:600;">height[left] &lt; height[right] → left++</span><br>
+      否则：<span style="color:#16a34a; font-weight:600;">height[right] ≤ height[left] → right--</span>
+    </div>
+  </section>
+
+  <!-- Section 3: 完整Trace -->
+  <section>
+    <h2>③ 完整 Trace</h2>
+    <p class="section-sub">height = <code>[1, 8, 6, 2, 5, 4, 8, 3, 7]</code>，初始 left=0, right=8</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">L=0 (h=1) &nbsp; R=8 (h=7)</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:80px;margin:8px 0;">
+        <div style="width:48px;height:20px;background:#2563eb;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">1</div>
+        <div style="width:300px;height:140px;background:linear-gradient(to bottom, rgba(59,130,246,0.3), rgba(59,130,246,0.5));border-radius:0 0 4px 4px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;color:#2563eb;font-weight:600;">water h=1 × w=8 = 8</div>
+        <div style="width:48px;height:175px;background:#16a34a;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">7</div>
+      </div>
+      <div class="decision">
+        <div class="kv"><code>area = 8 × min(1,7) = 8</code></div>
+        <div class="kv"><code>max = 8</code></div>
+        <div class="kv"><span class="blue">1 &lt; 7</span> → <span class="blue">left++</span></div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">L=1 (h=8) &nbsp; R=8 (h=7)</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:80px;margin:8px 0;">
+        <div style="width:48px;height:200px;background:#2563eb;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">8</div>
+        <div style="width:280px;height:140px;background:linear-gradient(to bottom, rgba(37,99,235,0.5), rgba(37,99,235,0.7));border-radius:0 0 4px 4px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;color:#2563eb;font-weight:700;font-size:14px;">✓ area = 7 × 7 = <strong style="color:var(--accent);">49</strong></div>
+        <div style="width:48px;height:175px;background:#16a34a;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">7</div>
+      </div>
+      <div class="decision">
+        <div class="kv focal"><code>area = 7 × 7 = 49</code> ← <strong>max 更新！</strong></div>
+        <div class="kv"><span class="blue">8 &gt; 7</span> → <span class="green">right--</span></div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">L=1 (h=8) &nbsp; R=7 (h=3)</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:80px;margin:8px 0;">
+        <div style="width:48px;height:200px;background:#2563eb;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">8</div>
+        <div style="width:240px;height:60px;background:linear-gradient(to bottom, rgba(59,130,246,0.3), rgba(59,130,246,0.5));border-radius:0 0 4px 4px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;color:#2563eb;font-weight:600;">h=3 × w=6 = 18</div>
+        <div style="width:48px;height:75px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">3</div>
+      </div>
+      <div class="decision">
+        <div class="kv"><code>area = 6 × 3 = 18</code> &lt; 49，不更新</div>
+        <div class="kv"><span class="blue">8 &gt; 3</span> → <span class="green">right--</span></div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">L=1 (h=8) &nbsp; R=6 (h=8)</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:80px;margin:8px 0;">
+        <div style="width:48px;height:200px;background:#2563eb;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">8</div>
+        <div style="width:200px;height:160px;background:linear-gradient(to bottom, rgba(37,99,235,0.5), rgba(37,99,235,0.7));border-radius:0 0 4px 4px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;color:#2563eb;font-weight:600;">h=8 × w=5 = 40</div>
+        <div style="width:48px;height:200px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">8</div>
+      </div>
+      <div class="decision">
+        <div class="kv"><code>area = 5 × 8 = 40</code> &lt; 49，不更新</div>
+        <div class="kv"><span class="blue">8 == 8</span> → <span class="green">right--</span></div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">L=1 (h=8) &nbsp; R=5 (h=4)</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:80px;margin:8px 0;">
+        <div style="width:48px;height:200px;background:#2563eb;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">8</div>
+        <div style="width:160px;height:80px;background:linear-gradient(to bottom, rgba(59,130,246,0.3), rgba(59,130,246,0.5));border-radius:0 0 4px 4px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;color:#2563eb;font-weight:600;">h=4 × w=4 = 16</div>
+        <div style="width:48px;height:100px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">4</div>
+      </div>
+      <div class="decision">
+        <div class="kv"><code>area = 4 × 4 = 16</code> &lt; 49，不更新</div>
+        <div class="kv"><span class="blue">8 &gt; 4</span> → <span class="green">right--</span></div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 6</span>
+        <span class="step-range">L=1 (h=8) &nbsp; R=4 (h=5)</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:80px;margin:8px 0;">
+        <div style="width:48px;height:200px;background:#2563eb;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#fff;">8</div>
+        <div style="width:120px;height:100px;background:linear-gradient(to bottom, rgba(59,130,246,0.3), rgba(59,130,246,0.5));border-radius:0 0 4px 4px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;color:#2563eb;font-weight:600;">h=5 × w=3 = 15</div>
+        <div style="width:48px;height:125px;background:rgba(28,25,23,0.15);border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#78716c;">5</div>
+      </div>
+      <div class="decision">
+        <div class="kv"><code>area = 3 × 5 = 15</code> &lt; 49，不更新</div>
+        <div class="kv"><span class="blue">8 &gt; 5</span> → <span class="green">right--</span></div>
+      </div>
+    </div>
+
+    <!-- Step 7+ summary -->
+    <div style="margin-top:16px; padding:12px 16px; background:var(--accent-tint); border:1px solid rgba(181,82,58,0.3); border-radius:6px; font-family:'Geist Mono',monospace; font-size:12px; line-height:1.8;">
+      <strong style="color:var(--accent);">后续步骤类似：</strong>持续右移 right，每次 area 都 ≤ 49。<br>
+      最终 <strong style="color:var(--accent);">maxArea = 49</strong>（left=1, right=8，height=[8,7]，宽度=7，高度=7）
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心思想</p>
+      <h3><span class="dot accent"></span>夹逼</h3>
+      <p>左右指针从两端向中间收缩，<br>宽度必定减小，所以要找更高的短板。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">决策规则</p>
+      <h3><span class="dot blue"></span>移动短边</h3>
+      <p><code>height[L] &lt; height[R]</code> → <span class="blue">L++</span><br>
+      <code>height[R] ≤ height[L]</code> → <span class="green">R--</span></p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">时间复杂度</p>
+      <h3><span class="dot accent"></span>O(n)</h3>
+      <p>每个指针最多移动 n 步，<br>不回头，所以是线性时间。</p>
+    </div>
+  </div>
+
+  <footer>Time · O(n) &nbsp;·&nbsp; Space · O(1) &nbsp;·&nbsp; Two pointers, inward</footer>
+</div>
+</body>
+</html>

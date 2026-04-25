@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>滑动窗口最大值 · 图解 · LeetCode 239</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+    --eliminate: rgba(28,25,23,0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- sliding window row ---- */
+  .window-row {
+    display: flex; gap: 4px;
+    align-items: center; justify-content: center;
+    margin: 16px 0 4px; flex-wrap: wrap;
+  }
+  .w-cell {
+    width: 48px; height: 48px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #ffffff;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 16px; font-weight: 600;
+    position: relative;
+  }
+  .w-cell span.idx {
+    position: absolute; bottom: 2px;
+    font-size: 7px; color: var(--soft);
+  }
+  .w-cell.in-window { background: var(--paper); }
+  .w-cell.out-window { background: var(--eliminate); border-color: var(--rule); color: var(--soft); }
+  .w-cell.max {
+    background: var(--accent-strong);
+    border: 2px solid var(--accent);
+  }
+  .w-cell.new {
+    animation: newPulse 0.6s ease-out;
+  }
+  @keyframes newPulse {
+    0% { background: rgba(181,82,58,0.4); transform: scale(1.1); }
+    100% { background: var(--paper); transform: scale(1); }
+  }
+  .w-cell.max.new { animation: maxPulse 0.6s ease-out; }
+  @keyframes maxPulse {
+    0% { background: var(--accent-strong); box-shadow: 0 0 0 6px rgba(181,82,58,0.3); }
+    100% { background: var(--accent-strong); box-shadow: none; }
+  }
+
+  /* ---- deque row ---- */
+  .deque-label {
+    font-family: 'Geist Mono', monospace; font-size: 8px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); text-align: center; margin: 12px 0 4px;
+  }
+  .deque-row {
+    display: flex; gap: 4px;
+    align-items: center; justify-content: center;
+    margin: 0; flex-wrap: wrap;
+  }
+  .d-cell {
+    width: 40px; height: 40px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 600;
+    background: rgba(28,25,23,0.04);
+    color: var(--muted);
+    position: relative;
+  }
+  .d-cell span.idx { position: absolute; bottom: 1px; font-size: 7px; color: var(--soft); }
+  .d-cell.head {
+    background: var(--accent-strong);
+    border: 2px solid var(--accent);
+    color: var(--accent);
+  }
+  .d-cell.tail { background: rgba(22,163,74,0.1); border-color: rgba(22,163,74,0.4); }
+  .d-cell.popped {
+    opacity: 0.3;
+    text-decoration: line-through;
+    background: var(--eliminate);
+    border-color: var(--rule);
+    color: var(--soft);
+  }
+  .d-cell.out-of-window {
+    opacity: 0.3;
+    background: var(--eliminate);
+    border-color: var(--rule);
+    color: var(--soft);
+    text-decoration: line-through;
+  }
+  .deque-arrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px; color: var(--soft);
+  }
+
+  /* ---- action badges ---- */
+  .action-row {
+    display: flex; gap: 8px;
+    justify-content: center;
+    margin: 8px 0; flex-wrap: wrap;
+  }
+  .badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .badge.push { background: rgba(37,99,235,0.1); color: #2563eb; border: 1px solid rgba(37,99,235,0.3); }
+  .badge.pop { background: rgba(181,82,58,0.1); color: var(--accent); border: 1px solid rgba(181,82,58,0.3); }
+  .badge.out { background: rgba(28,25,23,0.06); color: var(--muted); border: 1px solid var(--rule); }
+  .badge.result { background: var(--accent-strong); color: var(--accent); border: 1px solid rgba(181,82,58,0.3); }
+
+  /* ---- step card ---- */
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px 24px; margin-top: 16px; }
+  .step-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 8px; font-weight: 600; letter-spacing: 0.18em; background: var(--ink); color: var(--paper); padding: 4px 8px; border-radius: 3px; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); }
+  .decision { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-family: 'Geist', sans-serif; font-size: 12px; line-height: 1.6; color: var(--ink); }
+  .decision .kv { padding: 6px 10px; background: rgba(28,25,23,0.03); border-left: 2px solid var(--muted); border-radius: 0 4px 4px 0; }
+  .decision .kv.focal { border-left-color: var(--accent); background: var(--accent-tint); }
+  .decision code { font-family: 'Geist Mono', monospace; font-size: 11px; }
+  .decision strong { color: var(--accent); font-weight: 600; }
+  .decision .blue { color: #2563eb; font-weight: 600; }
+  .decision .green { color: #16a34a; font-weight: 600; }
+
+  /* ---- deque state box ---- */
+  .deque-state {
+    display: flex; gap: 16px;
+    align-items: center; justify-content: center;
+    margin: 8px 0; flex-wrap: wrap;
+  }
+  .deque-box {
+    padding: 8px 16px;
+    background: rgba(28,25,23,0.04);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; color: var(--ink);
+    min-width: 120px; text-align: center;
+  }
+  .deque-box.head { background: var(--accent-tint); border-color: rgba(181,82,58,0.3); color: var(--accent); }
+  .deque-note { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--muted); }
+
+  /* ---- answer row ---- */
+  .answer-row {
+    display: flex; gap: 8px;
+    justify-content: center;
+    margin: 16px 0 0; flex-wrap: wrap;
+  }
+  .ans-cell {
+    width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent-strong);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 18px; font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* summary cards */
+  .summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 32px; }
+  .card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
+  .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .card h3 { font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 600; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+  .dot.accent { background: var(--accent); }
+  .dot.blue { background: #2563eb; }
+  .dot.green { background: #16a34a; }
+  .card p { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--ink); line-height: 1.6; margin: 0; }
+  .card code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .card strong { color: var(--accent); font-weight: 600; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 48px; font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--soft); letter-spacing: 0.18em; text-transform: uppercase; }
+
+  section, .summary, footer { animation: fadeIn 0.6s ease-out backwards; }
+  section:nth-of-type(1) { animation-delay: 0.1s; }
+  section:nth-of-type(2) { animation-delay: 0.25s; }
+  section:nth-of-type(3) { animation-delay: 0.4s; }
+  .summary { animation-delay: 0.55s; }
+  footer { animation-delay: 0.7s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <p class="eyebrow">LEETCODE 239 · SLIDING WINDOW MAXIMUM</p>
+    <h1>滑动窗口最大值</h1>
+    <p class="subtitle">单调 deque 存下标 · 队首永远是当前窗口最大值</p>
+  </header>
+
+  <!-- Section 1: deque 是什么 -->
+  <section>
+    <h2>① 单调 deque 是什么</h2>
+    <p class="section-sub">Deque 里存的是**下标**，并且下标对应的值保持**单调递减**。<br>队首 deque[0] 始终是当前窗口最大值的下标。</p>
+
+    <!-- deque illustration -->
+    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:24px; margin-top:24px;">
+      <div style="text-align:center; font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:16px; letter-spacing:0.12em; text-transform:uppercase;">nums = [1, 3, -1, -3, 5, 3, 6, 7] &nbsp; k = 3</div>
+
+      <!-- Window -->
+      <div class="deque-label">滑动窗口</div>
+      <div class="window-row">
+        <div class="w-cell in-window">1<span class="idx">0</span></div>
+        <div class="w-cell in-window max">3<span class="idx">1</span></div>
+        <div class="w-cell in-window">-1<span class="idx">2</span></div>
+        <div class="w-cell out-window">-3<span class="idx">3</span></div>
+        <div class="w-cell out-window">5<span class="idx">4</span></div>
+        <div class="w-cell out-window">3<span class="idx">5</span></div>
+        <div class="w-cell out-window">6<span class="idx">6</span></div>
+        <div class="w-cell out-window">7<span class="idx">7</span></div>
+      </div>
+
+      <!-- Deque -->
+      <div class="deque-label">Deque（存下标，值单调递减）</div>
+      <div class="deque-row">
+        <div class="d-cell head">1<span class="idx">val=3</span></div>
+        <div class="deque-arrow">←</div>
+        <div class="d-cell">2<span class="idx">val=-1</span></div>
+      </div>
+
+      <div style="display:flex; gap:16px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
+        <div style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted);">
+          deque = <span style="color:var(--accent); font-weight:600;">[1, 2]</span> &nbsp;→&nbsp; 最大值 = nums[1] = <span style="color:var(--accent); font-weight:700;">3</span>
+        </div>
+      </div>
+
+      <div class="deque-note" style="text-align:center; margin-top:8px;">队首是最大值下标 · 队尾是最新入队的下标 · 中间是"可能被提拔"的下标</div>
+    </div>
+
+    <!-- rules -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:16px;">
+      <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:16px;">
+        <div style="font-family:'Geist Mono',monospace; font-size:9px; color:#2563eb; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:8px;">入队时</div>
+        <div style="font-family:'Geist Mono',monospace; font-size:11px; line-height:1.7; color:var(--ink);">
+          从队尾弹出所有<br><code>nums[back] &lt; nums[new]</code><br>保持递减
+        </div>
+      </div>
+      <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:16px;">
+        <div style="font-family:'Geist Mono',monospace; font-size:9px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:8px;">出队时</div>
+        <div style="font-family:'Geist Mono',monospace; font-size:11px; line-height:1.7; color:var(--ink);">
+          窗口右移时检查<br><code>deque[0] &lt;= R-k</code><br>弹出队首
+        </div>
+      </div>
+      <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:16px;">
+        <div style="font-family:'Geist Mono',monospace; font-size:9px; color:#16a34a; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:8px;">取答案</div>
+        <div style="font-family:'Geist Mono',monospace; font-size:11px; line-height:1.7; color:var(--ink);">
+          当 R ≥ k-1 时<br><code>result = nums[deque[0]]</code><br>队首即最大值
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 完整Trace -->
+  <section>
+    <h2>② 完整 Trace</h2>
+    <p class="section-sub">nums = <code>[1, 3, -1, -3, 5, 3, 6, 7]</code>，k = 3</p>
+
+    <!-- Step 1: R=0 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">R=0</span>
+        <span class="step-range">nums[0] = 1，窗口 [0..0]，未形成</span>
+      </div>
+      <div class="window-row">
+        <div class="w-cell in-window new">1<span class="idx">0</span></div>
+        <div class="w-cell out-window">3<span class="idx">1</span></div>
+        <div class="w-cell out-window">-1<span class="idx">2</span></div>
+        <div class="w-cell out-window">-3<span class="idx">3</span></div>
+        <div class="w-cell out-window">5<span class="idx">4</span></div>
+        <div class="w-cell out-window">3<span class="idx">5</span></div>
+        <div class="w-cell out-window">6<span class="idx">6</span></div>
+        <div class="w-cell out-window">7<span class="idx">7</span></div>
+      </div>
+      <div class="deque-label">Deque 操作</div>
+      <div class="deque-row">
+        <div class="d-cell tail">0<span class="idx">val=1</span></div>
+      </div>
+      <div class="action-row">
+        <div class="badge push">nums[0]=1 入队</div>
+      </div>
+      <div class="decision">
+        <div class="kv">R=0 &lt; k-1=2，窗口未形成，不记录答案</div>
+      </div>
+    </div>
+
+    <!-- Step 2: R=1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">R=1</span>
+        <span class="step-range">nums[1] = 3，窗口 [0..1]，未形成</span>
+      </div>
+      <div class="window-row">
+        <div class="w-cell in-window">1<span class="idx">0</span></div>
+        <div class="w-cell in-window max new">3<span class="idx">1</span></div>
+        <div class="w-cell out-window">-1<span class="idx">2</span></div>
+        <div class="w-cell out-window">-3<span class="idx">3</span></div>
+        <div class="w-cell out-window">5<span class="idx">4</span></div>
+        <div class="w-cell out-window">3<span class="idx">5</span></div>
+        <div class="w-cell out-window">6<span class="idx">6</span></div>
+        <div class="w-cell out-window">7<span class="idx">7</span></div>
+      </div>
+      <div class="deque-label">Deque 操作</div>
+      <div class="deque-row">
+        <div class="d-cell popped">0<span class="idx">val=1</span></div>
+        <div class="deque-arrow" style="opacity:0.3;">←</div>
+        <div class="d-cell head tail">1<span class="idx">val=3</span></div>
+      </div>
+      <div class="action-row">
+        <div class="badge pop">nums[0]=1 &lt; nums[1]=3，弹出</div>
+        <div class="badge push">nums[1]=3 入队</div>
+      </div>
+      <div class="decision">
+        <div class="kv">nums[1]=3 比队尾 1 大，弹出 0</div>
+        <div class="kv">deque = [1]</div>
+        <div class="kv">R=1 &lt; 2，仍未形成，不记录</div>
+      </div>
+    </div>
+
+    <!-- Step 3: R=2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">R=2</span>
+        <span class="step-range">nums[2] = -1，窗口 [0..2]，窗口形成！</span>
+      </div>
+      <div class="window-row">
+        <div class="w-cell in-window">1<span class="idx">0</span></div>
+        <div class="w-cell in-window max">3<span class="idx">1</span></div>
+        <div class="w-cell in-window new">-1<span class="idx">2</span></div>
+        <div class="w-cell out-window">-3<span class="idx">3</span></div>
+        <div class="w-cell out-window">5<span class="idx">4</span></div>
+        <div class="w-cell out-window">3<span class="idx">5</span></div>
+        <div class="w-cell out-window">6<span class="idx">6</span></div>
+        <div class="w-cell out-window">7<span class="idx">7</span></div>
+      </div>
+      <div class="deque-label">Deque 操作</div>
+      <div class="deque-row">
+        <div class="d-cell head">1<span class="idx">val=3</span></div>
+        <div class="deque-arrow">←</div>
+        <div class="d-cell tail">2<span class="idx">val=-1</span></div>
+      </div>
+      <div class="action-row">
+        <div class="badge push">nums[2]=-1 入队（-1 &lt; 3，不弹）</div>
+      </div>
+      <div class="decision">
+        <div class="kv focal"><strong>deque = [1, 2]，ans[0] = nums[1] = 3</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 4: R=3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">R=3</span>
+        <span class="step-range">nums[3] = -3，窗口 [1..3]</span>
+      </div>
+      <div class="window-row">
+        <div class="w-cell out-window">1<span class="idx">0</span></div>
+        <div class="w-cell in-window max">3<span class="idx">1</span></div>
+        <div class="w-cell in-window">-1<span class="idx">2</span></div>
+        <div class="w-cell in-window new">-3<span class="idx">3</span></div>
+        <div class="w-cell out-window">5<span class="idx">4</span></div>
+        <div class="w-cell out-window">3<span class="idx">5</span></div>
+        <div class="w-cell out-window">6<span class="idx">6</span></div>
+        <div class="w-cell out-window">7<span class="idx">7</span></div>
+      </div>
+      <div class="deque-label">Deque 操作</div>
+      <div class="deque-row">
+        <div class="d-cell head">1<span class="idx">val=3</span></div>
+        <div class="deque-arrow">←</div>
+        <div class="d-cell">2<span class="idx">val=-1</span></div>
+        <div class="deque-arrow">←</div>
+        <div class="d-cell tail">3<span class="idx">val=-3</span></div>
+      </div>
+      <div class="action-row">
+        <div class="badge out">0 &lt;= 3-3=0，0 弹出窗口</div>
+        <div class="badge push">nums[3]=-3 入队（-3 &lt; -1，不弹）</div>
+      </div>
+      <div class="decision">
+        <div class="kv">deque[0]=1 在窗口内（1 &gt; 0）</div>
+        <div class="kv focal"><strong>deque = [1, 2, 3]，ans[1] = nums[1] = 3</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 5: R=4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">R=4</span>
+        <span class="step-range">nums[4] = 5，窗口 [2..4]，5 是最大值</span>
+      </div>
+      <div class="window-row">
+        <div class="w-cell out-window">1<span class="idx">0</span></div>
+        <div class="w-cell out-window">3<span class="idx">1</span></div>
+        <div class="w-cell in-window">-1<span class="idx">2</span></div>
+        <div class="w-cell in-window">-3<span class="idx">3</span></div>
+        <div class="w-cell in-window max new">5<span class="idx">4</span></div>
+        <div class="w-cell out-window">3<span class="idx">5</span></div>
+        <div class="w-cell out-window">6<span class="idx">6</span></div>
+        <div class="w-cell out-window">7<span class="idx">7</span></div>
+      </div>
+      <div class="deque-label">Deque 操作</div>
+      <div class="deque-row">
+        <div class="d-cell head out-of-window">1<span class="idx">val=3</span></div>
+        <div class="deque-arrow" style="opacity:0.3;">←</div>
+        <div class="d-cell popped">2<span class="idx">val=-1</span></div>
+        <div class="deque-arrow" style="opacity:0.3;">←</div>
+        <div class="d-cell popped">3<span class="idx">val=-3</span></div>
+        <div class="deque-arrow" style="opacity:0.3;">←</div>
+        <div class="d-cell head tail">4<span class="idx">val=5</span></div>
+      </div>
+      <div class="action-row">
+        <div class="badge pop">-1 &lt; 5，弹出 · -3 &lt; 5，弹出</div>
+        <div class="badge out">1 &lt;= 4-3=1，1 弹出窗口</div>
+        <div class="badge push">nums[4]=5 入队</div>
+      </div>
+      <div class="decision">
+        <div class="kv">5 把 -1,-3,1 全弹走了</div>
+        <div class="kv focal"><strong>deque = [4]，ans[2] = nums[4] = 5</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 6: R=5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">R=5</span>
+        <span class="step-range">nums[5] = 3，窗口 [3..5]</span>
+      </div>
+      <div class="window-row">
+        <div class="w-cell out-window">1<span class="idx">0</span></div>
+        <div class="w-cell out-window">3<span class="idx">1</span></div>
+        <div class="w-cell out-window">-1<span class="idx">2</span></div>
+        <div class="w-cell in-window">-3<span class="idx">3</span></div>
+        <div class="w-cell in-window max">5<span class="idx">4</span></div>
+        <div class="w-cell in-window new">3<span class="idx">5</span></div>
+        <div class="w-cell out-window">6<span class="idx">6</span></div>
+        <div class="w-cell out-window">7<span class="idx">7</span></div>
+      </div>
+      <div class="deque-label">Deque 操作</div>
+      <div class="deque-row">
+        <div class="d-cell head">4<span class="idx">val=5</span></div>
+        <div class="deque-arrow">←</div>
+        <div class="d-cell tail">5<span class="idx">val=3</span></div>
+      </div>
+      <div class="action-row">
+        <div class="badge out">2 &lt;= 5-3=2，2 弹出</div>
+        <div class="badge push">nums[5]=3 入队（3 &lt; 5，不弹）</div>
+      </div>
+      <div class="decision">
+        <div class="kv">deque[0]=4 仍在窗口内</div>
+        <div class="kv focal"><strong>deque = [4, 5]，ans[3] = nums[4] = 5</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 7: R=6 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">R=6</span>
+        <span class="step-range">nums[6] = 6，窗口 [4..6]，6 &gt; 5</span>
+      </div>
+      <div class="window-row">
+        <div class="w-cell out-window">1<span class="idx">0</span></div>
+        <div class="w-cell out-window">3<span class="idx">1</span></div>
+        <div class="w-cell out-window">-1<span class="idx">2</span></div>
+        <div class="w-cell out-window">-3<span class="idx">3</span></div>
+        <div class="w-cell in-window">5<span class="idx">4</span></div>
+        <div class="w-cell in-window">3<span class="idx">5</span></div>
+        <div class="w-cell in-window max new">6<span class="idx">6</span></div>
+        <div class="w-cell out-window">7<span class="idx">7</span></div>
+      </div>
+      <div class="deque-label">Deque 操作</div>
+      <div class="deque-row">
+        <div class="d-cell popped">4<span class="idx">val=5</span></div>
+        <div class="deque-arrow" style="opacity:0.3;">←</div>
+        <div class="d-cell popped">5<span class="idx">val=3</span></div>
+        <div class="deque-arrow" style="opacity:0.3;">←</div>
+        <div class="d-cell head tail">6<span class="idx">val=6</span></div>
+      </div>
+      <div class="action-row">
+        <div class="badge pop">5 &lt; 6，弹出 · 3 &lt; 6，弹出</div>
+        <div class="badge push">nums[6]=6 入队</div>
+      </div>
+      <div class="decision">
+        <div class="kv">6 把 5 和 3 全弹走了</div>
+        <div class="kv focal"><strong>deque = [6]，ans[4] = nums[6] = 6</strong></div>
+      </div>
+    </div>
+
+    <!-- Step 8: R=7 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">R=7</span>
+        <span class="step-range">nums[7] = 7，窗口 [5..7]</span>
+      </div>
+      <div class="window-row">
+        <div class="w-cell out-window">1<span class="idx">0</span></div>
+        <div class="w-cell out-window">3<span class="idx">1</span></div>
+        <div class="w-cell out-window">-1<span class="idx">2</span></div>
+        <div class="w-cell out-window">-3<span class="idx">3</span></div>
+        <div class="w-cell out-window">5<span class="idx">4</span></div>
+        <div class="w-cell in-window">3<span class="idx">5</span></div>
+        <div class="w-cell in-window">6<span class="idx">6</span></div>
+        <div class="w-cell in-window max new">7<span class="idx">7</span></div>
+      </div>
+      <div class="deque-label">Deque 操作</div>
+      <div class="deque-row">
+        <div class="d-cell popped">6<span class="idx">val=6</span></div>
+        <div class="deque-arrow" style="opacity:0.3;">←</div>
+        <div class="d-cell head tail">7<span class="idx">val=7</span></div>
+      </div>
+      <div class="action-row">
+        <div class="badge pop">6 &lt; 7，弹出</div>
+        <div class="badge out">4 &lt;= 7-3=4，4 弹出</div>
+        <div class="badge push">nums[7]=7 入队</div>
+      </div>
+      <div class="decision">
+        <div class="kv focal"><strong>deque = [7]，ans[5] = nums[7] = 7</strong></div>
+      </div>
+    </div>
+
+    <!-- Answer -->
+    <div style="margin-top:20px; text-align:center;">
+      <div style="font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:12px; letter-spacing:0.12em; text-transform:uppercase;">最终答案</div>
+      <div class="answer-row">
+        <div class="ans-cell">3</div>
+        <div class="ans-cell">3</div>
+        <div class="ans-cell">5</div>
+        <div class="ans-cell">5</div>
+        <div class="ans-cell">6</div>
+        <div class="ans-cell">7</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot accent"></span>单调递减 deque</h3>
+      <p>存下标，值递减。<br>队首 = 当前窗口最大值下标。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">操作</p>
+      <h3><span class="dot blue"></span>入队出队</h3>
+      <p>入队：从队尾弹掉所有比新元素小的<br>出队：deque[0] 超出左边界时弹出</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">复杂度</p>
+      <h3><span class="dot accent"></span>O(n)</h3>
+      <p>每个元素最多入队出队各一次。<br>总操作 O(2n) = O(n)。</p>
+    </div>
+  </div>
+
+  <footer>Time · O(n) &nbsp;·&nbsp; Space · O(k) &nbsp;·&nbsp; Monotonic deque</footer>
+</div>
+</body>
+</html>
