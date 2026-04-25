@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>32. 最长有效括号</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #faf7f2;
+  --ink: #1c1917;
+  --rust: #c2410c;
+  --rust-light: #ea580c;
+  --rust-pale: #fff7ed;
+  --muted: #78716c;
+  --border: #e7e5e4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  padding: 3rem;
+  line-height: 1.6;
+}
+h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  margin-bottom: 0.25rem;
+}
+.subtitle {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 2.5rem;
+}
+h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  margin: 2rem 0 0.75rem;
+  color: var(--rust);
+}
+.section {
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  max-width: 860px;
+}
+.kv {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.kv-item { font-size: 0.9rem; }
+.kv-item span { font-family: 'DM Mono', monospace; background: var(--rust-pale); color: var(--rust); padding: 0.1em 0.35em; border-radius: 3px; }
+.input-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.5rem;
+  letter-spacing: 0.35em;
+  margin: 0.5rem 0;
+  display: flex;
+  gap: 0;
+}
+.char-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2.5rem;
+  border: 1.5px solid var(--border);
+  margin-right: -1.5px;
+  position: relative;
+}
+.char-cell.paren { color: var(--ink); }
+.char-cell.active { background: var(--rust-pale); border-color: var(--rust); color: var(--rust); }
+.char-cell.matched { background: #f0fdf4; border-color: #22c55e; color: #16a34a; }
+.char-cell .idx {
+  position: absolute;
+  bottom: -1.3rem;
+  font-size: 0.6rem;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+}
+.stack-visual {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-height: 4rem;
+  margin: 0.75rem 0;
+}
+.stack-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-bottom: none;
+  width: 2.5rem;
+  height: 2.75rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  background: var(--paper);
+  border-radius: 3px 3px 0 0;
+}
+.stack-bar .label { font-size: 0.6rem; color: var(--muted); }
+.stack-bar .val { padding: 0.2rem; }
+.trace-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.trace-step:last-child { border-bottom: none; }
+.step-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  min-width: 1.5rem;
+}
+.step-action {
+  font-family: 'DM Mono', monospace;
+  background: var(--rust-pale);
+  color: var(--rust);
+  padding: 0.15em 0.5em;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.step-detail { color: var(--ink); }
+.step-detail .highlight { color: var(--rust); font-weight: 500; }
+.valid-block {
+  display: inline-block;
+  border: 1.5px solid #16a34a;
+  background: #f0fdf4;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  color: #16a34a;
+  font-family: 'DM Mono', monospace;
+  margin: 0.15em;
+}
+.answer-box {
+  background: var(--rust-pale);
+  border: 1.5px solid var(--rust);
+  border-radius: 4px;
+  padding: 0.75rem 1.25rem;
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.4rem;
+  color: var(--rust);
+  display: inline-block;
+}
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<h1>32. 最长有效括号</h1>
+<p class="subtitle">Longest Valid Parentheses — 栈底记录"最后一个未匹配的右括号"</p>
+
+<div class="section">
+<h2>核心思想</h2>
+<p style="font-size: 0.9rem; color: var(--muted); max-width: 680px;">
+栈底永远保存「最后一个未匹配的右括号下标」。遇到左括号 <span style="font-family: monospace;">(</span> 入栈，遇到右括号 <span style="font-family: monospace;">)</span> 出栈。<br>
+有效括号长度 = 当前下标 − 栈顶下标。
+</p>
+</div>
+
+<div class="section">
+<h2>输入示例</h2>
+<div class="kv">
+  <div class="kv-item">s = <span>)()())</span></div>
+  <div class="kv-item">答案 = <span>4</span></div>
+</div>
+<div class="input-display">
+  <span class="char-cell" id="c0"><span>)</span><span class="idx">0</span></span>
+  <span class="char-cell" id="c1"><span>(</span><span class="idx">1</span></span>
+  <span class="char-cell" id="c2"><span>)</span><span class="idx">2</span></span>
+  <span class="char-cell" id="c3"><span>(</span><span class="idx">3</span></span>
+  <span class="char-cell" id="c4"><span>)</span><span class="idx">4</span></span>
+  <span class="char-cell" id="c5"><span>)</span><span class="idx">5</span></span>
+</div>
+</div>
+
+<div class="section">
+<h2>栈的变化（6步 trace）</h2>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">Step 1 — i=0, s[0]=')'</h3>
+<div class="trace-step"><span class="step-num">①</span><span class="step-action">右括号</span><span class="step-detail">栈空 → 入栈 <span class="highlight">0</span>（标记最后未匹配位置）</span></div>
+<div class="stack-visual">
+  <div class="stack-bar" style="height:0.75rem;"><span class="val" style="color: var(--rust);">0</span></div>
+</div>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">Step 2 — i=1, s[1]='('</h3>
+<div class="trace-step"><span class="step-num">②</span><span class="step-action">左括号</span><span class="step-detail">入栈 <span class="highlight">1</span></span></div>
+<div class="stack-visual">
+  <div class="stack-bar" style="height:0.75rem;"><span class="val">0</span></div>
+  <div class="stack-bar" style="height:1.5rem;"><span class="val" style="color: var(--rust);">1</span></div>
+</div>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">Step 3 — i=2, s[2]=')'</h3>
+<div class="trace-step"><span class="step-num">③</span><span class="step-action">右括号</span><span class="step-detail">栈顶 '(' 出栈 → 栈=[0] → len=2−<span class="highlight">0</span>=<span class="highlight">2</span></span></div>
+<div class="stack-visual">
+  <div class="stack-bar" style="height:0.75rem; opacity: 0.4;"><span class="val" style="text-decoration:line-through">1</span></div>
+  <div class="stack-bar" style="height:0.75rem;"><span class="val">0</span></div>
+</div>
+<p style="font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem;">maxLen = 2 ✓ <span class="valid-block">()[</span></p>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">Step 4 — i=3, s[3]='('</h3>
+<div class="trace-step"><span class="step-num">④</span><span class="step-action">左括号</span><span class="step-detail">入栈 <span class="highlight">3</span></span></div>
+<div class="stack-visual">
+  <div class="stack-bar" style="height:0.75rem;"><span class="val">0</span></div>
+  <div class="stack-bar" style="height:1.5rem;"><span class="val" style="color: var(--rust);">3</span></div>
+</div>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">Step 5 — i=4, s[4]=')'</h3>
+<div class="trace-step"><span class="step-num">⑤</span><span class="step-action">右括号</span><span class="step-detail">栈顶 '(' 出栈 → 栈=[0] → len=4−<span class="highlight">0</span>=<span class="highlight">4</span></span></div>
+<div class="stack-visual">
+  <div class="stack-bar" style="height:0.75rem; opacity: 0.4;"><span class="val" style="text-decoration:line-through">3</span></div>
+  <div class="stack-bar" style="height:0.75rem;"><span class="val">0</span></div>
+</div>
+<p style="font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem;">maxLen = 4 ✓ <span class="valid-block">()( )</span></p>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">Step 6 — i=5, s[5]=')'</h3>
+<div class="trace-step"><span class="step-num">⑥</span><span class="step-action">右括号</span><span class="step-detail">栈顶 0 出栈 → 栈空 → 入栈 5 → len=5−5=0</span></div>
+<div class="stack-visual">
+  <div class="stack-bar" style="height:0.75rem; opacity: 0.4;"><span class="val" style="text-decoration:line-through">0</span></div>
+  <div class="stack-bar" style="height:0.75rem;"><span class="val" style="color: var(--rust);">5</span></div>
+</div>
+<p style="font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem;">maxLen 保持 4，不再更新</p>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h2>结果</h2>
+<div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+  <div class="answer-box">maxLen = 4</div>
+  <div style="font-size: 0.9rem;">
+    有效括号段：索引 <span style="font-family: monospace; color: var(--rust);">1–4</span>
+    <span class="valid-block">()( )</span>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h2>核心规律</h2>
+<div class="two-col">
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">为什么需要「哨兵」？</h3>
+<p style="font-size: 0.88rem;">栈初始化时放入 <span style="font-family: monospace; color: var(--rust);">-1</span> 作为哨兵。计算长度时：<br>
+<span style="font-family: monospace;">len = i − stack.top()</span><br>
+当所有括号都匹配完，栈顶回到哨兵位置，长度自然归零，不会出错。</p>
+</div>
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">时间空间</h3>
+<p style="font-size: 0.88rem;">
+<span style="font-family: monospace; color: var(--rust);">时间</span> O(n) — 每个字符最多入栈出栈各一次<br>
+<span style="font-family: monospace; color: var(--rust);">空间</span> O(n) — 最坏情况全是左括号</p>
+</div>
+</div>
+</div>
+
+<script>
+const cells = document.querySelectorAll('.char-cell');
+const highlighted = [1, 2, 3, 4]; // 有效部分
+cells.forEach((cell, i) => {
+  if (highlighted.includes(i)) {
+    cell.classList.add('matched');
+  }
+});
+</script>
+</body>
+</html>

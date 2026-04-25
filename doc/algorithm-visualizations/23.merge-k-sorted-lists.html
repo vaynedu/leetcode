@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>23. 合并K个排序链表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #faf7f2;
+  --ink: #1c1917;
+  --rust: #c2410c;
+  --rust-light: #ea580c;
+  --rust-pale: #fff7ed;
+  --muted: #78716c;
+  --border: #e7e5e4;
+  --green: #16a34a;
+  --green-pale: #f0fdf4;
+  --blue: #1d4ed8;
+  --blue-pale: #eff6ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; padding: 3rem; line-height: 1.6; }
+h1 { font-family: 'Instrument Serif', serif; font-size: 2.2rem; font-weight: 400; margin-bottom: 0.25rem; }
+.subtitle { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--muted); margin-bottom: 2.5rem; }
+h2 { font-family: 'Instrument Serif', serif; font-size: 1.25rem; font-weight: 400; margin: 1.75rem 0 0.6rem; color: var(--rust); }
+.section { border: 1.5px solid var(--border); border-radius: 4px; padding: 1.2rem 1.4rem; margin-bottom: 1.2rem; max-width: 900px; }
+.kv { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.88rem; margin-bottom: 0.5rem; }
+.kv span { font-family: 'DM Mono', monospace; background: var(--rust-pale); color: var(--rust); padding: 0.1em 0.35em; border-radius: 3px; }
+
+/* 链表节点 */
+.linked-list { display: flex; align-items: center; gap: 0; margin: 0.4rem 0; }
+.ll-title { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); margin-bottom: 0.3rem; }
+.ll-node {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  min-width: 2.2rem;
+}
+.ll-node.val-node { border-color: var(--blue); background: var(--blue-pale); }
+.ll-node.chosen { border-color: var(--rust); background: var(--rust-pale); }
+.ll-node.done { opacity: 0.45; }
+.ll-node .node-val { padding: 0.3rem 0.5rem; font-weight: 500; }
+.ll-node .node-next {
+  display: flex;
+  align-items: center;
+  padding: 0 0.3rem;
+  background: rgba(0,0,0,0.05);
+  font-size: 0.7rem;
+  color: var(--muted);
+  border-left: 1px solid var(--border);
+}
+.ll-node .null-label { padding: 0.3rem 0.4rem; font-size: 0.7rem; color: var(--muted); }
+
+.heap-visual { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.75rem 0; }
+.heap-row { display: flex; align-items: center; gap: 0.4rem; }
+.heap-row .level-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); width: 1.5rem; }
+.heap-item {
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  width: 2rem; height: 2rem;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 500;
+  background: var(--paper);
+}
+.heap-item.min { border-color: var(--rust); background: var(--rust-pale); color: var(--rust); }
+.heap-item.popped { opacity: 0.35; }
+
+.heap-connector { width: 1.5rem; height: 1px; background: var(--border); }
+
+.step-box {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+}
+.step-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; }
+.step-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); min-width: 1.5rem; }
+.step-action { font-family: 'DM Mono', monospace; background: var(--rust-pale); color: var(--rust); padding: 0.12em 0.45em; border-radius: 3px; font-size: 0.78rem; }
+.step-result { font-size: 0.82rem; color: var(--ink); }
+.step-result .hi { color: var(--rust); font-weight: 500; }
+.step-result .hi-green { color: var(--green); font-weight: 500; }
+
+.result-list { display: flex; align-items: center; gap: 0; margin: 0.5rem 0; }
+.result-list .rl-node {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--green);
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  background: var(--green-pale);
+}
+.result-list .rl-node .rv { padding: 0.3rem 0.5rem; font-weight: 500; color: var(--green); }
+.result-list .rl-node .rn { display: flex; align-items: center; padding: 0 0.3rem; background: rgba(0,0,0,0.05); border-left: 1px solid rgba(0,0,0,0.1); font-size: 0.7rem; color: var(--muted); }
+
+.answer-box { background: var(--rust-pale); border: 1.5px solid var(--rust); border-radius: 4px; padding: 0.75rem 1.25rem; display: inline-block; }
+.answer-box .val { font-family: 'Instrument Serif', serif; font-size: 1.4rem; color: var(--rust); }
+</style>
+</head>
+<body>
+<h1>23. 合并K个排序链表</h1>
+<p class="subtitle">最小堆（小顶堆）— 每次从 k 个链表头中选最小的接入结果</p>
+
+<div class="section">
+<h2>输入示例</h2>
+<div class="kv">
+  <div>lists = <span>3条链表</span></div>
+  <div>答案 = <span>1→1→2→3→4→4→5→6</span></div>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 0.75rem;">
+<div>
+<div class="ll-title">List 1</div>
+<div class="linked-list">
+  <div class="ll-node"><span class="node-val">1</span><span class="node-next">→</span></div>
+  <div class="ll-node val-node"><span class="node-val">4</span><span class="node-next">→</span></div>
+  <div class="ll-node val-node"><span class="node-val">5</span><span class="null-label">∅</span></div>
+</div>
+</div>
+<div>
+<div class="ll-title">List 2</div>
+<div class="linked-list">
+  <div class="ll-node val-node"><span class="node-val">1</span><span class="node-next">→</span></div>
+  <div class="ll-node val-node"><span class="node-val">3</span><span class="node-next">→</span></div>
+  <div class="ll-node val-node"><span class="node-val">4</span><span class="null-label">∅</span></div>
+</div>
+</div>
+<div>
+<div class="ll-title">List 3</div>
+<div class="linked-list">
+  <div class="ll-node val-node"><span class="node-val">2</span><span class="node-next">→</span></div>
+  <div class="ll-node val-node"><span class="node-val">6</span><span class="null-label">∅</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h2>最小堆初始化</h2>
+<p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem;">把每条链表的头节点加入堆（跳过 nil）：</p>
+<div class="heap-visual">
+<div class="heap-row">
+  <span class="heap-row level-label">L0</span>
+  <div class="heap-item min">1₁</div>
+</div>
+<div class="heap-row">
+  <span class="heap-row level-label">L1</span>
+  <div class="heap-item">1₂</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item">2₃</div>
+</div>
+</div>
+<p style="font-size: 0.8rem; color: var(--muted);">下标 ₁₂₃ 表示来自第几条链表（用于值相同时排序）</p>
+</div>
+
+<div class="section">
+<h2>完整 trace — 弹出 8 次</h2>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+
+<div class="step-box">
+<div class="step-header"><span class="step-num">Step 1</span><span class="step-action">Pop min</span></div>
+<div class="step-result">堆顶 <span class="hi">1₁</span> 弹出 → 接入结果 → List₁ 后继 <span class="hi-green">4₁</span> 入堆</div>
+<div class="heap-row" style="margin-top: 0.4rem;">
+  <div class="heap-item popped">1₁</div>
+  <div class="heap-item">1₂</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item">2₃</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item" style="border-color: var(--green); background: var(--green-pale); color: var(--green);">4₁</div>
+</div>
+<div class="result-list">
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+</div>
+</div>
+
+<div class="step-box">
+<div class="step-header"><span class="step-num">Step 2</span><span class="step-action">Pop min</span></div>
+<div class="step-result">堆顶 <span class="hi">1₂</span> 弹出 → 接入结果 → List₂ 后继 <span class="hi-green">3₂</span> 入堆</div>
+<div class="heap-row" style="margin-top: 0.4rem;">
+  <div class="heap-item">1₂</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item">2₃</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item">4₁</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item" style="border-color: var(--green); background: var(--green-pale); color: var(--green);">3₂</div>
+</div>
+<div class="result-list">
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+</div>
+</div>
+
+<div class="step-box">
+<div class="step-header"><span class="step-num">Step 3</span><span class="step-action">Pop min</span></div>
+<div class="step-result">堆顶 <span class="hi">2₃</span> 弹出 → 接入结果 → List₃ 后继 <span class="hi-green">6₃</span> 入堆</div>
+<div class="heap-row" style="margin-top: 0.4rem;">
+  <div class="heap-item popped">1₂</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item">3₂</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item">4₁</div>
+  <div class="heap-connector"></div>
+  <div class="heap-item" style="border-color: var(--green); background: var(--green-pale); color: var(--green);">6₃</div>
+</div>
+<div class="result-list">
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">2</span><span class="rn">→</span></div>
+</div>
+</div>
+
+<div class="step-box">
+<div class="step-header"><span class="step-num">Step 4</span><span class="step-action">Pop min</span></div>
+<div class="step-result">堆顶 <span class="hi">3₂</span> 弹出 → 接入结果 → List₂ 后继 <span class="hi-green">4₂</span> 入堆</div>
+<div class="result-list">
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">2</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">3</span><span class="rn">→</span></div>
+</div>
+</div>
+
+<div class="step-box">
+<div class="step-header"><span class="step-num">Step 5</span><span class="step-action">Pop min</span></div>
+<div class="step-result">堆顶 <span class="hi">4₁</span> 弹出 → 接入结果 → List₁ 后继 <span class="hi-green">5₁</span> 入堆</div>
+<div class="result-list">
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">2</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">3</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">4</span><span class="rn">→</span></div>
+</div>
+</div>
+
+<div class="step-box">
+<div class="step-header"><span class="step-num">Step 6</span><span class="step-action">Pop min</span></div>
+<div class="step-result">堆顶 <span class="hi">4₂</span> 弹出 → 接入结果 → List₂ 后继 nil（不入堆）</div>
+<div class="result-list">
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">2</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">3</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">4</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">4</span><span class="rn">→</span></div>
+</div>
+</div>
+
+<div class="step-box">
+<div class="step-header"><span class="step-num">Step 7</span><span class="step-action">Pop min</span></div>
+<div class="step-result">堆顶 <span class="hi">5₁</span> 弹出 → 接入结果 → List₁ 后继 nil</div>
+<div class="result-list">
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">2</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">3</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">4</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">4</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">5</span><span class="rn">→</span></div>
+</div>
+</div>
+
+<div class="step-box">
+<div class="step-header"><span class="step-num">Step 8</span><span class="step-action">Pop min</span></div>
+<div class="step-result">堆顶 <span class="hi">6₃</span> 弹出 → 接入结果 → List₃ 后继 nil → 堆空，结束</div>
+<div class="result-list">
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">1</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">2</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">3</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">4</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">4</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">5</span><span class="rn">→</span></div>
+  <div class="rl-node"><span class="rv">6</span><span class="null-label">∅</span></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="section">
+<h2>复杂度分析</h2>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+<div>
+<table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+<tr style="border-bottom: 1px solid var(--border);">
+  <th style="text-align: left; padding: 0.3rem 0.5rem; color: var(--muted);">指标</th>
+  <th style="text-align: left; padding: 0.3rem 0.5rem; color: var(--muted);">值</th>
+</tr>
+<tr style="border-bottom: 1px solid var(--border);">
+  <td style="padding: 0.3rem 0.5rem;">时间</td>
+  <td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(n log k)</td>
+</tr>
+<tr style="border-bottom: 1px solid var(--border);">
+  <td style="padding: 0.3rem 0.5rem;">空间</td>
+  <td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(k)</td>
+</tr>
+<tr>
+  <td style="padding: 0.3rem 0.5rem;">n = 总节点数</td>
+  <td style="padding: 0.3rem 0.5rem; font-family: monospace; color: var(--muted);">k = 链表数量</td>
+</tr>
+</table>
+</div>
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">为什么是 O(n log k)？</h3>
+<p style="font-size: 0.85rem;">n 个节点，每个节点最多进堆出堆各一次。<br>
+每次堆操作 O(log k)，k 是链表数量（不是 n）。</p>
+</div>
+</div>
+</div>
+</body>
+</html>

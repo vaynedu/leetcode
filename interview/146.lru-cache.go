@@ -1,83 +1,84 @@
 package interview
 
-// ================================================================
 // 146. LRU 缓存
-// ================================================================
+// HashMap + 双向链表：HashMap 做到 O(1) 查找，链表维护顺序
+// 最近使用的放在链表头部，最久未使用的在尾部
+// 时间：O(1) | 空间：O(capacity)
 
-// LRUNode 双向链表节点
-type LRUNode struct {
-	Key  int
-	Val  int
-	Prev *LRUNode
-	Next *LRUNode
-}
-
-// LRUCache O(1) get/put - HashMap + 双向链表
 type LRUCache struct {
 	capacity int
-	cache    map[int]*LRUNode // key -> Node
-	head     *LRUNode         // 表头（最近使用）
-	tail     *LRUNode         // 表尾（最久未使用）
+	head     *Node // 虚拟头（最近使用）
+	tail     *Node // 虚拟尾（最久未使用）
+	cache    map[int]*Node
 }
 
-// NewLRUCache 构造函数
-func NewLRUCache(capacity int) *LRUCache {
-	h := &LRUNode{}
-	t := &LRUNode{}
-	h.Next = t
-	t.Prev = h
-	return &LRUCache{
+type Node struct {
+	key, val int
+	prev, next *Node
+}
+
+// NewLRUCache 别名，兼容 interview_test.go
+func NewLRUCache(capacity int) LRUCache {
+	return Constructor146(capacity)
+}
+
+func Constructor146(capacity int) LRUCache {
+	head := &Node{}
+	tail := &Node{}
+	head.next = tail
+	tail.prev = head
+	return LRUCache{
 		capacity: capacity,
-		cache:    make(map[int]*LRUNode),
-		head:     h,
-		tail:     t,
+		head:     head,
+		tail:     tail,
+		cache:    make(map[int]*Node, capacity),
 	}
 }
 
-// Get 获取值
-func (c *LRUCache) Get(key int) int {
-	if node, ok := c.cache[key]; ok {
-		c.moveToHead(node)
-		return node.Val
+func (this *LRUCache) Get(key int) int {
+	if node, ok := this.cache[key]; ok {
+		// 移到头部（最近使用）
+		this.moveToHead(node)
+		return node.val
 	}
 	return -1
 }
 
-// Put 存入值
-func (c *LRUCache) Put(key int, value int) {
-	if node, ok := c.cache[key]; ok {
-		node.Val = value
-		c.moveToHead(node)
+func (this *LRUCache) Put(key int, value int) {
+	if node, ok := this.cache[key]; ok {
+		// 已存在：更新值，移到头部
+		node.val = value
+		this.moveToHead(node)
 	} else {
-		node := &LRUNode{Key: key, Val: value}
-		c.cache[key] = node
-		c.addToHead(node)
-		if len(c.cache) > c.capacity {
-			removed := c.removeTail()
-			delete(c.cache, removed.Key)
+		// 新建节点
+		node := &Node{key: key, val: value}
+		this.cache[key] = node
+		this.addToHead(node)
+		// 超过容量，删除尾部节点
+		if len(this.cache) > this.capacity {
+			tailNode := this.tail.prev
+			this.removeNode(tailNode)
+			delete(this.cache, tailNode.key)
 		}
 	}
 }
 
-func (c *LRUCache) addToHead(node *LRUNode) {
-	node.Prev = c.head
-	node.Next = c.head.Next
-	c.head.Next.Prev = node
-	c.head.Next = node
+// 将节点移到链表头部（最近使用）
+func (this *LRUCache) moveToHead(node *Node) {
+	this.removeNode(node)
+	this.addToHead(node)
 }
 
-func (c *LRUCache) removeNode(node *LRUNode) {
-	node.Prev.Next = node.Next
-	node.Next.Prev = node.Prev
+// 在头部添加节点
+func (this *LRUCache) addToHead(node *Node) {
+	node.prev = this.head
+	node.next = this.head.next
+	this.head.next.prev = node
+	this.head.next = node
 }
 
-func (c *LRUCache) moveToHead(node *LRUNode) {
-	c.removeNode(node)
-	c.addToHead(node)
-}
-
-func (c *LRUCache) removeTail() *LRUNode {
-	node := c.tail.Prev
-	c.removeNode(node)
-	return node
+// 删除节点（从任意位置）
+func (this *LRUCache) removeNode(node *Node) {
+	node.prev.next = node.next
+	node.next.prev = node.prev
 }

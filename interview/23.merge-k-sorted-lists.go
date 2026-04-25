@@ -1,51 +1,64 @@
 package interview
 
+import "container/heap"
+
 // ListNode 链表节点
 type ListNode struct {
 	Val  int
 	Next *ListNode
 }
 
-// mergeKLists 合并K个升序链表 - 分治归并
-// 时间：O(N log K)，空间：O(log K) 递归栈
+// 23. 合并K个排序链表
+// 最小堆：把所有链表头加入堆，每次弹出最小的接入结果
+
+// MinHeapItem 是堆中存储的元素
+type MinHeapItem struct {
+	node  *ListNode
+	heapIdx int // 堆中原始链表下标，用于值相同时分辨
+}
+
+// MinHeap 实现 container/heap 的接口
+type MinHeap []*MinHeapItem
+
+func (h MinHeap) Len() int { return len(h) }
+func (h MinHeap) Less(i, j int) bool {
+	if h[i].node.Val != h[j].node.Val {
+		return h[i].node.Val < h[j].node.Val
+	}
+	return h[i].heapIdx < h[j].heapIdx
+}
+func (h *MinHeap) Swap(i, j int)       { (*h)[i], (*h)[j] = (*h)[j], (*h)[i] }
+func (h *MinHeap) Push(x interface{})   { *h = append(*h, x.(*MinHeapItem)) }
+func (h *MinHeap) Pop() interface{} {
+	n := len(*h)
+	item := (*h)[n-1]
+	*h = (*h)[:n-1]
+	return item
+}
+
 func mergeKLists(lists []*ListNode) *ListNode {
-	if len(lists) == 0 {
-		return nil
-	}
-	return mergeSort(lists, 0, len(lists)-1)
-}
+	h := &MinHeap{}
+	heap.Init(h)
 
-func mergeSort(lists []*ListNode, left, right int) *ListNode {
-	if left == right {
-		return lists[left]
-	}
-	// 防止整数溢出
-	mid := left + (right-left)/2
-	// 递归左右两半
-	l1 := mergeSort(lists, left, mid)
-	l2 := mergeSort(lists, mid+1, right)
-	// 合并两个有序链表
-	return mergeTwoLists(l1, l2)
-}
-
-// mergeTwoLists 合并两个有序链表
-func mergeTwoLists(l1, l2 *ListNode) *ListNode {
-	dummy := &ListNode{}
-	cur := dummy
-	for l1 != nil && l2 != nil {
-		if l1.Val < l2.Val {
-			cur.Next = l1
-			l1 = l1.Next
-		} else {
-			cur.Next = l2
-			l2 = l2.Next
+	// 初始化：把所有链表头加入堆（跳过 nil）
+	for i, node := range lists {
+		if node != nil {
+			heap.Push(h, &MinHeapItem{node: node, heapIdx: i})
 		}
-		cur = cur.Next
 	}
-	if l1 != nil {
-		cur.Next = l1
-	} else {
-		cur.Next = l2
+
+	dummy := &ListNode{}
+	curr := dummy
+
+	for h.Len() > 0 {
+		item := heap.Pop(h).(*MinHeapItem)
+		curr.Next = item.node
+		curr = curr.Next
+		// 弹出的节点有后继的话，后继入堆
+		if item.node.Next != nil {
+			heap.Push(h, &MinHeapItem{node: item.node.Next, heapIdx: item.heapIdx})
+		}
 	}
+
 	return dummy.Next
 }

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>215. 数组第K大</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #faf7f2;
+  --ink: #1c1917;
+  --rust: #c2410c;
+  --rust-light: #ea580c;
+  --rust-pale: #fff7ed;
+  --muted: #78716c;
+  --border: #e7e5e4;
+  --blue: #1d4ed8;
+  --blue-pale: #eff6ff;
+  --green: #16a34a;
+  --green-pale: #f0fdf4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; padding: 3rem; line-height: 1.6; }
+h1 { font-family: 'Instrument Serif', serif; font-size: 2.4rem; font-weight: 400; margin-bottom: 0.25rem; }
+.subtitle { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--muted); margin-bottom: 2.5rem; }
+h2 { font-family: 'Instrument Serif', serif; font-size: 1.3rem; font-weight: 400; margin: 2rem 0 0.75rem; color: var(--rust); }
+.section { border: 1.5px solid var(--border); border-radius: 4px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; max-width: 860px; }
+.kv { display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9rem; }
+.kv span { font-family: 'DM Mono', monospace; background: var(--rust-pale); color: var(--rust); padding: 0.1em 0.35em; border-radius: 3px; }
+
+/* 数组格子 */
+.array-row { display: flex; align-items: center; gap: 0; margin: 0.5rem 0; }
+.array-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  min-width: 2.2rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.88rem;
+  overflow: hidden;
+}
+.array-cell.pivot { border-color: var(--rust); background: var(--rust-pale); }
+.array-cell.swapped { border-color: var(--blue); background: var(--blue-pale); }
+.array-cell.sorted { border-color: var(--green); background: var(--green-pale); }
+.array-cell.found { border-color: var(--rust); background: var(--rust-pale); border-width: 2.5px; }
+.array-cell .cell-val { padding: 0.3rem 0.5rem; font-weight: 500; }
+.array-cell .cell-idx { font-size: 0.62rem; color: var(--muted); padding: 0.15rem; background: rgba(0,0,0,0.04); width: 100%; text-align: center; }
+.array-cell .cell-val .hi { color: var(--rust); font-weight: 600; }
+.arrow-down { color: var(--rust); font-size: 1.1rem; margin: 0.1rem 0; }
+.arrow-up { color: var(--green); font-size: 1.1rem; margin: 0.1rem 0; }
+
+/* 分区可视化 */
+.partition-box {
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.partition-header { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem; }
+.partition-regions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.partition-region {
+  display: flex;
+  gap: 0.2rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 3px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+}
+.partition-region.less { background: var(--blue-pale); border: 1px solid var(--blue); color: var(--blue); }
+.partition-region.greater { background: var(--rust-pale); border: 1px solid var(--rust); color: var(--rust); }
+.partition-region.pivot-region { background: var(--green-pale); border: 1px solid var(--green); color: var(--green); }
+.partition-divider { color: var(--muted); font-size: 1rem; }
+
+/* trace 步骤 */
+.trace-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.trace-step:last-child { border-bottom: none; }
+.step-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); min-width: 1.5rem; padding-top: 0.1rem; }
+.step-action { font-family: 'DM Mono', monospace; background: var(--rust-pale); color: var(--rust); padding: 0.12em 0.5em; border-radius: 3px; font-size: 0.78rem; white-space: nowrap; }
+.step-detail { color: var(--ink); }
+.step-detail .hi { color: var(--rust); font-weight: 500; }
+.step-detail .hi-blue { color: var(--blue); font-weight: 500; }
+.step-detail .hi-green { color: var(--green); font-weight: 500; }
+
+.answer-box { background: var(--rust-pale); border: 1.5px solid var(--rust); border-radius: 4px; padding: 0.75rem 1.25rem; display: inline-block; }
+.answer-box .val { font-family: 'Instrument Serif', serif; font-size: 1.6rem; color: var(--rust); }
+.answer-box .label { font-size: 0.8rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+.heap-diagram { display: flex; flex-direction: column; gap: 0.4rem; margin: 0.75rem 0; }
+.heap-row { display: flex; align-items: center; gap: 0.5rem; }
+.heap-row .level { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); width: 1.2rem; }
+.heap-node {
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  width: 2.2rem; height: 2.2rem;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 500;
+  background: var(--paper);
+}
+.heap-node.in-heap { border-color: var(--blue); background: var(--blue-pale); color: var(--blue); }
+.heap-node.kth { border-color: var(--rust); background: var(--rust-pale); color: var(--rust); }
+.heap-node .val { padding: 0; }
+.heap-arrow { width: 1.2rem; height: 1px; background: var(--border); position: relative; }
+.heap-arrow::after { content: '↓'; position: absolute; right: -0.1rem; top: -0.55rem; font-size: 0.7rem; color: var(--muted); }
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  padding: 0.2em 0.5em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: rgba(0,0,0,0.03);
+  cursor: pointer;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+}
+.kbd.active { background: var(--rust-pale); border-color: var(--rust); color: var(--rust); }
+.kbd-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+<h1>215. 数组第K大元素</h1>
+<p class="subtitle">快速选择 Quick Select — 平均 O(n)，最坏 O(n²)</p>
+
+<div class="section">
+<h2>快速选择核心思想</h2>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+<div>
+<p style="font-size: 0.88rem; margin-bottom: 0.5rem;">类似快排的 partition，每次把 pivot 放到正确位置：</p>
+<ul style="font-size: 0.85rem; color: var(--muted); padding-left: 1.2rem;">
+  <li>pivot 排好序后的下标 = <span class="hi">p</span></li>
+  <li>若 <span class="hi">p == target</span> → 找到答案</li>
+  <li>若 <span class="hi">p < target</span> → 答案在右半边</li>
+  <li>若 <span class="hi">p > target</span> → 答案在左半边</li>
+</ul>
+</div>
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">为什么比快排快？</h3>
+<p style="font-size: 0.85rem;">快排两边都递归，快速选择只递归一边。<br>
+平均 T(n) = T(n/2) + O(n) = <span style="font-family: monospace; color: var(--rust);">O(n)</span><br>
+只递归一边，剪掉了另一半</p>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h2>输入示例</h2>
+<div class="kv">
+  <div>nums = <span>[3, 2, 1, 5, 6, 4]</span></div>
+  <div>k = <span>2</span></div>
+</div>
+<div class="array-row" style="margin-top: 0.75rem;">
+  <div class="array-cell"><span class="cell-val">3</span><span class="cell-idx">0</span></div>
+  <div class="array-cell"><span class="cell-val">2</span><span class="cell-idx">1</span></div>
+  <div class="array-cell"><span class="cell-val">1</span><span class="cell-idx">2</span></div>
+  <div class="array-cell"><span class="cell-val">5</span><span class="cell-idx">3</span></div>
+  <div class="array-cell"><span class="cell-val">6</span><span class="cell-idx">4</span></div>
+  <div class="array-cell"><span class="cell-val">4</span><span class="cell-idx">5</span></div>
+</div>
+<p style="font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem;">目标排名 = len−k = 6−2 = <span style="font-family: monospace; color: var(--rust);">4</span>（升序第 4 小 = 第 2 大）</p>
+</div>
+
+<div class="section">
+<h2>partition 图解</h2>
+<p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem;">以 pivot = nums[right] = 4 为例：</p>
+<div class="partition-box">
+<div class="partition-header">初始: [3, 2, 1, <span style="color: var(--rust); font-weight: 500;">5</span>, 6, <span style="color: var(--green); font-weight: 500;">4</span>]</div>
+<div class="partition-regions">
+  <div class="partition-region less">3  2  1</div>
+  <div class="partition-divider">|</div>
+  <div class="partition-region pivot-region">4</div>
+  <div class="partition-divider">|</div>
+  <div class="partition-region greater">5  6</div>
+</div>
+</div>
+<div class="partition-box">
+<div class="partition-header">i=1 交换后: [1, 2, <span style="color: var(--blue); font-weight: 500;">3</span>, 5, 6, 4]</div>
+<div class="partition-regions">
+  <div class="partition-region less">1  2  3</div>
+  <div class="partition-divider">|</div>
+  <div class="partition-region pivot-region">4</div>
+  <div class="partition-divider">|</div>
+  <div class="partition-region greater">5  6</div>
+</div>
+</div>
+<p style="font-size: 0.82rem; color: var(--muted);">pivot=4 最终下标 = 2 → 升序第 3 小，不是第 4 小 → 递归右半边</p>
+</div>
+
+<div class="section">
+<h2>递归 trace（5 步）</h2>
+
+<div class="trace-step">
+  <span class="step-num">①</span>
+  <span class="step-action">partition</span>
+  <span class="step-detail">范围 [0,5]，target=4，pivot=4 → p=2<br>
+  <span class="hi-blue">p=2 < target=4</span> → 递归右半 [3,5]
+</span>
+</div>
+
+<div class="trace-step">
+  <span class="step-num">②</span>
+  <span class="step-action">partition</span>
+  <span class="step-detail">范围 [3,5]（对应元素 [5,6,4]），target=4<br>
+  pivot=4 → 交换后 p=3（只有 4 本身在 <= 区）
+</span>
+</div>
+
+<div class="trace-step">
+  <span class="step-num">③</span>
+  <span class="step-action">partition</span>
+  <span class="step-detail">范围 [4,5]（对应元素 [6,4]），target=4<br>
+  pivot=4 → p=4（4 是这个子数组第一个）
+</span>
+</div>
+
+<div class="trace-step">
+  <span class="step-num">④</span>
+  <span class="step-action">check</span>
+  <span class="step-detail">p=4 == target → <span class="hi">找到答案</span>，返回 nums[4]=<span class="hi-green">6</span>
+</span>
+</div>
+
+<div class="trace-step">
+  <span class="step-num">⑤</span>
+  <span class="step-action">answer</span>
+  <span class="step-detail">快速选择返回 6，即第 2 大的元素 ✓
+</span>
+</div>
+</div>
+
+<div class="section">
+<h2>结果</h2>
+<div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+  <div class="answer-box">
+    <div class="label">第 2 大 (k=2)</div>
+    <div class="val">6</div>
+  </div>
+  <div style="font-size: 0.88rem; color: var(--muted);">
+    升序排列：[1, 2, 3, <span style="color: var(--rust); font-weight: 500;">4</span>, <span style="color: var(--rust); font-weight: 600; font-size: 1.05rem;">5</span>, <span style="color: var(--rust); font-weight: 600; font-size: 1.1rem;">6</span>]<br>
+    第 2 大是 6，第 1 大是 5
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h2>两种解法对比</h2>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">快速选择（默认）</h3>
+<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.3rem 0.5rem;">时间</td><td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(n) 平均</td></tr>
+<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.3rem 0.5rem;">空间</td><td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(1)</td></tr>
+<tr><td style="padding: 0.3rem 0.5rem;">最坏</td><td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(n²)</td></tr>
+</table>
+</div>
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">最小堆</h3>
+<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.3rem 0.5rem;">时间</td><td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(n + k log n)</td></tr>
+<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.3rem 0.5rem;">空间</td><td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(n)</td></tr>
+<tr><td style="padding: 0.3rem 0.5rem;">适合</td><td style="padding: 0.3rem 0.5rem; font-family: monospace;">k 很小时</td></tr>
+</table>
+</div>
+</div>
+</div>
+</body>
+</html>

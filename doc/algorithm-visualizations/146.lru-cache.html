@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>146. LRU 缓存</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #faf7f2;
+  --ink: #1c1917;
+  --rust: #c2410c;
+  --rust-light: #ea580c;
+  --rust-pale: #fff7ed;
+  --muted: #78716c;
+  --border: #e7e5e4;
+  --green: #16a34a;
+  --green-pale: #f0fdf4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  padding: 3rem;
+  line-height: 1.6;
+}
+h1 { font-family: 'Instrument Serif', serif; font-size: 2.4rem; font-weight: 400; margin-bottom: 0.25rem; }
+.subtitle { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--muted); margin-bottom: 2.5rem; }
+h2 { font-family: 'Instrument Serif', serif; font-size: 1.3rem; font-weight: 400; margin: 2rem 0 0.75rem; color: var(--rust); }
+.section { border: 1.5px solid var(--border); border-radius: 4px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; max-width: 860px; }
+.kv { display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9rem; }
+.kv span { font-family: 'DM Mono', monospace; background: var(--rust-pale); color: var(--rust); padding: 0.1em 0.35em; border-radius: 3px; }
+
+/* 数据结构图 */
+.ds-diagram { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; }
+.map-box {
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  min-width: 160px;
+}
+.map-title { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); margin-bottom: 0.35rem; }
+.map-row { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 0.82rem; padding: 0.15rem 0; }
+.map-row .k { color: var(--muted); }
+.map-row .v { font-weight: 500; }
+
+.arrow { font-size: 1.2rem; color: var(--muted); }
+
+.dll {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
+}
+.dll-title { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); width: 100%; margin-bottom: 0.35rem; }
+.dll-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+}
+.dll-node.head { border-style: dashed; border-color: var(--muted); }
+.dll-node.active { border-color: var(--rust); background: var(--rust-pale); }
+.node-key { background: var(--ink); color: var(--paper); padding: 0.15rem 0.5rem; font-size: 0.75rem; }
+.node-val { padding: 0.2rem 0.5rem; font-weight: 500; }
+.dll-node.head .node-key { background: var(--muted); }
+.node-ptr { font-size: 0.65rem; color: var(--muted); padding: 0.1rem; }
+
+.dll-connector {
+  width: 1.5rem;
+  height: 1.5px;
+  background: var(--muted);
+  position: relative;
+}
+.dll-connector::after { content: '→'; position: absolute; right: -1rem; top: -0.55rem; font-size: 0.8rem; color: var(--muted); }
+
+.op-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.op-step:last-child { border-bottom: none; }
+.op-num { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); min-width: 1.8rem; }
+.op-name { font-family: 'DM Mono', monospace; background: var(--rust-pale); color: var(--rust); padding: 0.15em 0.5em; border-radius: 3px; font-size: 0.78rem; white-space: nowrap; }
+.op-detail { color: var(--ink); }
+.op-detail .hi { color: var(--rust); font-weight: 500; }
+.op-detail .evict { color: var(--green); font-weight: 500; }
+
+.dll-list { display: flex; align-items: center; gap: 0.3rem; margin: 0.5rem 0; }
+.dll-list .node-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 20px;
+  padding: 0.2rem 0.5rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+}
+.dll-list .node-pill.head-pill { border-style: dashed; border-color: var(--muted); color: var(--muted); }
+.dll-list .node-pill.active-pill { border-color: var(--rust); background: var(--rust-pale); color: var(--rust); }
+.dll-list .node-pill.evicted { border-color: var(--green); background: var(--green-pale); color: var(--green); opacity: 0.5; text-decoration: line-through; }
+.arrow-pill { color: var(--muted); font-size: 0.9rem; }
+
+.answer-box { background: var(--rust-pale); border: 1.5px solid var(--rust); border-radius: 4px; padding: 0.75rem 1.25rem; display: inline-block; }
+.answer-box .label { font-size: 0.8rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+.answer-box .val { font-family: 'Instrument Serif', serif; font-size: 1.4rem; color: var(--rust); }
+
+.hit { color: var(--green); font-weight: 500; }
+.miss { color: var(--rust); font-weight: 500; }
+</style>
+</head>
+<body>
+<h1>146. LRU 缓存</h1>
+<p class="subtitle">HashMap + 双向链表 — 最近使用放在链表头，最久未用在尾</p>
+
+<div class="section">
+<h2>核心数据结构</h2>
+<div class="ds-diagram">
+  <!-- HashMap -->
+  <div class="map-box">
+    <div class="map-title">HashMap&lt;key, Node*&gt;</div>
+    <div class="map-row"><span class="k">key</span><span>val</span></div>
+    <div class="map-row"><span class="k">1</span><span>1</span></div>
+    <div class="map-row"><span class="k">2</span><span>2</span></div>
+    <div class="map-row"><span class="k">...</span><span>...</span></div>
+  </div>
+
+  <div class="arrow">⟷</div>
+
+  <!-- 双向链表 -->
+  <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+    <div class="map-title">双向链表（头部 = 最近使用）</div>
+    <div class="dll-list">
+      <div class="node-pill head-pill">HEAD</div>
+      <div class="arrow-pill">→</div>
+      <div class="node-pill">1:1</div>
+      <div class="arrow-pill">→</div>
+      <div class="node-pill">2:2</div>
+      <div class="arrow-pill">→</div>
+      <div class="node-pill head-pill">TAIL</div>
+    </div>
+    <div style="font-size: 0.75rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 0.25rem;">
+      HashMap 指向 Node 指针 → O(1) 查找<br>
+      链表维护顺序 → O(1) 移动节点
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h2>LeetCode 标准测试 trace</h2>
+<p style="font-size: 0.88rem; color: var(--muted); margin-bottom: 0.75rem;">capacity = 2</p>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">Step 1: put(1, 1)</h3>
+<div class="dll-list">
+  <div class="node-pill head-pill">H</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill active-pill">1:1</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill head-pill">T</div>
+</div>
+<p style="font-size: 0.8rem; color: var(--muted);">Map: {1→1}</p>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">Step 2: put(2, 2)</h3>
+<div class="dll-list">
+  <div class="node-pill head-pill">H</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill active-pill">2:2</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill">1:1</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill head-pill">T</div>
+</div>
+<p style="font-size: 0.8rem; color: var(--muted);">Map: {1→1, 2→2}</p>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">Step 3: get(1) <span class="hit">HIT</span></h3>
+<div class="dll-list">
+  <div class="node-pill head-pill">H</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill active-pill">1:1</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill">2:2</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill head-pill">T</div>
+</div>
+<p style="font-size: 0.8rem; color: var(--muted);">1 移动到头部，2 退到尾部</p>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">Step 4: put(3, 3)</h3>
+<div class="dll-list">
+  <div class="node-pill head-pill">H</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill active-pill">3:3</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill">1:1</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill evicted">2:2</div>
+</div>
+<p style="font-size: 0.8rem;"><span class="evict">淘汰 key=2</span>（最久未用，在 TAIL 旁边）<br>Map: {1→1, 3→3}</p>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">Step 5: get(2) <span class="miss">MISS → -1</span></h3>
+<div class="dll-list">
+  <div class="node-pill head-pill">H</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill">3:3</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill">1:1</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill head-pill">T</div>
+</div>
+<p style="font-size: 0.8rem; color: var(--muted);">key=2 已被淘汰，返回 -1</p>
+</div>
+
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">Step 6: put(4, 4)</h3>
+<div class="dll-list">
+  <div class="node-pill head-pill">H</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill active-pill">4:4</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill">3:3</div>
+  <div class="arrow-pill">→</div>
+  <div class="node-pill evicted">1:1</div>
+</div>
+<p style="font-size: 0.8rem;"><span class="evict">淘汰 key=1</span>（get(1) 后 1 变最久未用）<br>Map: {3→3, 4→4}</p>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h2>最终结果</h2>
+<div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+  <div class="answer-box">
+    <div class="label">get(1)</div>
+    <div class="val" style="color: var(--muted);">-1</div>
+  </div>
+  <div class="answer-box">
+    <div class="label">get(3)</div>
+    <div class="val">3</div>
+  </div>
+  <div class="answer-box">
+    <div class="label">get(4)</div>
+    <div class="val">4</div>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h2>操作复杂度</h2>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+<div>
+<table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+<tr style="border-bottom: 1px solid var(--border);">
+  <th style="text-align: left; padding: 0.3rem 0.5rem; color: var(--muted);">操作</th>
+  <th style="text-align: left; padding: 0.3rem 0.5rem; color: var(--muted);">HashMap</th>
+  <th style="text-align: left; padding: 0.3rem 0.5rem; color: var(--muted);">链表</th>
+</tr>
+<tr style="border-bottom: 1px solid var(--border);">
+  <td style="padding: 0.3rem 0.5rem;">Get</td>
+  <td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(1) 查找</td>
+  <td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(1) 移到头</td>
+</tr>
+<tr>
+  <td style="padding: 0.3rem 0.5rem;">Put</td>
+  <td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(1) 插入/删除</td>
+  <td style="padding: 0.3rem 0.5rem; font-family: monospace;">O(1) 头部插入+尾部删除</td>
+</tr>
+</table>
+</div>
+<div>
+<h3 style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem;">为什么双向链表？</h3>
+<p style="font-size: 0.85rem;">删除一个节点需要知道它的前驱。<br>单向链表找前驱要 O(n)，双向链表直接 <span style="font-family: monospace;">node.prev.next = node.next</span> O(1)。</p>
+</div>
+</div>
+</div>
+</body>
+</html>
