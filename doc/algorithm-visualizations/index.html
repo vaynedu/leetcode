@@ -52,8 +52,18 @@
   /* ---- cards ---- */
   .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; text-decoration: none; color: inherit; display: block; }
   .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(28,25,23,0.1); border-color: var(--accent); }
-  .card-preview { height: 120px; background: var(--paper); border-bottom: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-  .card-preview iframe { width: 100%; height: 100%; border: none; pointer-events: none; transform: scale(0.35); transform-origin: center; width: 285%; height: 285%; }
+  .card-preview {
+    height: 80px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
   .card-body { padding: 14px 16px; }
   .card-number { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--accent); letter-spacing: 0.1em; margin: 0 0 4px; }
   .card-title { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 6px; line-height: 1.3; }
@@ -65,17 +75,6 @@
   .search-input { width: 100%; max-width: 320px; padding: 8px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); font-size: 13px; font-family: 'Geist', sans-serif; color: var(--ink); outline: none; transition: border-color 0.15s; }
   .search-input:focus { border-color: var(--accent); }
   .search-input::placeholder { color: var(--soft); }
-
-  /* ---- modal ---- */
-  .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(28,25,23,0.6); backdrop-filter: blur(4px); }
-  .modal.open { display: flex; align-items: center; justify-content: center; }
-  .modal-box { background: var(--paper); border-radius: 12px; width: 90vw; height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 64px rgba(28,25,23,0.3); }
-  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--paper-2); }
-  .modal-title { font-family: 'Instrument Serif', serif; font-size: 1.1rem; }
-  .modal-close { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--rule); background: var(--paper); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; color: var(--muted); transition: all 0.15s; }
-  .modal-close:hover { background: var(--accent); border-color: var(--accent); color: white; }
-  .modal-body { flex: 1; overflow: hidden; }
-  .modal-body iframe { width: 100%; height: 100%; border: none; }
 
   /* ---- footer ---- */
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 24px 48px; border-top: 1px solid var(--rule); margin-top: 32px; }
@@ -124,17 +123,6 @@
 </div>
 
 <!-- modal -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <div class="modal-head">
-      <span class="modal-title" id="modal-title"></span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <iframe id="modal-iframe" src=""></iframe>
-    </div>
-  </div>
-</div>
 
 <footer>
   doc/algorithm-visualizations/index.html · 算法可视化看板
@@ -189,10 +177,8 @@ function render() {
   }
 
   grid.innerHTML = filtered.map(c => `
-    <a class="card" href="${c.file}" onclick="openModal(event, '${c.file}', '${c.num}. ${c.title}')">
-      <div class="card-preview">
-        <iframe src="${c.file}" loading="lazy"></iframe>
-      </div>
+    <a class="card" href="${c.file}" target="_blank" rel="noopener">
+      <div class="card-preview">${c.num} · ${catLabel[c.cat] || c.cat}</div>
       <div class="card-body">
         <p class="card-number">${c.num}</p>
         <h3 class="card-title">${c.title}</h3>
@@ -242,31 +228,6 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 document.getElementById('search').addEventListener('input', e => {
   searchTerm = e.target.value;
   render();
-});
-
-// modal
-function openModal(e, file, title) {
-  e.preventDefault();
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-iframe').src = file;
-  document.getElementById('modal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  document.getElementById('modal-iframe').src = '';
-  document.body.style.overflow = '';
-}
-
-// ESC to close
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-});
-
-// click outside modal-box to close
-document.getElementById('modal').addEventListener('click', e => {
-  if (e.target.id === 'modal') closeModal();
 });
 
 updateStats();

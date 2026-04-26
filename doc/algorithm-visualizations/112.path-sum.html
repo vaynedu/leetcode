@@ -93,10 +93,11 @@
 <section>
 <h2>递归核心</h2>
 <p class="section-sub">从根开始，目标值<strong>减去当前节点值</strong>，递归到左右子树。叶子节点时判断。</p>
-<div class="code-block">
-<span class="cm">// 关键洞察：叶子节点才判断，非叶子继续递归</span>
+<div class="code-block"><span class="cm">// 关键洞察：叶子节点才判断，非叶子继续递归</span>
 <span class="kw">func</span> <span class="fn">HasPathSum</span>(root *TreeNode, target <span class="kw">int</span>) <span class="kw">bool</span> {
-    <span class="kw">if</span> root == <span class="kw">nil</span> { <span class="kw">return</span> <span class="kw">false</span> }
+    <span class="kw">if</span> root == <span class="kw">nil</span> {
+        <span class="kw">return</span> <span class="kw">false</span>
+    }
 
     <span class="cm">// 叶子节点：判断是否等于目标值</span>
     <span class="kw">if</span> root.Left == <span class="kw">nil</span> && root.Right == <span class="kw">nil</span> {
@@ -104,8 +105,8 @@
     }
 
     <span class="cm">// 非叶子：减去当前值，递归左右子树</span>
-    <span class="kw">return</span> <span class="fn">HasPathSum</span>(root.Left, target - root.Val) ||
-           <span class="fn">HasPathSum</span>(root.Right, target - root.Val)
+    <span class="kw">return</span> <span class="fn">HasPathSum</span>(root.Left, target-root.Val) ||
+           <span class="fn">HasPathSum</span>(root.Right, target-root.Val)
 }
 </div>
 </section>
