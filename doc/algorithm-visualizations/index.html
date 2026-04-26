@@ -110,6 +110,7 @@
   <span class="filter-label">分类</span>
   <button class="filter-btn active" data-filter="all">全部<span class="filter-count" id="count-all">0</span></button>
   <button class="filter-btn" data-filter="binary-tree">二叉树<span class="filter-count" id="count-binary-tree">0</span></button>
+  <button class="filter-btn" data-filter="two-pointer">双指针<span class="filter-count" id="count-two-pointer">0</span></button>
   <button class="filter-btn" data-filter="sliding-window">滑动窗口<span class="filter-count" id="count-sliding-window">0</span></button>
   <button class="filter-btn" data-filter="binary-search">二分查找<span class="filter-count" id="count-binary-search">0</span></button>
   <button class="filter-btn" data-filter="dp">动态规划<span class="filter-count" id="count-dp">0</span></button>
@@ -131,7 +132,7 @@
 <script>
 const cards = [
   // { id, num, title, file, tags: [] }
-  { id: 1,  num: '11',  title: '装水容器',        file: '11.container-with-most-water.html',      tags: ['two-pointer', 'sliding-window'], cat: 'other' },
+  { id: 1,  num: '11',  title: '装水容器',        file: '11.container-with-most-water.html',      tags: ['two-pointer'],                   cat: 'two-pointer' },
   { id: 2,  num: '112', title: '路径总和',        file: '112.path-sum.html',                      tags: ['binary-tree', 'dfs'],          cat: 'binary-tree' },
   { id: 3,  num: '113', title: '路径总和 II',      file: '113.path-sum-ii.html',                   tags: ['binary-tree', 'dfs'],          cat: 'binary-tree' },
   { id: 4,  num: '146', title: 'LRU 缓存',        file: '146.lru-cache.html',                     tags: ['hash-map', 'linked-list'],     cat: 'other' },
@@ -151,6 +152,7 @@ const cards = [
 // category labels
 const catLabel = {
   'binary-tree': '二叉树',
+  'two-pointer': '双指针',
   'sliding-window': '滑动窗口',
   'binary-search': '二分查找',
   'dp': '动态规划',
@@ -206,6 +208,7 @@ function updateStats() {
   // filter counts
   document.getElementById('count-all').textContent = total;
   document.getElementById('count-binary-tree').textContent = byCat['binary-tree'] || 0;
+  document.getElementById('count-two-pointer').textContent = byCat['two-pointer'] || 0;
   document.getElementById('count-sliding-window').textContent = byCat['sliding-window'] || 0;
   document.getElementById('count-binary-search').textContent = byCat['binary-search'] || 0;
   document.getElementById('count-dp').textContent = byCat['dp'] || 0;
