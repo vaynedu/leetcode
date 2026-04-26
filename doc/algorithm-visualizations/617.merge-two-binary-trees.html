@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>合并二叉树 · 图解 · LeetCode 617</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+  :root {
+    --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917;
+    --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 32px; }
+  .card { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
+  .card h3 { font-size: 1rem; font-weight: 600; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+  .card p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--rule); }
+
+  .tree-pair { display: flex; gap: 32px; justify-content: center; align-items: center; margin: 20px 0; flex-wrap: wrap; }
+  .tree-box { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; text-align: center; }
+  .tree-box h4 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-family: 'Geist Mono', monospace; }
+  .plus-sign { font-size: 32px; color: var(--accent); font-family: 'Instrument Serif', serif; }
+  .equals-sign { font-size: 32px; color: var(--accent); font-family: 'Instrument Serif', serif; }
+  .merge-arrow { color: var(--accent); font-size: 20px; margin: 0 8px; }
+  .code-block { background: var(--ink); color: #faf7f2; font-family: 'Geist Mono', monospace; font-size: 12px; padding: 16px; border-radius: 6px; line-height: 1.7; overflow-x: auto; }
+  .code-block .kw { color: #f97316; }
+  .code-block .fn { color: #60a5fa; }
+  .code-block .cm { color: #78716c; }
+  .node-merged { fill: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="eyebrow">LeetCode 617</div>
+<h1>合并二叉树</h1>
+<p class="subtitle">相同位置节点值相加，返回合并后的树</p>
+
+<section>
+<h2>三棵树对比</h2>
+<div class="tree-pair">
+  <div class="tree-box">
+    <h4>Tree 1</h4>
+    <svg viewBox="0 0 200 130" width="200" height="130">
+      <line x1="100" y1="25" x2="60" y2="55" stroke="#78716c" stroke-width="1.5"/>
+      <line x1="100" y1="25" x2="140" y2="55" stroke="#78716c" stroke-width="1.5"/>
+      <circle cx="100" cy="25" r="18" fill="#1c1917"/><text x="100" y="29" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">1</text>
+      <circle cx="60" cy="55" r="18" fill="#1c1917"/><text x="60" y="59" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">3</text>
+      <circle cx="140" cy="55" r="18" fill="#1c1917"/><text x="140" y="59" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">2</text>
+    </svg>
+  </div>
+  <span class="plus-sign">+</span>
+  <div class="tree-box">
+    <h4>Tree 2</h4>
+    <svg viewBox="0 0 200 130" width="200" height="130">
+      <line x1="100" y1="25" x2="60" y2="55" stroke="#78716c" stroke-width="1.5"/>
+      <line x1="100" y1="25" x2="140" y2="55" stroke="#78716c" stroke-width="1.5"/>
+      <circle cx="100" cy="25" r="18" fill="#1c1917"/><text x="100" y="29" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">2</text>
+      <circle cx="60" cy="55" r="18" fill="#1c1917"/><text x="60" y="59" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">1</text>
+      <circle cx="140" cy="55" r="18" fill="#1c1917"/><text x="140" y="59" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">3</text>
+    </svg>
+  </div>
+  <span class="equals-sign">=</span>
+  <div class="tree-box">
+    <h4>Merged</h4>
+    <svg viewBox="0 0 200 130" width="200" height="130">
+      <line x1="100" y1="25" x2="60" y2="55" stroke="#78716c" stroke-width="1.5"/>
+      <line x1="100" y1="25" x2="140" y2="55" stroke="#78716c" stroke-width="1.5"/>
+      <circle cx="100" cy="25" r="18" fill="#b5523a"/><text x="100" y="29" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">3</text>
+      <circle cx="60" cy="55" r="18" fill="#b5523a"/><text x="60" y="59" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">4</text>
+      <circle cx="140" cy="55" r="18" fill="#b5523a"/><text x="140" y="59" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="11" font-weight="600">5</text>
+    </svg>
+  </div>
+</div>
+<p class="section-sub" style="text-align:center;">1+2=3, 3+1=4, 2+3=5</p>
+</section>
+
+<section>
+<h2>原地合并代码</h2>
+<div class="code-block">
+<span class="kw">func</span> <span class="fn">MergeTrees</span>(root1, root2 *TreeNode) *TreeNode {
+    <span class="cm">// 其中一个为空，直接返回另一个</span>
+    <span class="kw">if</span> root1 == <span class="kw">nil</span> { <span class="kw">return</span> root2 }
+    <span class="kw">if</span> root2 == <span class="kw">nil</span> { <span class="kw">return</span> root1 }
+
+    <span class="cm">// 都有值：相加</span>
+    root1.Val += root2.Val
+
+    <span class="cm">// 递归合并左右子树</span>
+    root1.Left  = <span class="fn">MergeTrees</span>(root1.Left,  root2.Left)
+    root1.Right = <span class="fn">MergeTrees</span>(root1.Right, root2.Right)
+
+    <span class="kw">return</span> root1
+}
+</div>
+</section>
+
+<section>
+<h2>合并顺序</h2>
+<p class="section-sub">先处理根，再递归处理左子树和右子树。返回值直接接在当前节点的 Left/Right 上。</p>
+<div style="display:flex; gap:8px; justify-content:center; margin-top:16px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted);">
+  <span style="background:var(--paper); border:1px solid var(--rule); padding:6px 12px; border-radius:4px;">root1==nil → return root2</span>
+  <span style="color:var(--accent);">→</span>
+  <span style="background:var(--paper); border:1px solid var(--rule); padding:6px 12px; border-radius:4px;">root2==nil → return root1</span>
+  <span style="color:var(--accent);">→</span>
+  <span style="background:var(--accent-tint); border:1px solid var(--accent); padding:6px 12px; border-radius:4px; color:var(--accent);">Val相加</span>
+</div>
+</section>
+
+<footer>LeetCode 617 · 合并二叉树</footer>
+</div>
+</body>
+</html>
