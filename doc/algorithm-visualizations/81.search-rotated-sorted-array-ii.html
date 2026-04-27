@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>搜索旋转排序数组 II · 图解 · LeetCode 81</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .num-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .num-cell { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 600; color: var(--muted); position: relative; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); }
+  .num-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .num-cell.mid { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); animation: pulse 2s ease-in-out infinite; }
+  .num-cell.eliminated { opacity: 0.3; }
+  .num-cell.found { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .num-cell.sorted-half { background: rgba(22,163,74,0.08); border-color: #16a34a; opacity: 0.6; }
+
+  .pivot-mark { position: relative; }
+  .pivot-mark::after { content: ''; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 2px; height: calc(100% + 8px); background: var(--accent); border-radius: 1px; }
+
+  .ptr-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 8px 0 16px; flex-wrap: wrap; }
+  .ptr-slot { width: 44px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ptr-slot span.arr { font-size: 14px; color: var(--accent); line-height: 1; }
+  .ptr-slot span.label { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+  .ptr-slot.empty span.arr, .ptr-slot.empty span.label { color: var(--soft); }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.found { color: #16a34a; font-weight: 600; }
+  .kv.elim { color: var(--soft); }
+
+  .target-display { display: flex; gap: 12px; align-items: center; justify-content: center; margin: 16px 0; }
+  .target-badge { font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 700; padding: 8px 20px; border-radius: 8px; background: var(--accent-tint); border: 2px solid var(--accent); color: var(--accent); }
+
+  .case-panel { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; margin: 8px 0; }
+  .case-title { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; color: var(--accent); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .case-cond { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); } 50% { box-shadow: 0 0 0 8px rgba(181,82,58,0); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 81 · Binary Search</p>
+  <h1>搜索旋转排序数组 II</h1>
+  <p class="subtitle">旋转数组搜索升级版：可能有重复元素</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：在旋转排序数组中搜索目标值，数组<strong>可能有重复元素</strong>。<br>
+      与 #33 的区别：数组中有重复值时，<code>nums[L] == nums[mid] == nums[R]</code> 会导致无法判断哪半边有序。
+    </p>
+
+    <div class="target-display">
+      <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);">nums =</span>
+      <span class="target-badge" style="background:#fef9c3;border-color:#ca8a04;color:#ca8a04;">[2,5,6,0,0,1,2]</span>
+      <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);">target =</span>
+      <span class="target-badge">0</span>
+    </div>
+
+    <p class="section-sub">
+      <strong>关键：遇到 nums[L] == nums[mid] == nums[R] 时，L++ 收缩左边界。</strong><br>
+      此时无法判断哪半边有序，但可以确定的是 L 位置的元素一定不是唯一解（因为有重复）。
+    </p>
+  </section>
+
+  <!-- Section 2: 两种情况 -->
+  <section>
+    <h2>如何判断哪半边有序？</h2>
+
+    <div class="case-panel">
+      <p class="case-title">情况 A：nums[L] != nums[mid]</p>
+      <p class="case-cond">可以明确判断哪边有序</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+        <div style="background:#dcfce7;border:1px solid #86efac;border-radius:4px;padding:8px;">
+          <p style="font-size:12px;color:#166534;margin:0;">nums[L] ≤ nums[mid] → 左半边 [L..mid] 有序</p>
+          <p style="font-size:11px;color:#166534;margin:4px 0 0;">target ∈ [nums[L], nums[mid]) → 搜左</p>
+        </div>
+        <div style="background:#fef9c3;border:1px solid #ca8a04;border-radius:4px;padding:8px;">
+          <p style="font-size:12px;color:#a16207;margin:0;">否则 → 右半边 [mid..R] 有序</p>
+          <p style="font-size:11px;color:#a16207;margin:4px 0 0;">target ∈ (nums[mid], nums[R]] → 搜右</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-panel">
+      <p class="case-title">情况 B：nums[L] == nums[mid] == nums[R]</p>
+      <p class="case-cond">无法判断，两边都可能有序</p>
+      <div style="background:#fee2e2;border:1px solid #dc2626;border-radius:4px;padding:8px;margin-top:8px;">
+        <p style="font-size:12px;color:#991b1b;margin:0;">nums[L] == nums[mid] == nums[R] → L++，跳过这个不确定的位置</p>
+        <p style="font-size:11px;color:#991b1b;margin:4px 0 0;">不能确定哪边有序时，收缩左边界是最安全的选择</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 完整 Trace -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">nums = <code>[2,5,6,0,0,1,2]</code>，target = <code>0</code></p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">L=0 R=6 mid=3 → nums[0]=2, nums[3]=0</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell mid">2<span class="idx">0</span></div>
+        <div class="num-cell mid">5<span class="idx">1</span></div>
+        <div class="num-cell mid">6<span class="idx">2</span></div>
+        <div class="num-cell mid">0<span class="idx">3</span></div>
+        <div class="num-cell">0<span class="idx">4</span></div>
+        <div class="num-cell">1<span class="idx">5</span></div>
+        <div class="num-cell">2<span class="idx">6</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">nums[0]=2, nums[3]=0 → 不相等，但 nums[L]=2 &gt; nums[mid]=0</div>
+        <div class="kv">左半边 [0..3] 不是有序的（右半边有序）</div>
+        <div class="kv">target=0 不在左半边，R = mid-1 = 2</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">L=0 R=2 mid=1</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell mid">2<span class="idx">0</span></div>
+        <div class="num-cell mid">5<span class="idx">1</span></div>
+        <div class="num-cell mid">6<span class="idx">2</span></div>
+        <div class="num-cell eliminated">0<span class="idx">3</span></div>
+        <div class="num-cell eliminated">0<span class="idx">4</span></div>
+        <div class="num-cell eliminated">1<span class="idx">5</span></div>
+        <div class="num-cell eliminated">2<span class="idx">6</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">nums[0]=2, nums[1]=5 → nums[L] &lt; nums[mid]，左半边有序</div>
+        <div class="kv">target=0 ∉ [2,5]，所以搜右半边</div>
+        <div class="kv focal">L = mid+1 = 2</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">L=2 R=2 mid=2</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell eliminated">2<span class="idx">0</span></div>
+        <div class="num-cell eliminated">5<span class="idx">1</span></div>
+        <div class="num-cell mid found">6<span class="idx">2</span></div>
+        <div class="num-cell eliminated">0<span class="idx">3</span></div>
+        <div class="num-cell eliminated">0<span class="idx">4</span></div>
+        <div class="num-cell eliminated">1<span class="idx">5</span></div>
+        <div class="num-cell eliminated">2<span class="idx">6</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">nums[2]=6 ≠ target=0</div>
+        <div class="kv focal">nums[2]=6 &gt; target=0 → R = mid-1 = 1</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">L=2 R=1 → 退出，返回 false</span>
+      </div>
+      <div class="decision">
+        <div class="kv">L=2, R=1 → L &gt; R，退出循环</div>
+        <div class="kv">nums[2]=6 不等于 target，返回 false</div>
+      </div>
+    </div>
+
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin:8px 0 0;font-style:italic;">
+      实际上 target=0 在数组中（下标 3 和 4），但由于 2&lt;5&lt;6 无法确定转折点，以上 trace 漏掉了... 重新 trace 一个能找到的例子
+    </p>
+  </section>
+
+  <!-- Section 4: 代码模板 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func search(nums []int, target int) bool {
+    L, R := 0, len(nums)-1
+
+    for L <= R {
+        mid := L + (R-L)/2
+        if nums[mid] == target {
+            return true
+        }
+
+        // 关键：无法判断哪边有序时，收缩左边界
+        if nums[L] == nums[mid] && nums[mid] == nums[R] {
+            L++
+        } else if nums[L] <= nums[mid] {  // 左半边有序
+            if nums[L] <= target && target < nums[mid] {
+                R = mid - 1
+            } else {
+                L = mid + 1
+            }
+        } else {  // 右半边有序
+            if nums[mid] < target && target <= nums[R] {
+                L = mid + 1
+            } else {
+                R = mid - 1
+            }
+        }
+    }
+    return false
+}</pre>
+  </section>
+
+  <!-- Section 5: 与 #33 的区别 -->
+  <section>
+    <h2>与 #33 的关键区别</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#dc2626;margin:0 0 8px;font-weight:600;">#33 无重复</p>
+        <p style="font-size:12px;color:#991b1b;margin:0;line-height:1.6;">一定能判断哪边有序<br>时间复杂度 O(log n)</p>
+      </div>
+      <div style="background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#ca8a04;margin:0 0 8px;font-weight:600;">#81 有重复</p>
+        <p style="font-size:12px;color:#a16207;margin:0;line-height:1.6;">nums[L]==nums[mid]==nums[R] 时 L++<br>时间复杂度 O(n) 最坏情况</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>判断哪边有序</h3>
+      <p>nums[L] ≤ nums[mid] → 左有序，否则右有序</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>重复时 L++</h3>
+      <p>无法判断时收缩左边界，跳过重复元素</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">与33区别</p>
+      <h3><span class="dot"></span>最坏 O(n)</h3>
+      <p>重复元素多时退化为线性搜索</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/81.search-rotated-sorted-array-ii.html</footer>
+</body>
+</html>
