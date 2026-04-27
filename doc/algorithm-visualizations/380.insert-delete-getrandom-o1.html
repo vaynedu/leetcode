@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>常数时间插入删除和随机获取 · 图解 · LeetCode 380</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .data-row { display: flex; gap: 16px; align-items: flex-start; justify-content: center; margin: 24px 0; flex-wrap: wrap; }
+  .data-col { text-align: center; min-width: 180px; }
+  .data-label { font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 600; color: var(--accent); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .array-visual { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; margin: 8px 0; }
+  .arr-cell { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 600; border-radius: 4px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .arr-cell.fresh { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .arr-cell.deleted { background: #fee2e2; border-color: #dc2626; color: #dc2626; opacity: 0.4; text-decoration: line-through; }
+  .arr-cell.rand { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); animation: pulse 1s infinite; }
+  .hash-visual { display: flex; flex-direction: column; gap: 2px; align-items: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 8px; min-width: 180px; }
+  .hash-row { display: flex; gap: 8px; }
+  .hash-kv { color: var(--accent); font-weight: 600; }
+  .hash-v { color: var(--muted); }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.done { color: #16a34a; font-weight: 600; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .op-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .op-table th { font-family: 'Geist Mono', monospace; font-size: 10px; text-align: left; padding: 8px 12px; background: var(--paper); border: 1px solid var(--rule); color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+  .op-table td { font-size: 12px; padding: 8px 12px; border: 1px solid var(--rule); color: var(--muted); }
+  .op-table td:first-child { font-family: 'Geist Mono', monospace; font-weight: 600; color: var(--accent); }
+  .op-table .ds { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); } 50% { box-shadow: 0 0 0 6px rgba(181,82,58,0); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 380 · Design</p>
+  <h1>O(1) 时间插入、删除和随机获取</h1>
+  <p class="subtitle">实现一个支持 O(1) 平均时间的数据结构</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：实现一个数据结构，支持：<strong>insert</strong>、<strong>delete</strong>、<strong>getRandom</strong>，且所有操作均为<strong>均摊 O(1)</strong>。<br>
+      关键：<strong>HashMap + Array/List 的组合</strong>。
+    </p>
+
+    <table class="op-table">
+      <tr><th>操作</th><th>数据结构</th><th>时间</th><th>关键点</th></tr>
+      <tr>
+        <td>insert</td><td class="ds">HashMap + Array</td><td>O(1)</td>
+        <td>map[val] = index, arr.append(val)</td>
+      </tr>
+      <tr>
+        <td>delete</td><td class="ds">HashMap + Array</td><td>O(1)</td>
+        <td>与末尾交换，map 更新，arr.pop()</td>
+      </tr>
+      <tr>
+        <td>getRandom</td><td class="ds">Array</td><td>O(1)</td>
+        <td>rand.Intn(len(arr)) 随机索引</td>
+      </tr>
+    </table>
+
+    <p class="section-sub" style="margin-top:16px;">
+      <strong>为什么 delete 是 O(1)？</strong>普通数组删除中间元素是 O(n)，但我们通过<strong>将被删除元素与末尾元素交换</strong>，然后 pop()，避免移动数组元素。
+    </p>
+  </section>
+
+  <!-- Section 2: 数据结构 -->
+  <section>
+    <h2>双数据结构协同</h2>
+    <div class="data-row">
+      <div class="data-col">
+        <p class="data-label">Array (值列表)</p>
+        <div class="array-visual">
+          <div class="arr-cell">1</div>
+          <div class="arr-cell">3</div>
+          <div class="arr-cell">7</div>
+          <div class="arr-cell">2</div>
+        </div>
+        <p style="font-size:11px;color:var(--soft);margin:4px 0 0;">索引: 0  1  2  3</p>
+        <p style="font-size:11px;color:var(--soft);margin:0;">用于 getRandom O(1) 随机访问</p>
+      </div>
+      <div class="data-col">
+        <p class="data-label">HashMap (val → index)</p>
+        <div class="hash-visual">
+          <div class="hash-row"><span class="hash-kv">1</span> → <span class="hash-v">0</span></div>
+          <div class="hash-row"><span class="hash-kv">3</span> → <span class="hash-v">1</span></div>
+          <div class="hash-row"><span class="hash-kv">7</span> → <span class="hash-v">2</span></div>
+          <div class="hash-row"><span class="hash-kv">2</span> → <span class="hash-v">3</span></div>
+        </div>
+        <p style="font-size:11px;color:var(--soft);margin:8px 0 0;">用于 insert/delete O(1) 查找索引</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 手推 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">依次执行：insert(1), insert(3), insert(7), insert(2), remove(3), getRandom()</p>
+
+    <!-- After inserts -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="kv">insert(1), insert(3), insert(7), insert(2) 完成后</span>
+      </div>
+      <div class="data-row">
+        <div class="data-col">
+          <p class="data-label">Array</p>
+          <div class="array-visual">
+            <div class="arr-cell fresh">1</div>
+            <div class="arr-cell fresh">3</div>
+            <div class="arr-cell fresh">7</div>
+            <div class="arr-cell fresh">2</div>
+          </div>
+        </div>
+        <div class="data-col">
+          <p class="data-label">HashMap</p>
+          <div class="hash-visual">
+            <div class="hash-row"><span class="hash-kv">1</span>→<span class="hash-v">0</span></div>
+            <div class="hash-row"><span class="hash-kv">3</span>→<span class="hash-v">1</span></div>
+            <div class="hash-row"><span class="hash-kv">7</span>→<span class="hash-v">2</span></div>
+            <div class="hash-row"><span class="hash-kv">2</span>→<span class="hash-v">3</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Remove 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="kv">remove(3) — 删除元素 3</span>
+      </div>
+      <div class="decision">
+        <div class="kv">HashMap 查找 3 → index=1</div>
+        <div class="kv">末尾是 2，将 2 与 arr[1] 交换</div>
+        <div class="kv">Array: [1, 2, 7, 3] → [1, 2, 7]（pop）</div>
+        <div class="kv focal">HashMap 更新: 2→1, 删除 3→1</div>
+      </div>
+      <div class="data-row" style="margin-top:12px;">
+        <div class="data-col">
+          <p class="data-label">Array 后</p>
+          <div class="array-visual">
+            <div class="arr-cell">1</div>
+            <div class="arr-cell fresh">2</div>
+            <div class="arr-cell deleted">3</div>
+            <div class="arr-cell">7</div>
+          </div>
+        </div>
+        <div class="data-col">
+          <p class="data-label">HashMap 后</p>
+          <div class="hash-visual">
+            <div class="hash-row"><span class="hash-kv">1</span>→<span class="hash-v">0</span></div>
+            <div class="hash-row"><span class="hash-kv">2</span>→<span class="hash-v">1</span></div>
+            <div class="hash-row"><span class="hash-kv">7</span>→<span class="hash-v">2</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- getRandom -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="kv done">getRandom() → 随机返回一个元素</span>
+      </div>
+      <div class="decision">
+        <div class="kv">rand.Intn(3) ∈ {0,1,2}</div>
+        <div class="kv">可能返回 1, 2, 或 7</div>
+        <div class="kv done">均摊 O(1)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: 代码 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+type RandomizedSet struct {
+    // val → index 映射，O(1) 查找
+    index map[int]int
+    // 值列表，O(1) 随机访问
+    vals  []int
+}
+
+func Constructor() RandomizedSet {
+    return RandomizedSet{
+        index: make(map[int]int),
+        vals:  []int{},
+    }
+}
+
+// 插入：O(1)
+func (r *RandomizedSet) Insert(val int) bool {
+    if _, exists := r.index[val]; exists {
+        return false
+    }
+    r.index[val] = len(r.vals)
+    r.vals = append(r.vals, val)
+    return true
+}
+
+// 删除：O(1) — 关键是与末尾交换
+func (r *RandomizedSet) Remove(val int) bool {
+    idx, exists := r.index[val]
+    if !exists {
+        return false
+    }
+    // 将待删除元素与末尾交换
+    last := len(r.vals) - 1
+    lastVal := r.vals[last]
+    r.vals[idx], r.vals[last] = r.vals[last], r.vals[idx]
+    // 更新末尾元素的索引
+    r.index[lastVal] = idx
+    // 删除末尾
+    r.vals = r.vals[:last]
+    delete(r.index, val)
+    return true
+}
+
+// 随机获取：O(1)
+func (r *RandomizedSet) GetRandom() int {
+    return r.vals[rand.Intn(len(r.vals))]
+}</pre>
+  </section>
+
+  <!-- Section 5: 变种 -->
+  <section>
+    <h2>变种对比</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">#380 只存值</p>
+        <p style="font-size:12px;color:#166534;margin:0;line-height:1.6;">HashMap[int]int 映射值→索引<br>删除时与末尾交换</p>
+      </div>
+      <div style="background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#ca8a04;margin:0 0 8px;font-weight:600;">#381 允许重复</p>
+        <p style="font-size:12px;color:#a16207;margin:0;line-height:1.6;">HashMap[int]Set[int] 映射值→索引集合<br>多一次 Set 操作，但仍是 O(1) 均摊</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>HashMap + Array</h3>
+      <p>Map 存索引，Array 存值，互补实现 O(1)</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>末尾交换删除</h3>
+      <p>避免数组中间删除 O(n)，改用交换+pop O(1)</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">要点</p>
+      <h3><span class="dot"></span>删除时更新索引</h3>
+      <p>与末尾交换后，HashMap 中末尾元素索引要更新</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/380.insert-delete-getrandom-o1.html</footer>
+</body>
+</html>
