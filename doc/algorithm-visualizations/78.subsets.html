@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>子集 · 图解 · LeetCode 78</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .num-row { display: flex; gap: 6px; align-items: center; justify-content: center; margin: 12px 0; flex-wrap: wrap; }
+  .num-cell { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 600; color: var(--muted); border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); }
+  .num-cell.included { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+
+  .subset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin: 16px 0; }
+  .subset { font-family: 'Geist Mono', monospace; font-size: 12px; padding: 6px 10px; border-radius: 6px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); text-align: center; }
+  .subset.done { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .subset.current { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; margin: 10px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 12px; color: var(--muted); margin: 3px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 11px; background: rgba(28,25,23,0.05); padding: 1px 4px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.done { color: #16a34a; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 10px 14px; margin-top: 10px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 78 · Backtracking</p>
+  <h1>子集</h1>
+  <p class="subtitle">给定无重复数组，返回所有可能的子集</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定一个<strong>无重复</strong>数组，返回所有可能的子集（幂集）。<br>
+      关键：<strong>每个元素都有"选"和"不选"两种状态，共 2ⁿ 个子集</strong>。本质是一棵二叉树的遍历。
+    </p>
+
+    <div class="num-row">
+      <div class="num-cell">1</div>
+      <div class="num-cell">2</div>
+      <div class="num-cell">3</div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin:0;">每个元素：选 / 不选 → 2³ = 8 个子集</p>
+  </section>
+
+  <!-- Section 2: 二叉树图 -->
+  <section>
+    <h2>二叉树视角</h2>
+    <p class="section-sub">每层代表一个元素，分叉为"选"或"不选"</p>
+    <pre style="font-size:12px;line-height:1.9;color:#78716c;margin:0;">
+                []          depth=0（空集）
+           /         \
+        []            [1]      depth=1（选/不选元素1）
+       /   \         /   \
+    []      [2]   [1]   [1,2]  depth=2
+    / \     /\    / \    / \
+  []  [3] [2][2,3][1][1,3][1,2][1,2,3]  depth=3
+    </pre>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:16px;">共 2³ = 8 个子集</p>
+  </section>
+
+  <!-- Section 3: 手推 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">nums = <code>[1,2,3]</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">初始</span>
+        <span class="kv">path=[], index=0</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">depth=0</span>
+        <span class="kv">不选 1 → [], 选 1 → [1]</span>
+      </div>
+      <div class="subset-grid">
+        <span class="subset current">[]</span>
+        <span class="subset current">[1]</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">depth=1</span>
+        <span class="kv">在 [] 基础上：不选2→[], 选2→[2]</span>
+      </div>
+      <div class="subset-grid">
+        <span class="subset done">[]</span>
+        <span class="subset done">[1]</span>
+        <span class="subset current">[]</span>
+        <span class="subset current">[2]</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">depth=2</span>
+        <span class="kv">在 [1] 基础上：不选2→[1], 选2→[1,2]</span>
+      </div>
+      <div class="subset-grid">
+        <span class="subset done">[]</span>
+        <span class="subset done">[1]</span>
+        <span class="subset done">[]</span>
+        <span class="subset done">[2]</span>
+        <span class="subset current">[1]</span>
+        <span class="subset current">[1,2]</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">完成</span>
+        <span class="kv done">共 8 个子集</span>
+      </div>
+      <div class="subset-grid">
+        <span class="subset done">[]</span>
+        <span class="subset done">[1]</span>
+        <span class="subset done">[2]</span>
+        <span class="subset done">[3]</span>
+        <span class="subset done">[1,2]</span>
+        <span class="subset done">[1,3]</span>
+        <span class="subset done">[2,3]</span>
+        <span class="subset done">[1,2,3]</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: 代码 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func subsets(nums []int) [][]int {
+    var result [][]int
+    var path []int
+
+    var backtrack func(index int)
+    backtrack = func(index int) {
+        // 每个节点都是合法子集，直接收集
+        ans := make([]int, len(path))
+        copy(ans, path)
+        result = append(result, ans)
+
+        for i := index; i < len(nums); i++ {
+            path = append(path, nums[i])
+            backtrack(i + 1)  // 关键：从 i+1 开始（不回头选）
+            path = path[:len(path)-1]
+        }
+    }
+
+    backtrack(0)
+    return result
+}</pre>
+  </section>
+
+  <!-- Section 5: 与组合/排列的区别 -->
+  <section>
+    <h2>三种回溯的本质区别</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:12px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--accent);margin:0 0 6px;font-weight:600;">子集 #78</p>
+        <p style="font-size:11px;color:var(--muted);margin:0;line-height:1.6;">每个元素：选/不选<br>2ⁿ 个子集</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:12px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--accent);margin:0 0 6px;font-weight:600;">组合 #39/40</p>
+        <p style="font-size:11px;color:var(--muted);margin:0;line-height:1.6;">选固定数量<br>顺序无关，用 index</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:12px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--accent);margin:0 0 6px;font-weight:600;">排列 #46</p>
+        <p style="font-size:11px;color:var(--muted);margin:0;line-height:1.6;">选所有元素<br>顺序有关，用 used</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">本质</p>
+      <h3><span class="dot"></span>二叉树遍历</h3>
+      <p>每个元素"选"或"不选"，每个节点都是子集</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>每个节点都收集</h3>
+      <p>子集问题不等到叶节点，每层都保存</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">模板</p>
+      <h3><span class="dot"></span>index 控制起点</h3>
+      <p>backtrack(i+1) 不回头，自然去重</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/78.subsets.html</footer>
+</body>
+</html>
