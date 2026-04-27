@@ -3,13 +3,13 @@ package interview
 // 155. 最小栈
 // 两个栈：数据栈 + 最小栈（同步记录当前最小值）
 type MinStack struct {
-    stack []int
+    stack    []int
     minStack []int
 }
 
-func Constructor() MinStack {
-    return MinStack{
-        stack: []int{},
+func NewMinStack() *MinStack {
+    return &MinStack{
+        stack:    []int{},
         minStack: []int{},
     }
 }

@@ -9,7 +9,7 @@ import (
 // 前序遍历序列化，空节点用 # 分隔
 type Codec struct{}
 
-func Constructor() Codec {
+func NewCodec() Codec {
     return Codec{}
 }
 

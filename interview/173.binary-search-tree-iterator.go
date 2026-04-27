@@ -7,7 +7,7 @@ type BSTIterator struct {
     node  *TreeNode
 }
 
-func Constructor(root *TreeNode) BSTIterator {
+func NewBSTIterator(root *TreeNode) BSTIterator {
     return BSTIterator{node: root}
 }
 
