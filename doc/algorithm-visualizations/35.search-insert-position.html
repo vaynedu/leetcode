@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>搜索插入位置 · 图解 · LeetCode 35</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .num-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .num-cell { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 600; color: var(--muted); position: relative; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); }
+  .num-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .num-cell.mid { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); animation: pulse 2s ease-in-out infinite; }
+  .num-cell.found { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .num-cell.eliminated { opacity: 0.3; }
+  .num-cell.insert { background: #fef9c3; border-color: #ca8a04; color: #ca8a04; transform: scale(1.1); }
+
+  .ptr-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 8px 0 16px; flex-wrap: wrap; }
+  .ptr-slot { width: 48px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ptr-slot span.arr { font-size: 14px; color: var(--accent); line-height: 1; }
+  .ptr-slot span.label { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.found { color: #16a34a; font-weight: 600; }
+  .kv.insert { color: #ca8a04; font-weight: 600; }
+
+  .target-display { display: flex; gap: 12px; align-items: center; justify-content: center; margin: 16px 0; }
+  .target-badge { font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 700; padding: 8px 20px; border-radius: 8px; background: var(--accent-tint); border: 2px solid var(--accent); color: var(--accent); }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); } 50% { box-shadow: 0 0 0 8px rgba(181,82,58,0); } }
+  @keyframes found { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  .found { animation: found 1s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 35 · Binary Search</p>
+  <h1>搜索插入位置</h1>
+  <p class="subtitle">在有序数组中找 target，找不到则返回插入位置</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定有序数组 <code>nums</code> 和目标值 <code>target</code>，如果存在则返回下标，否则返回插入位置。<br>
+      关键：<strong>标准二分查找，找不到时返回 L（恰好是插入位置）</strong>。
+    </p>
+
+    <div class="target-display">
+      <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);">target =</span>
+      <span class="target-badge">5</span>
+    </div>
+
+    <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;align-items:center;margin:24px 0;">
+      <div style="text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">情况 ①：target 存在</p>
+        <div class="num-row">
+          <div class="num-cell">1</div>
+          <div class="num-cell">3</div>
+          <div class="num-cell found">5</div>
+          <div class="num-cell">7</div>
+          <div class="num-cell">9</div>
+        </div>
+        <p style="font-size:12px;color:#16a34a;font-weight:600;margin:8px 0 0;">返回 2</p>
+      </div>
+
+      <div style="text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">情况 ②：target 不存在</p>
+        <div class="num-row">
+          <div class="num-cell">1</div>
+          <div class="num-cell">3</div>
+          <div class="num-cell eliminated">5</div>
+          <div class="num-cell insert">7</div>
+          <div class="num-cell">9</div>
+        </div>
+        <p style="font-size:12px;color:#ca8a04;font-weight:600;margin:8px 0 0;">target=6 → 插入位置 3</p>
+      </div>
+    </div>
+
+    <p class="section-sub">
+      <strong>为什么 L 就是插入位置？</strong><br>
+      二分结束时 L==R，落在 target 应该所在的"槽位"。如果 target 存在，命中时会返回 mid；
+      如果不存在，循环结束时 L 停在第一个 > target 的位置（或者数组末尾）。
+    </p>
+  </section>
+
+  <!-- Section 2: 完整 Trace -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">nums = <code>[1,3,5,7,9]</code>，target = <code>6</code></p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">L=0 R=4 mid=2</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell mid">1<span class="idx">0</span></div>
+        <div class="num-cell mid">3<span class="idx">1</span></div>
+        <div class="num-cell mid">5<span class="idx">2</span></div>
+        <div class="num-cell">7<span class="idx">3</span></div>
+        <div class="num-cell">9<span class="idx">4</span></div>
+      </div>
+      <div class="ptr-row">
+        <div class="ptr-slot"><span class="arr">↑</span><span class="label">L</span></div>
+        <div class="ptr-slot empty"><span class="arr"></span><span class="label"></span></div>
+        <div class="ptr-slot"><span class="arr">↑</span><span class="label">M</span></div>
+        <div class="ptr-slot empty"><span class="arr"></span><span class="label"></span></div>
+        <div class="ptr-slot"><span class="arr">↑</span><span class="label">R</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">mid=2, nums[2]=5 &lt; target=6 → L = mid + 1 = 3</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">L=3 R=4 mid=3</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell eliminated">1<span class="idx">0</span></div>
+        <div class="num-cell eliminated">3<span class="idx">1</span></div>
+        <div class="num-cell eliminated">5<span class="idx">2</span></div>
+        <div class="num-cell mid">7<span class="idx">3</span></div>
+        <div class="num-cell">9<span class="idx">4</span></div>
+      </div>
+      <div class="ptr-row">
+        <div class="ptr-slot empty"><span class="arr"></span><span class="label"></span></div>
+        <div class="ptr-slot empty"><span class="arr"></span><span class="label"></span></div>
+        <div class="ptr-slot empty"><span class="arr"></span><span class="label"></span></div>
+        <div class="ptr-slot"><span class="arr">↑</span><span class="label">L</span></div>
+        <div class="ptr-slot"><span class="arr">↑</span><span class="label">M</span></div>
+        <div class="ptr-slot"><span class="arr">↑</span><span class="label">R</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">mid=3, nums[3]=7 &gt; target=6 → R = mid - 1 = 2</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">L=3 R=2 → 退出</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell eliminated">1<span class="idx">0</span></div>
+        <div class="num-cell eliminated">3<span class="idx">1</span></div>
+        <div class="num-cell eliminated">5<span class="idx">2</span></div>
+        <div class="num-cell insert">7<span class="idx">3</span></div>
+        <div class="num-cell eliminated">9<span class="idx">4</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">L=3, R=2 → L &gt; R，退出循环</div>
+        <div class="kv insert">L=3 就是 target=6 的插入位置</div>
+        <div class="kv found">return L = 3</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:#16a34a;font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：return 3（插入到 7 之前的位置）
+    </p>
+  </section>
+
+  <!-- Section 3: 代码模板 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <p class="section-sub">标准二分，注意循环条件和返回值</p>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func searchInsert(nums []int, target int) int {
+    L, R := 0, len(nums)-1
+
+    for L <= R {
+        mid := L + (R-L)/2
+        if nums[mid] == target {
+            return mid
+        } else if nums[mid] < target {
+            L = mid + 1
+        } else {
+            R = mid - 1
+        }
+    }
+    // 找不到时，L 就是插入位置
+    return L
+}</pre>
+  </section>
+
+  <!-- Section 4: 易错 -->
+  <section>
+    <h2>易错点</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:#fee2e2;border:1px solid #dc2626;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#dc2626;margin:0 0 8px;font-weight:600;">❌ 循环条件 L &lt; R</p>
+        <p style="font-size:12px;color:#991b1b;margin:0;line-height:1.6;">如果用 L &lt; R，可能漏掉 target 恰好在 L==R 的情况</p>
+      </div>
+      <div style="background:#dcfce7;border:1px solid #16a34a;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">✓ 循环条件 L &lt;= R</p>
+        <p style="font-size:12px;color:#166534;margin:0;line-height:1.6;">用 L &lt;= R，确保 L==R 时还能再判断一次</p>
+      </div>
+    </div>
+    <p class="section-sub" style="margin-top:16px;">
+      <strong>边界 case：</strong><br>
+      target &lt; 所有元素：L=0 保持不变，返回 0<br>
+      target &gt; 所有元素：L 最终会变成 len(nums)，返回 len(nums)
+    </p>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>标准二分</h3>
+      <p>L=0, R=n-1, while L &lt;= R，每次缩半</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>找不到返回 L</h3>
+      <p>循环结束时 L 恰好是插入位置</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">变形</p>
+      <h3><span class="dot"></span>最左插入 / 最右插入</h3>
+      <p>改 nums[mid] &lt; target 判断，找边界</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/35.search-insert-position.html</footer>
+</body>
+</html>
