@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>寻找旋转排序数组中的最小值 · 图解 · LeetCode 153</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .num-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .num-cell { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 600; color: var(--muted); position: relative; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); }
+  .num-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .num-cell.mid { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); animation: pulse 2s ease-in-out infinite; }
+  .num-cell.eliminated { opacity: 0.3; }
+  .num-cell.ans { background: #dcfce7; border-color: #16a34a; color: #16a34a; transform: scale(1.1); }
+  .num-cell.min-pivot { position: relative; }
+  .num-cell.min-pivot::after { content: '←最小'; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #16a34a; font-family: 'Geist Mono', monospace; white-space: nowrap; }
+
+  .ptr-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 8px 0 16px; flex-wrap: wrap; }
+  .ptr-slot { width: 48px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ptr-slot span.arr { font-size: 14px; color: var(--accent); line-height: 1; }
+  .ptr-slot span.label { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+  .ptr-slot.empty span.arr, .ptr-slot.empty span.label { color: var(--soft); }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.found { color: #16a34a; font-weight: 600; }
+
+  .pivot-note { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; margin: 16px 0; }
+  .pivot-note p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); } 50% { box-shadow: 0 0 0 8px rgba(181,82,58,0); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 153 · Binary Search</p>
+  <h1>寻找旋转排序数组中的最小值</h1>
+  <p class="subtitle">找旋转点（最小值所在位置）</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：在旋转排序数组中找到<strong>最小的元素</strong>。旋转排序数组原本是升序的，被旋转后分为两段升序。<br>
+      关键：<strong>最小值一定在旋转点，即后半段升序的第一个元素</strong>。
+    </p>
+
+    <div class="pivot-note">
+      <p><strong>旋转数组示例：</strong></p>
+      <p style="margin-top:8px;font-family:'Geist Mono',monospace;">原数组: [1,2,3,4,5,6,7]</p>
+      <p style="margin-top:4px;font-family:'Geist Mono',monospace;">旋转 3: [4,5,6,7,1,2,3]</p>
+      <p style="margin-top:8px;">旋转点 = 4（最小值），前半段 [4,5,6,7] 比后半段 [1,2,3] 都大</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">nums[mid] > nums[R]？</p>
+        <div style="font-size:32px;color:var(--accent);margin:8px 0;">↓</div>
+        <p style="font-size:13px;color:#16a34a;font-weight:600;margin:0;">最小值在右半边<br>L = mid + 1</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">nums[mid] ≤ nums[R]？</p>
+        <div style="font-size:32px;color:var(--accent);margin:8px 0;">↓</div>
+        <p style="font-size:13px;color:#dc2626;font-weight:600;margin:0;">最小值在左半边（含mid）<br>R = mid</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 完整 Trace -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">nums = <code>[4,5,6,7,0,1,2]</code>，找最小值</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">L=0 R=6 mid=3 → nums[3]=7 > nums[6]=2</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell mid">4<span class="idx">0</span></div>
+        <div class="num-cell mid">5<span class="idx">1</span></div>
+        <div class="num-cell mid">6<span class="idx">2</span></div>
+        <div class="num-cell mid">7<span class="idx">3</span></div>
+        <div class="num-cell">0<span class="idx">4</span></div>
+        <div class="num-cell">1<span class="idx">5</span></div>
+        <div class="num-cell">2<span class="idx">6</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">mid=3, nums[3]=7, nums[6]=2</div>
+        <div class="kv">7 &gt; 2，说明左半边被旋转了</div>
+        <div class="kv focal">最小值在右半边 → L = mid + 1 = 4</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">L=4 R=6 mid=5 → nums[5]=1 > nums[6]=2？不对</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell eliminated">4<span class="idx">0</span></div>
+        <div class="num-cell eliminated">5<span class="idx">1</span></div>
+        <div class="num-cell eliminated">6<span class="idx">2</span></div>
+        <div class="num-cell eliminated">7<span class="idx">3</span></div>
+        <div class="num-cell mid">0<span class="idx">4</span></div>
+        <div class="num-cell mid">1<span class="idx">5</span></div>
+        <div class="num-cell">2<span class="idx">6</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">L=4, R=6, mid=5</div>
+        <div class="kv">nums[5]=1, nums[6]=2, 1 &lt; 2</div>
+        <div class="kv focal">nums[mid] &lt; nums[R]，最小值在左半边 → R = mid = 5</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">L=4 R=5 mid=4</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell eliminated">4<span class="idx">0</span></div>
+        <div class="num-cell eliminated">5<span class="idx">1</span></div>
+        <div class="num-cell eliminated">6<span class="idx">2</span></div>
+        <div class="num-cell eliminated">7<span class="idx">3</span></div>
+        <div class="num-cell mid ans">0<span class="idx">4</span></div>
+        <div class="num-cell mid">1<span class="idx">5</span></div>
+        <div class="num-cell eliminated">2<span class="idx">6</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">L=4, R=5, mid=4, nums[4]=0, nums[5]=1</div>
+        <div class="kv">0 &lt; 1，所以 nums[mid] &lt; nums[R]</div>
+        <div class="kv focal">R = mid = 4</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">L=4 R=4 → nums[R]=0 是最小值</span>
+      </div>
+      <div class="decision">
+        <div class="kv">L=4, R=4，循环结束</div>
+        <div class="kv found">nums[R] = 0 是最小值</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:#16a34a;font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：min = 0
+    </p>
+  </section>
+
+  <!-- Section 3: 代码模板 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func findMin(nums []int) int {
+    L, R := 0, len(nums)-1
+
+    for L < R {  // 注意是 L < R，不是 L <= R
+        mid := L + (R-L)/2
+
+        if nums[mid] > nums[R] {
+            // 最小值在右半边
+            L = mid + 1
+        } else {
+            // nums[mid] <= nums[R]，最小值在左半边（含mid）
+            R = mid
+        }
+    }
+    return nums[R]  // L == R，最小值位置
+}</pre>
+    <p class="section-sub" style="margin-top:12px;">
+      <strong>为什么用 nums[R] 而不是 nums[L]？</strong><br>
+      因为原数组最后一个元素 nums[n-1] 是后半段升序的最大值，比较时更稳定。
+      用 nums[L] 也可以，但 nums[R] 更常用。
+    </p>
+  </section>
+
+  <!-- Section 4: 关键区别 -->
+  <section>
+    <h2>与 #154（找最小值 II）的区别</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#dc2626;margin:0 0 8px;font-weight:600;">#153 无重复</p>
+        <p style="font-size:12px;color:#991b1b;margin:0;line-height:1.6;">严格升序旋转<br>可以直接比较 nums[mid] 和 nums[R]</p>
+      </div>
+      <div style="background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#ca8a04;margin:0 0 8px;font-weight:600;">#154 有重复</p>
+        <p style="font-size:12px;color:#a16207;margin:0;line-height:1.6;">可能有重复<br>nums[mid] == nums[R] 时 R-- 跳过</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>找旋转点</h3>
+      <p>最小值就是旋转点，后半段升序的第一个元素</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">判断</p>
+      <h3><span class="dot"></span>nums[mid] > nums[R]</h3>
+      <p>右半边被旋转，最小值在右半边</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">细节</p>
+      <h3><span class="dot"></span>循环条件 L &lt; R</h3>
+      <p>L == R 时退出，nums[R] 就是答案</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/153.find-minimum-in-rotated-sorted-array.html</footer>
+</body>
+</html>
