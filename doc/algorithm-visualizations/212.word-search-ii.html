@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>单词搜索 II · 图解 · LeetCode 212</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .grid { display: grid; gap: 4px; margin: 16px 0; }
+  .grid-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 700; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--muted); }
+  .grid-cell.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .grid-cell.visited { background: var(--paper-2); border-color: var(--soft); color: var(--soft); opacity: 0.4; }
+  .grid-cell.found { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .grid-cell.path { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+
+  .word-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  .word { font-family: 'Geist Mono', monospace; font-size: 13px; padding: 4px 10px; border-radius: 4px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .word.done { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; margin: 10px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 12px; color: var(--muted); margin: 3px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 11px; background: rgba(28,25,23,0.05); padding: 1px 4px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.done { color: #16a34a; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 10px 14px; margin-top: 10px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 212 · Trie</p>
+  <h1>单词搜索 II</h1>
+  <p class="subtitle">在二维网格中找到所有出现在网格中的单词</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定一个 m×n 的字符网格和一个单词列表，找到所有可以由网格中的相邻单元格字母连接形成的单词。<br>
+      关键：<strong>先构建 Trie，然后从每个格子开始 DFS 回溯搜索</strong>。
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px;">
+      <div>
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;text-align:center;">字符网格</p>
+        <div class="grid" style="grid-template-columns:repeat(4,40px);margin:0 auto;">
+          <div class="grid-cell">o</div>
+          <div class="grid-cell">a</div>
+          <div class="grid-cell">a</div>
+          <div class="grid-cell">n</div>
+          <div class="grid-cell">e</div>
+          <div class="grid-cell active" style="border-color:#dc2626;">t</div>
+          <div class="grid-cell active" style="border-color:#dc2626;">e</div>
+          <div class="grid-cell">m</div>
+          <div class="grid-cell">e</div>
+          <div class="grid-cell">a</div>
+          <div class="grid-cell">e</div>
+          <div class="grid-cell">m</div>
+          <div class="grid-cell">o</div>
+          <div class="grid-cell">o</div>
+          <div class="grid-cell">f</div>
+          <div class="grid-cell">f</div>
+        </div>
+      </div>
+      <div>
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">Trie 树</p>
+        <div style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);line-height:1.8;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:12px;">
+root<br>
+└─ o<br>
+&nbsp;&nbsp;└─ a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;└─ a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ n ✓<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ o<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ t ✓<br>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 搜索过程 -->
+  <section>
+    <h2>搜索过程</h2>
+    <p class="section-sub">从 't' 开始（e,t 单元格）搜索，"oath" 从左上角开始搜索</p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="kv">从 't' 开始，上下左右 DFS</span>
+      </div>
+      <div class="decision">
+        <div class="kv">t → te → tea → tean（不对）</div>
+        <div class="kv">t → to → too → toom（不对）</div>
+        <div class="kv focal">t → oa → oat → oath ✓</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="kv">回溯尝试其他路径</span>
+      </div>
+      <div class="decision">
+        <div class="kv">从 'e' 开始 (1,1)</div>
+        <div class="kv">e → ea → eat ✓</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">完成</span>
+        <span class="kv done">找到: oath, eat, teen</span>
+      </div>
+      <div class="word-row">
+        <span class="word done">oath</span>
+        <span class="word done">eat</span>
+        <span class="word done">teen</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 代码 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func findWords(board [][]byte, words []string) []string {
+    // 1. 构建 Trie
+    trie := Constructor()
+    for _, w := range words {
+        trie.Insert(w)
+    }
+    m, n := len(board), len(board[0])
+    visited := make([][]bool, m)
+    for i := range visited {
+        visited[i] = make([]bool, n)
+    }
+    var result []string
+
+    // 2. 从每个格子开始 DFS
+    var dfs func(i, j int, node *TrieNode, path []byte)
+    dfs = func(i, j int, node *TrieNode, path []byte) {
+        if i < 0 || i >= m || j < 0 || j >= n || visited[i][j] {
+            return
+        }
+        ch := board[i][j]
+        if child, ok := node.children[ch]; ok {
+            path = append(path, ch)
+            visited[i][j] = true
+            if child.isEnd {
+                result = append(result, string(path))
+                child.isEnd = false  // 避免重复
+            }
+            // 继续 DFS
+            dirs := [][2]int{{-1,0},{1,0},{0,-1},{0,1}}
+            for _, d := range dirs {
+                dfs(i+d[0], j+d[1], child, path)
+            }
+            visited[i][j] = false
+            path = path[:len(path)-1]
+        }
+    }
+
+    for i := 0; i < m; i++ {
+        for j := 0; j < n; j++ {
+            dfs(i, j, trie.root, nil)
+        }
+    }
+    return result
+}</pre>
+  </section>
+
+  <!-- Section 4: 优化 -->
+  <section>
+    <h2>重要优化：剪枝</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:#fee2e2;border:1px solid #dc2626;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#dc2626;margin:0 0 8px;font-weight:600;">不加优化</p>
+        <p style="font-size:12px;color:#991b1b;margin:0;line-height:1.6;">找到单词后不标记，相同单词会被重复加入结果</p>
+      </div>
+      <div style="background:#dcfce7;border:1px solid #16a34a;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">优化：标记已找到</p>
+        <p style="font-size:12px;color:#166534;margin:0;line-height:1.6;">child.isEnd = false 防止重复加入</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>Trie + DFS</h3>
+      <p>先构建 Trie，从每个格子 DFS 搜索路径</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>回溯</h3>
+      <p>visited 标记走过的格子，递归后撤销</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">优化</p>
+      <h3><span class="dot"></span>已找到的词标记</h3>
+      <p>防止重复加入结果</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/212.word-search-ii.html</footer>
+</body>
+</html>
