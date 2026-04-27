@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>用队列实现栈 · 图解 · LeetCode 225</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .queues-row { display: flex; gap: 40px; justify-content: center; align-items: flex-start; margin: 24px 0; }
+  .queue-col { text-align: center; }
+  .queue-label { font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 600; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); }
+  .queue-visual { display: flex; flex-direction: row; align-items: center; gap: 4px; justify-content: center; padding: 0 8px; min-width: 200px; }
+  .queue-cell { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; border-radius: 6px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .queue-cell.front { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .queue-cell.rear { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .queue-cell.active { background: #fef9c3; border-color: #ca8a04; color: #ca8a04; }
+  .queue-marker { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--soft); margin: 4px 0 0; }
+  .queue-group { display: flex; flex-direction: column; align-items: center; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.done { color: #16a34a; font-weight: 600; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .two-queues { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .tq-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; text-align: center; }
+  .tq-card h4 { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+  .tq-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .tq-card.active-sol { background: var(--accent-tint); border-color: var(--accent); }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 225 · Design</p>
+  <h1>用队列实现栈</h1>
+  <p class="subtitle">用一个或两个队列实现 LIFO 栈的 push、pop、top 操作</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>两种解法对比</h2>
+    <div class="two-queues">
+      <div class="tq-card">
+        <h4>方案 A：单队列</h4>
+        <p>push 时将前面 n-1 个元素出队再入队，将新元素转到队首<br><strong>push O(n)，pop O(1)</strong></p>
+      </div>
+      <div class="tq-card active-sol">
+        <h4>方案 B：双队列（推荐）</h4>
+        <p>q1 持有栈元素，q2 作为中转<br>push O(1)，pop 均摊 O(1)</p>
+      </div>
+    </div>
+
+    <div class="queues-row">
+      <div class="queue-group">
+        <p class="queue-label">q1（主力）</p>
+        <div class="queue-visual" id="q1-v">
+          <div class="queue-cell">—</div>
+        </div>
+        <p class="queue-marker">front → rear</p>
+      </div>
+      <div class="queue-group">
+        <p class="queue-label">q2（中转）</p>
+        <div class="queue-visual" id="q2-v">
+          <div class="queue-cell">—</div>
+        </div>
+        <p class="queue-marker">front → rear</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 手推 -->
+  <section>
+    <h2>手推全过程（双队列）</h2>
+    <p class="section-sub">依次执行：push(1), push(2), push(3), pop(), pop()</p>
+
+    <!-- Push all -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 1~3</span>
+        <span class="kv done">push(1), push(2), push(3) → q1 直接入队</span>
+      </div>
+      <div class="queues-row">
+        <div class="queue-group">
+          <p class="queue-label">q1</p>
+          <div class="queue-visual">
+            <div class="queue-cell front">1</div>
+            <div class="queue-cell">2</div>
+            <div class="queue-cell rear">3</div>
+          </div>
+          <p class="queue-marker">top = 3（栈顶）</p>
+        </div>
+        <div class="queue-group">
+          <p class="queue-label">q2</p>
+          <div class="queue-visual">
+            <div class="queue-cell">空</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pop 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 4</span>
+        <span class="kv done">pop() → 3</span>
+      </div>
+      <div class="decision">
+        <div class="kv">q1: [1, 2, 3]，将前 n-1 个（1, 2）倒入 q2</div>
+        <div class="kv">q1 剩下 3，直接 pop/remove 即可</div>
+      </div>
+      <div class="queues-row" style="margin-top:12px;">
+        <div class="queue-group">
+          <p class="queue-label">q1（结果）</p>
+          <div class="queue-visual">
+            <div class="queue-cell front">1</div>
+            <div class="queue-cell rear">2</div>
+          </div>
+          <p class="queue-marker">top = 2</p>
+        </div>
+        <div class="queue-group">
+          <p class="queue-label">q2（备用）</p>
+          <div class="queue-visual">
+            <div class="queue-cell">空</div>
+          </div>
+        </div>
+      </div>
+      <div class="decision">
+        <div class="kv done">栈顶 3 弹出，现在栈顶 = 2</div>
+      </div>
+    </div>
+
+    <!-- Pop 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 5</span>
+        <span class="kv done">pop() → 2</span>
+      </div>
+      <div class="decision">
+        <div class="kv">q1: [1, 2]，将 1 倒入 q2</div>
+        <div class="kv done">q1 剩下 2，弹出</div>
+        <div class="kv">栈顶 = 1</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 代码 -->
+  <section>
+    <h2>Go 代码模板（双队列）</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+type MyStack struct {
+    q1 []int  // 主队列
+    q2 []int  // 中转队列
+}
+
+func Constructor() MyStack {
+    return MyStack{q1: []int{}, q2: []int{}}
+}
+
+// push: O(1) — 直接入 q1
+func (s *MyStack) Push(x int) {
+    s.q1 = append(s.q1, x)
+}
+
+// pop: 均摊 O(1)
+func (s *MyStack) Pop() int {
+    // 将 q1 前 n-1 个倒入 q2
+    for len(s.q1) > 1 {
+        s.q2 = append(s.q2, s.q1[0])
+        s.q1 = s.q1[1:]
+    }
+    top := s.q1[0]
+    s.q1 = s.q1[1:]
+    // 交换 q1 q2 引用
+    s.q1, s.q2 = s.q2, s.q1
+    return top
+}
+
+func (s *MyStack) Top() int {
+    // top = Pop() 后再 Push 回去
+    val := s.Pop()
+    s.q1 = append(s.q1, val)
+    return val
+}
+
+func (s *MyStack) Empty() bool {
+    return len(s.q1) == 0
+}</pre>
+  </section>
+
+  <!-- Section 4: 单队列变种 -->
+  <section>
+    <h2>单队列变种（push O(n)）</h2>
+    <p class="section-sub">
+      单队列每次 push 时，将前面 n-1 个元素出队再入队，把新元素转到队首。
+    </p>
+    <div class="decision" style="margin-top:12px;">
+      <div class="kv">push(4) 到 [1,2,3]：</div>
+      <div class="kv">出队入队 1, 2, 3 → q1: [2,3,1]</div>
+      <div class="kv">出队入队 2, 3 → q1: [3,1,2]</div>
+      <div class="kv">出队入队 3 → q1: [1,2,3,4]</div>
+      <div class="kv focal">完成！4 在队首（栈顶）</div>
+    </div>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin-top:16px;">
+// 单队列 push: O(n)
+func (s *MyStack) Push(x int) {
+    s.q1 = append(s.q1, x)
+    // 将前面 n-1 个元素循环移动到末尾
+    for i := 0; i < len(s.q1)-1; i++ {
+        s.q1 = append(s.q1, s.q1[0])
+        s.q1 = s.q1[1:]
+    }
+}</pre>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>q1/q2 互换</h3>
+      <p>pop 时把 n-1 个倒入 q2，最后一个弹出，然后交换引用</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">时间</p>
+      <h3><span class="dot"></span>push O(1)，pop 均摊 O(1)</h3>
+      <p>比单队列方案优秀，推荐双队列</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">对比</p>
+      <h3><span class="dot"></span>#232 vs #225</h3>
+      <p>232 用栈实现队列（shift），225 用队列实现栈（倒入中转）</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/225.implement-stack-using-queues.html</footer>
+</body>
+</html>
