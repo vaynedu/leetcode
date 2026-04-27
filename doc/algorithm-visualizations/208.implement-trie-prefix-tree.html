@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>实现 Trie · 图解 · LeetCode 208</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  /* Trie tree rendering */
+  .trie-tree { font-family: 'Geist Mono', monospace; font-size: 13px; line-height: 1.6; color: var(--muted); margin: 16px 0; padding: 16px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; overflow-x: auto; }
+  .node { display: inline; }
+  .node-end { color: #16a34a; font-weight: 700; }
+  .node-eos { color: #dc2626; font-weight: 700; }
+
+  /* Insert trace */
+  .word-row { display: flex; gap: 6px; align-items: center; justify-content: center; margin: 12px 0; flex-wrap: wrap; }
+  .letter { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 15px; font-weight: 600; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--muted); }
+  .letter.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .letter.inserted { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; margin: 10px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 12px; color: var(--muted); margin: 3px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 11px; background: rgba(28,25,23,0.05); padding: 1px 4px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.done { color: #16a34a; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 10px 14px; margin-top: 10px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .col { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 12px; }
+  .col-title { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--accent); font-weight: 600; margin: 0 0 6px; text-transform: uppercase; }
+  .col p { font-size: 11px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .col code { font-family: 'Geist Mono', monospace; font-size: 11px; background: rgba(28,25,23,0.05); padding: 1px 4px; border-radius: 3px; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 208 · Trie</p>
+  <h1>实现 Trie（前缀树）</h1>
+  <p class="subtitle">高效存储和搜索字符串前缀的数据结构</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      Trie（发音 "try"）是一种树形结构，专门用于<strong>高效地存储和搜索字符串前缀</strong>。<br>
+      核心思想：<strong>每个节点代表一个字符，从根到节点的路径代表一个前缀</strong>。
+    </p>
+
+    <div class="trie-tree">
+<span class="node"><b>root</b> (isEnd=<span class="node-eos">F</span>)</span>
+ └─ <span class="node">'a'</span> (isEnd=<span class="node-eos">F</span>)
+     ├─ <span class="node">'p'</span> (isEnd=<span class="node-eos">F</span>)
+     │   └─ <span class="node">'p'</span> <span class="node-end">[✓]</span> (isEnd=<span class="node-eos">T</span>)
+     │       └─ <span class="node">'l'</span> (isEnd=<span class="node-eos">F</span>)
+     │           └─ <span class="node">'e'</span> <span class="node-end">[✓]</span> (isEnd=<span class="node-eos">T</span>)
+     └─ <span class="node">'d'</span> (isEnd=<span class="node-eos">F</span>)
+         └─ <span class="node">'o'</span> (isEnd=<span class="node-eos">F</span>)
+             └─ <span class="node">'g'</span> <span class="node-end">[✓]</span> (isEnd=<span class="node-eos">T</span>)
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin:0;">存储了 "apple" 和 "dog"。节点标记 [✓] 表示是一个单词的结尾。</p>
+  </section>
+
+  <!-- Section 2: TrieNode 结构 -->
+  <section>
+    <h2>TrieNode 结构</h2>
+    <p class="section-sub">每个节点包含：子节点映射（26个字母）+ 是否为单词结尾的标记</p>
+
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+type TrieNode struct {
+    children map[rune]*TrieNode  // 26个小写字母的子节点映射
+    isEnd    bool               // 是否是某个单词的结尾
+}
+
+func NewTrieNode() *TrieNode {
+    return &TrieNode{
+        children: make(map[rune]*TrieNode),
+        isEnd:    false,
+    }
+}</pre>
+  </section>
+
+  <!-- Section 3: Insert 插入 -->
+  <section>
+    <h2>Insert 插入</h2>
+    <p class="section-sub">插入 "app"，逐字符沿路径走，不存在就创建</p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="kv">从 root 开始，插入 'a'</span>
+      </div>
+      <div class="word-row">
+        <div class="letter inserted">a</div>
+        <div class="letter">p</div>
+        <div class="letter">p</div>
+      </div>
+      <div class="decision">
+        <div class="kv">root 没有 'a' 子节点 → 创建节点 'a'</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="kv">继续插入 'p'</span>
+      </div>
+      <div class="word-row">
+        <div class="letter inserted">a</div>
+        <div class="letter inserted">p</div>
+        <div class="letter">p</div>
+      </div>
+      <div class="decision">
+        <div class="kv">节点 'a' 没有 'p' 子节点 → 创建节点 'p'</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="kv">最后一个 'p'，标记为单词结尾</span>
+      </div>
+      <div class="word-row">
+        <div class="letter inserted">a</div>
+        <div class="letter inserted">p</div>
+        <div class="letter inserted">p</div>
+      </div>
+      <div class="decision">
+        <div class="kv done">节点 'p' 的 isEnd = true，表示 "app" 是一个完整单词</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Search & StartsWith -->
+  <section>
+    <h2>Search 与 StartsWith</h2>
+
+    <div class="three-col">
+      <div class="col">
+        <p class="col-title">Search "apple"</p>
+        <p>沿 root→'a'→'p'→'p'→'l'→'e' 走完</p>
+        <p style="margin-top:8px;">检查最后一个节点的 <code>isEnd</code></p>
+        <p style="margin-top:8px;"><code>isEnd=true</code> → <strong>找到了</strong></p>
+      </div>
+      <div class="col">
+        <p class="col-title">Search "app"</p>
+        <p>沿 root→'a'→'p'→'p' 走完</p>
+        <p style="margin-top:8px;">检查最后一个节点的 <code>isEnd</code></p>
+        <p style="margin-top:8px;"><code>isEnd=true</code> → <strong>找到了</strong></p>
+      </div>
+      <div class="col">
+        <p class="col-title">StartsWith "ap"</p>
+        <p>沿 root→'a'→'p' 走完</p>
+        <p style="margin-top:8px;"><strong>不需要</strong>检查 isEnd</p>
+        <p style="margin-top:8px;">能走完路径 → <strong>存在此前缀</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: 完整代码 -->
+  <section>
+    <h2>完整 Go 实现</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+type Trie struct {
+    root *TrieNode
+}
+
+func Constructor() Trie {
+    return Trie{root: NewTrieNode()}
+}
+
+func (t *Trie) Insert(word string) {
+    node := t.root
+    for _, ch := range word {
+        if _, ok := node.children[ch]; !ok {
+            node.children[ch] = NewTrieNode()
+        }
+        node = node.children[ch]
+    }
+    node.isEnd = true
+}
+
+func (t *Trie) Search(word string) bool {
+    node := t.searchPrefix(word)
+    return node != nil && node.isEnd
+}
+
+func (t *Trie) StartsWith(prefix string) bool {
+    return t.searchPrefix(prefix) != nil
+}
+
+func (t *Trie) searchPrefix(prefix string) *TrieNode {
+    node := t.root
+    for _, ch := range prefix {
+        if _, ok := node.children[ch]; !ok {
+            return nil
+        }
+        node = node.children[ch]
+    }
+    return node
+}</pre>
+  </section>
+
+  <!-- Section 6: 复杂度 -->
+  <section>
+    <h2>复杂度分析</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">时间复杂度</p>
+        <p style="font-size:14px;color:var(--ink);margin:0;font-weight:600;">O(m)</p>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">m = 字符串长度，所有操作都只需遍历字符串长度</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">空间复杂度</p>
+        <p style="font-size:14px;color:var(--ink);margin:0;font-weight:600;">O(m × n)</p>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">m = 平均字符串长度，n = 字符串数量</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">本质</p>
+      <h3><span class="dot"></span>前缀树</h3>
+      <p>每个节点代表一个字符，从根到节点是前缀</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>isEnd 标记</h3>
+      <p>标记哪些节点是单词结尾，支持前缀搜索</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">优势</p>
+      <h3><span class="dot"></span>O(m) 时间</h3>
+      <p>搜索/插入与字典大小无关，只与字符串长度相关</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/208.implement-trie-prefix-tree.html</footer>
+</body>
+</html>
