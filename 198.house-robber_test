@@ -1,0 +1,25 @@
+package interview
+
+import "testing"
+
+func TestRob(t *testing.T) {
+    tests := []struct {
+        name string
+        nums []int
+        want int
+    }{
+        {"基本", []int{2, 7, 9, 3, 1}, 12},
+        {"全正", []int{1, 2, 3, 1}, 4},
+        {"两间", []int{2, 1, 1, 2}, 4},
+        {"全负", []int{-1, -2, -3}, -1},
+        {"单间", []int{5}, 5},
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := rob(tt.nums)
+            if got != tt.want {
+                t.Errorf("rob(%v) = %d, want %d", tt.nums, got, tt.want)
+            }
+        })
+    }
+}

@@ -1,7 +1,5 @@
 package interview
 
-import "math"
-
 // 84. 柱状图中最大的矩形
 // 单调栈：维护递增高度，弹出时计算宽度
 func largestRectangleArea(heights []int) int {

@@ -2,7 +2,7 @@ package interview
 
 // 131. 分割回文串
 // 回溯：枚举每个分割点，判断是否为回文
-func partition(s string) [][]string {
+func partitionPalindrome(s string) [][]string {
     result := [][]string{}
     path := []string{}
     var backtrack func(start int)
