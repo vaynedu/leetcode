@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>LFU 缓存 · 图解 · LeetCode 460</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .cache-visual { display: flex; flex-direction: column; gap: 6px; max-width: 320px; margin: 24px auto; }
+  .cache-row { display: flex; align-items: center; gap: 8px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 12px; font-family: 'Geist Mono', monospace; font-size: 13px; }
+  .cache-row.evict { background: #fee2e2; border-color: #fca5a5; }
+  .cache-row.new { background: #dcfce7; border-color: #16a34a; }
+  .freq-badge { min-width: 24px; height: 24px; border-radius: 50%; background: var(--accent-tint); border: 1px solid var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .key-col { color: var(--ink); font-weight: 600; }
+  .val-col { color: var(--muted); margin-left: auto; }
+  .cap-tag { font-size: 10px; color: var(--soft); background: var(--paper-2); padding: 2px 6px; border-radius: 3px; }
+
+  .ds-row { display: flex; gap: 24px; justify-content: center; margin: 24px 0; flex-wrap: wrap; }
+  .ds-col { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; min-width: 200px; text-align: center; }
+  .ds-col h4 { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; color: var(--accent); text-transform: uppercase; }
+  .ds-col p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; text-align: left; }
+
+  .freq-list { display: flex; flex-direction: column; gap: 4px; align-items: center; margin-top: 12px; }
+  .freq-row { display: flex; gap: 8px; align-items: center; width: 100%; max-width: 280px; }
+  .freq-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; color: var(--accent); min-width: 40px; text-align: right; }
+  .freq-items { display: flex; gap: 4px; flex-wrap: wrap; }
+  .freq-node { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 4px; padding: 3px 8px; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--ink); }
+  .freq-node.min { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.done { color: #16a34a; font-weight: 600; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.evict { color: #dc2626; font-weight: 600; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .compare-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; }
+  .compare-card h4 { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .compare-card.lru h4 { color: #2563eb; }
+  .compare-card.lfu h4 { color: #16a34a; }
+  .compare-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 460 · Design · Hard</p>
+  <h1>LFU 缓存</h1>
+  <p class="subtitle">Least Frequently Used — 按使用频率淘汰的缓存，比 LRU 更精细</p>
+
+  <!-- Section 1: LRU vs LFU -->
+  <section>
+    <h2>LRU vs LFU：核心区别</h2>
+    <p class="section-sub">
+      LRU（最近最少使用）：<strong>时间维度</strong>，淘汰最久未访问的。<br>
+      LFU（最不经常使用）：<strong>频率维度</strong>，淘汰使用次数最少的。<br>
+      <strong>LFU 更精准但实现更复杂</strong>，需要追踪每个 key 的访问频率。
+    </p>
+
+    <div class="compare">
+      <div class="compare-card lru">
+        <h4>LRU #146</h4>
+        <p>淘汰：时间最久未访问<br>
+        数据结构：HashMap + 双向链表<br>
+        难点：O(1) 移动节点到头部</p>
+      </div>
+      <div class="compare-card lfu">
+        <h4>LFU #460（更难）</h4>
+        <p>淘汰：频率最低 + 时间最久未访问<br>
+        数据结构：HashMap + 频率双向链表<br>
+        难点：O(1) 增频率、O(1) 找最差频率</p>
+      </div>
+    </div>
+
+    <div style="background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;padding:16px;margin-top:16px;">
+      <p style="font-size:12px;color:#a16207;margin:0;line-height:1.8;">
+        <strong>LFU 的 tricky 点：</strong>同一个频率下，按 LRU 规则淘汰（时间最久）<br>
+        例如 freq=1 有多个 key → 淘汰其中最久未访问的
+      </p>
+    </div>
+  </section>
+
+  <!-- Section 2: 核心数据结构 -->
+  <section>
+    <h2>核心数据结构</h2>
+    <p class="section-sub">
+      需要同时支持：O(1) get/put，O(1) 增频率，O(1) 找最低频率。<br>
+      解法：<strong>HashMap + 频率桶（频率 → 双向链表）</strong>。
+    </p>
+
+    <div class="ds-row">
+      <div class="ds-col">
+        <h4>HashMap (key → Node*)</h4>
+        <p>key 找到节点指针<br>Node 含: key, val, freq, prev, next<br>O(1) 定位</p>
+      </div>
+      <div class="ds-col">
+        <h4>Freq Buckets []list</h4>
+        <p>freq=1,2,3,... 各一个双向链表<br>同 freq 内按 LRU 顺序<br>minFreq 变量指向最低非空频率</p>
+      </div>
+      <div class="ds-col">
+        <h4>minFreq 追踪器</h4>
+        <p>每次访问递增 freq<br>当最低频率桶变空，minFreq++<br>淘汰时从 freq=minFreq 的桶尾删</p>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;text-align:center;">频率桶结构示例</p>
+      <div class="freq-list">
+        <div class="freq-row">
+          <span class="freq-label">freq=1</span>
+          <div class="freq-items">
+            <span class="freq-node">key:a</span>
+            <span class="freq-node min">key:c</span>
+          </div>
+        </div>
+        <div class="freq-row">
+          <span class="freq-label">freq=2</span>
+          <div class="freq-items">
+            <span class="freq-node">key:b</span>
+          </div>
+        </div>
+        <div class="freq-row">
+          <span class="freq-label">freq=3</span>
+          <div class="freq-items">
+            <span class="freq-node">key:d</span>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--soft);margin:8px 0 0;text-align:center;">minFreq = 1，淘汰时从 freq=1 桶的尾部（最久未访问）淘汰</p>
+    </div>
+  </section>
+
+  <!-- Section 3: 手推 -->
+  <section>
+    <h2>手推全过程（capacity=2）</h2>
+    <p class="section-sub">依次执行：put(1,1), put(2,2), get(1), put(3,3), put(4,4)</p>
+
+    <!-- After first two puts -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 1~2</span>
+        <span class="kv done">put(1,1), put(2,2) 完成后</span>
+      </div>
+      <div class="freq-list">
+        <div class="freq-row">
+          <span class="freq-label">freq=1</span>
+          <div class="freq-items">
+            <span class="freq-node">1:1</span>
+            <span class="freq-node">2:2</span>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--soft);margin:8px 0 0;">minFreq=1，缓存满</p>
+    </div>
+
+    <!-- get(1) -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 3</span>
+        <span class="kv done">get(1) → 1，freq: 1→2</span>
+      </div>
+      <div class="decision">
+        <div class="kv">key=1 从 freq=1 桶移到 freq=2 桶</div>
+        <div class="kv done">freq=1 桶剩 [2:2]，minFreq 仍为 1</div>
+      </div>
+      <div class="freq-list" style="margin-top:12px;">
+        <div class="freq-row">
+          <span class="freq-label">freq=1</span>
+          <div class="freq-items"><span class="freq-node">2:2</span></div>
+        </div>
+        <div class="freq-row">
+          <span class="freq-label">freq=2</span>
+          <div class="freq-items"><span class="freq-node">1:1</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- put(3,3) - evict -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 4</span>
+        <span class="kv evict">put(3,3) → 缓存已满，淘汰 freq=1 最久的</span>
+      </div>
+      <div class="decision">
+        <div class="kv evict">minFreq=1，freq=1 桶中只有 [2:2] → 淘汰 key=2</div>
+        <div class="kv">插入 key=3, freq=1 到 freq=1 桶</div>
+        <div class="kv done">缓存状态: {1:1(freq=2), 3:3(freq=1)}，minFreq=1</div>
+      </div>
+    </div>
+
+    <!-- put(4,4) - evict -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 5</span>
+        <span class="kv evict">put(4,4) → 淘汰 freq=1 的（1 和 3 都是 freq=1，按 LRU）</span>
+      </div>
+      <div class="decision">
+        <div class="kv">freq=1 桶: [3:3, 1:1]（3 刚插入，1 较旧）</div>
+        <div class="kv evict">淘汰最旧的 → key=1 被淘汰</div>
+        <div class="kv done">插入 key=4, freq=1，缓存: {3:3, 4:4}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: 代码 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+type Node struct {
+    key, val int
+    freq     int
+    prev, next *Node
+}
+
+type LFUCache struct {
+    capacity int
+    minFreq  int
+    // key → node 指针
+    nodes map[int]*Node
+    // freq → 双向链表（头插法，最新在头，最旧在尾）
+    freqMap map[int]*list.List
+    // list.Element → Node（用于 O(1) 定位节点）
+    elemMap map[*list.Element]*Node
+}
+
+func Constructor(capacity int) LFUCache {
+    return LFUCache{
+        capacity: capacity,
+        minFreq:  0,
+        nodes:    make(map[int]*Node),
+        freqMap:  make(map[int]*list.List),
+        elemMap:  make(map[*list.Element]*Node),
+    }
+}
+
+func (c *LFUCache) Get(key int) int {
+    node, ok := c.nodes[key]
+    if !ok {
+        return -1
+    }
+    // 频率增加：从旧桶移到新桶
+    c.incrementFreq(node)
+    return node.val
+}
+
+func (c *LFUCache) Put(key, val int) {
+    if c.capacity == 0 {
+        return
+    }
+    if node, ok := c.nodes[key]; ok {
+        node.val = val
+        c.incrementFreq(node)
+        return
+    }
+    // 新 key
+    if len(c.nodes) == c.capacity {
+        // 淘汰 minFreq 桶的最旧节点
+        c.evict()
+    }
+    // 插入新节点，freq=1
+    node := &Node{key: key, val: val, freq: 1}
+    c.nodes[key] = node
+    c.addToFreqList(node)
+    c.minFreq = 1
+}
+
+// 频率+1：从原 freq 桶移除，加入 freq+1 桶
+func (c *LFUCache) incrementFreq(node *Node) {
+    oldFreq := node.freq
+    newFreq := oldFreq + 1
+    node.freq = newFreq
+
+    // 从旧桶移除
+    c.removeFromFreqList(node)
+    // 更新 minFreq
+    if oldFreq == c.minFreq && c.freqMap[oldFreq].Len() == 0 {
+        c.minFreq = newFreq
+    }
+    // 加入新桶
+    c.addToFreqList(node)
+}
+
+// 淘汰最低频率桶的最旧节点
+func (c *LFUCache) evict() {
+    lst := c.freqMap[c.minFreq]
+    last := lst.Back() // 最旧
+    node := c.elemMap[last]
+    lst.Remove(last)
+    delete(c.nodes, node.key)
+    delete(c.elemMap, last)
+}
+
+// 加入 freq 桶（头插，最新）
+func (c *LFUCache) addToFreqList(node *Node) {
+    if c.freqMap[node.freq] == nil {
+        c.freqMap[node.freq] = list.New()
+    }
+    elem := c.freqMap[node.freq].PushFront(node)
+    c.elemMap[elem] = node
+}
+
+// 从 freq 桶移除
+func (c *LFUCache) removeFromFreqList(node *Node) {
+    // 需要遍历或额外存 elem，这里简化：实际需要存 elem 指针
+    lst := c.freqMap[node.freq]
+    for e := lst.Front(); e != nil; e = e.Next() {
+        if e.Value.(*Node) == node {
+            lst.Remove(e)
+            delete(c.elemMap, e)
+            break
+        }
+    }
+}</pre>
+  </section>
+
+  <!-- Section 5: 面试核心问答 -->
+  <section>
+    <h2>面试核心问答</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--accent);margin:0 0 8px;font-weight:600;">Q: LFU vs LRU 哪个更难实现？</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">LFU 更难。LRU 只需要一个双向链表，LFU 需要两层结构：频率桶+桶内LRU。频率变化时要迁移节点，还要维护最小频率。</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--accent);margin:0 0 8px;font-weight:600;">Q: 为什么 freqMap 用 list 而不用 slice？</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">list 的 O(1) 插入/删除（PushFront/Remove）适合 LRU 规则（尾部淘汰）。slice 删除中间元素是 O(n)。</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--accent);margin:0 0 8px;font-weight:600;">Q: 如何做到真正的 O(1) removeFromFreqList？</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">Node 需要存 <code>elem *list.Element</code> 指针，这样 remove 时直接 elem.Remove()，无需遍历桶。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>HashMap + 频率桶</h3>
+      <p>两层结构：key 找节点，freq 找桶，桶内按 LRU 淘汰</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>minFreq 追踪</h3>
+      <p>记录当前最低非空频率，淘汰时直接定位，频率增加时更新</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">精华</p>
+      <h3><span class="dot"></span>Node 存 elem 指针</h3>
+      <p>避免从桶中遍历查找节点，真正 O(1) 迁移</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/460.lfu-cache.html</footer>
+</body>
+</html>
