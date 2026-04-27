@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>二叉树的序列化与反序列化 · 图解 · LeetCode 297</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .tree-viz { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 24px 0; }
+  .tree-row { display: flex; gap: 8px; align-items: center; justify-content: center; }
+  .node { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; background: var(--paper); border: 2px solid var(--rule); color: var(--ink); }
+  .node.root { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .node.nil { background: var(--paper-2); border-color: var(--rule); color: var(--soft); font-size: 10px; }
+  .edge { width: 2px; height: 20px; background: var(--rule); }
+
+  .code-block { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.done { color: #16a34a; font-weight: 600; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 297 · Design</p>
+  <h1>二叉树的序列化与反序列化</h1>
+  <p class="subtitle">将二叉树编码成字符串，并从字符串恢复二叉树</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      序列化：遍历二叉树 → 字符串。<br>
+      反序列化：解析字符串 → 重构二叉树。<br>
+      <strong>先序遍历（Preorder）最常用</strong>：根 → 左 → 右，唯一确定树结构。
+    </p>
+
+    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:20px;margin-top:16px;">
+      <p style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);margin:0;line-height:1.8;">
+        序列化: <span style="color:var(--accent);">"1,2,null,3,null,4,null,null,5"</span><br>
+        反序列化: 读取字符串，重建同样的树结构
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">前序 Preorder</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;">根 → 左 → 右<br>面试最常用</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">后序 Postorder</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;">左 → 右 → 根<br>子节点信息在前</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">层序 Level Order</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;">BFS 逐层<br>直观但需要队列</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 手推 -->
+  <section>
+    <h2>手推全过程（前序遍历）</h2>
+    <p class="section-sub">树结构：<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;1<br>
+      &nbsp;&nbsp;&nbsp;/\&nbsp;\<br>
+      &nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;3<br>
+      &nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;/\&nbsp;<br>
+      &nbsp;&nbsp;&nbsp;4&nbsp;&nbsp;5&nbsp;6</p>
+
+    <!-- Serialize -->
+    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:20px;margin-bottom:16px;">
+      <h3 style="font-family:'Instrument Serif',serif;font-size:1.1rem;margin:0 0 12px;">序列化（Serialize）</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(32px,1fr));gap:4px;max-width:400px;margin:0 auto;">
+        <div style="text-align:center;"><div class="node root">1</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">1</p></div>
+        <div style="text-align:center;"><div class="node">2</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">2</p></div>
+        <div style="text-align:center;"><div class="node nil">null</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">3</p></div>
+        <div style="text-align:center;"><div class="node">4</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">4</p></div>
+        <div style="text-align:center;"><div class="node nil">null</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">5</p></div>
+        <div style="text-align:center;"><div class="node nil">null</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">6</p></div>
+        <div style="text-align:center;"><div class="node">3</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">7</p></div>
+        <div style="text-align:center;"><div class="node nil">null</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">8</p></div>
+        <div style="text-align:center;"><div class="node">5</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">9</p></div>
+        <div style="text-align:center;"><div class="node nil">null</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">10</p></div>
+        <div style="text-align:center;"><div class="node">6</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">11</p></div>
+        <div style="text-align:center;"><div class="node nil">null</div><p style="font-size:10px;color:var(--soft);margin:2px 0 0;">12</p></div>
+      </div>
+      <p class="kv" style="text-align:center;margin-top:12px;">
+        结果: <code style="color:var(--accent);">"1,2,4,null,null,3,5,null,null,6,null,null"</code>
+      </p>
+    </div>
+
+    <!-- Deserialize -->
+    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:20px;">
+      <h3 style="font-family:'Instrument Serif',serif;font-size:1.1rem;margin:0 0 12px;">反序列化（Deserialize）</h3>
+      <div class="kv">tokens: ["1","2","4","null","null","3","5","null","null","6","null","null"]</div>
+      <div class="decision" style="margin-top:12px;">
+        <div class="kv">读取 1 → 创建根节点</div>
+        <div class="kv">读取 2 → 创建左子节点，递归处理 2 的子树</div>
+        <div class="kv">读取 4 → 左子，读取 null → 4 的左为空，读取 null → 4 的右为空</div>
+        <div class="kv">读取 3 → 回溯到根的右子节点，递归处理 3 的子树</div>
+        <div class="kv done">逐个读取 token，前序顺序重建整棵树</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 代码 -->
+  <section>
+    <h2>Go 代码模板（前序遍历）</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+type TreeNode struct {
+    Val   int
+    Left  *TreeNode
+    Right *TreeNode
+}
+
+// ---------- 序列化 ----------
+func (s *Serializer) Serialize(root *TreeNode) string {
+    var sb strings.Builder
+    s.serializeHelper(root, &sb)
+    return sb.String()
+}
+
+func (s *Serializer) serializeHelper(node *TreeNode, sb *strings.Builder) {
+    if node == nil {
+        sb.WriteString("null,")
+        return
+    }
+    sb.WriteString(strconv.Itoa(node.Val))
+    sb.WriteByte(',')
+    s.serializeHelper(node.Left, sb)
+    s.serializeHelper(node.Right, sb)
+}
+
+// ---------- 反序列化 ----------
+func (s *Serializer) Deserialize(data string) *TreeNode {
+    nodes := strings.Split(data, ",")
+    idx := 0
+    return s.deserializeHelper(nodes, &idx)
+}
+
+func (s *Serializer) deserializeHelper(nodes []string, idx *int) *TreeNode {
+    if *idx >= len(nodes) {
+        return nil
+    }
+    val := nodes[*idx]
+    *idx++
+    if val == "null" {
+        return nil
+    }
+    intVal, _ := strconv.Atoi(val)
+    node := &TreeNode{Val: intVal}
+    node.Left = s.deserializeHelper(nodes, idx)
+    node.Right = s.deserializeHelper(nodes, idx)
+    return node
+}</pre>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>前序遍历最常用</h3>
+      <p>根、左、右的顺序，null 用作占位符</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>索引指针传递</h3>
+      <p>反序列化时用指针 idx 跟踪读取位置</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">面试</p>
+      <h3><span class="dot"></span>高频设计题</h3>
+      <p>系统设计、数据结构设计常考，支持分布式树传输</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/297.serialize-and-deserialize-binary-tree.html</footer>
+</body>
+</html>
