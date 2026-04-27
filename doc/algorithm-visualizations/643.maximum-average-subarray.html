@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>子数组最大平均数 · 图解 · LeetCode 643</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .num-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .num-cell { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 600; color: var(--muted); position: relative; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); }
+  .num-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .num-cell.in-window { background: var(--accent-tint); border-color: var(--accent); color: var(--ink); }
+  .num-cell.out-window { opacity: 0.4; }
+  .num-cell.best { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+
+  .bracket-row { display: flex; gap: 4px; align-items: flex-start; justify-content: center; margin: 20px 0 8px; flex-wrap: wrap; }
+  .bracket { display: inline-block; font-size: 28px; color: var(--accent); font-family: 'Geist Mono', monospace; line-height: 1; margin: 0 2px; }
+  .b-cell { width: 44px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--soft); }
+  .b-cell.active { color: var(--accent); font-weight: 600; }
+
+  .sum-display { display: flex; gap: 12px; align-items: center; justify-content: center; margin: 12px 0; }
+  .sum-badge { font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 600; padding: 6px 16px; border-radius: 8px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .sum-badge.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .sum-badge.best { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+
+  .avg-display { display: flex; gap: 8px; align-items: center; justify-content: center; margin: 8px 0; }
+  .avg-badge { font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 700; padding: 8px 20px; border-radius: 8px; background: var(--accent-tint); border: 2px solid var(--accent); color: var(--accent); }
+  .avg-badge.best { background: #dcfce7; border: 2px solid #16a34a; color: #16a34a; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.best { color: #16a34a; font-weight: 600; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 643 · Sliding Window</p>
+  <h1>子数组最大平均数</h1>
+  <p class="subtitle">固定窗口求和模板的入门题</p>
+
+  <!-- Section 1: 核心思路 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定数组 <code>nums</code> 和窗口大小 <code>k</code>，找出长度为 <code>k</code> 的子数组的最大平均值。<br>
+      关键：<strong>固定窗口大小 K，先求第一个窗口的和，然后滑动：减左边加右边</strong>。
+    </p>
+
+    <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;align-items:center;margin:24px 0;">
+      <div style="text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">nums = [1,2,3,4,5], k=3</p>
+        <div class="num-row">
+          <div class="num-cell in-window">1<span class="idx">0</span></div>
+          <div class="num-cell in-window">2<span class="idx">1</span></div>
+          <div class="num-cell in-window">3<span class="idx">2</span></div>
+          <div class="num-cell">4<span class="idx">3</span></div>
+          <div class="num-cell">5<span class="idx">4</span></div>
+        </div>
+        <div class="sum-display">
+          <div class="sum-badge active">sum=6</div>
+          <div class="avg-badge">avg=2.00</div>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin:8px 0 0;">初始窗口</p>
+      </div>
+
+      <div style="font-size:24px;color:var(--accent);">→</div>
+
+      <div style="text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">滑动一步</p>
+        <div class="num-row">
+          <div class="num-cell">1<span class="idx">0</span></div>
+          <div class="num-cell in-window">2<span class="idx">1</span></div>
+          <div class="num-cell in-window">3<span class="idx">2</span></div>
+          <div class="num-cell in-window">4<span class="idx">3</span></div>
+          <div class="num-cell">5<span class="idx">4</span></div>
+        </div>
+        <div class="sum-display">
+          <div class="sum-badge active">sum=9</div>
+          <div class="avg-badge">avg=3.00</div>
+        </div>
+        <p style="font-size:11px;color:#16a34a;font-weight:600;margin:8px 0 0;">更大!</p>
+      </div>
+
+      <div style="font-size:24px;color:var(--accent);">→</div>
+
+      <div style="text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">再滑动一步</p>
+        <div class="num-row">
+          <div class="num-cell">1<span class="idx">0</span></div>
+          <div class="num-cell">2<span class="idx">1</span></div>
+          <div class="num-cell in-window">3<span class="idx">2</span></div>
+          <div class="num-cell in-window">4<span class="idx">3</span></div>
+          <div class="num-cell in-window">5<span class="idx">4</span></div>
+        </div>
+        <div class="sum-display">
+          <div class="sum-badge active">sum=12</div>
+          <div class="avg-badge best">avg=4.00</div>
+        </div>
+        <p style="font-size:11px;color:#16a34a;font-weight:600;margin:8px 0 0;">最大!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 完整 Trace -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">nums = <code>[1,12,-3,-5,3,3,6,7]</code>，k = <code>3</code></p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">窗口 [0..2] sum=10 avg=3.333</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell best">1<span class="idx">0</span></div>
+        <div class="num-cell best">12<span class="idx">1</span></div>
+        <div class="num-cell best">-3<span class="idx">2</span></div>
+        <div class="num-cell">-5<span class="idx">3</span></div>
+        <div class="num-cell">3<span class="idx">4</span></div>
+        <div class="num-cell">3<span class="idx">5</span></div>
+        <div class="num-cell">6<span class="idx">6</span></div>
+        <div class="num-cell">7<span class="idx">7</span></div>
+      </div>
+      <div class="bracket-row">
+        <span class="bracket">┌</span>
+        <div class="b-cell active">1</div>
+        <div class="b-cell active">12</div>
+        <div class="b-cell active">-3</div>
+        <div class="b-cell">-5</div>
+        <div class="b-cell">3</div>
+        <div class="b-cell">3</div>
+        <div class="b-cell">6</div>
+        <div class="b-cell">7</div>
+        <span class="bracket">┐</span>
+      </div>
+      <div class="decision">
+        <div class="kv">初始窗口和: 1 + 12 + (-3) = 10</div>
+        <div class="kv best">maxAvg = 10/3 = 3.333</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">窗口 [1..3] sum=4 avg=1.333</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell">1<span class="idx">0</span></div>
+        <div class="num-cell best">12<span class="idx">1</span></div>
+        <div class="num-cell best">-3<span class="idx">2</span></div>
+        <div class="num-cell best">-5<span class="idx">3</span></div>
+        <div class="num-cell">3<span class="idx">4</span></div>
+        <div class="num-cell">3<span class="idx">5</span></div>
+        <div class="num-cell">6<span class="idx">6</span></div>
+        <div class="num-cell">7<span class="idx">7</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">滑动: sum = 10 - 1 + (-5) = 4</div>
+        <div class="kv">maxAvg 保持 3.333</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">窗口 [2..4] sum=1 avg=0.333</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell">1<span class="idx">0</span></div>
+        <div class="num-cell">12<span class="idx">1</span></div>
+        <div class="num-cell best">-3<span class="idx">2</span></div>
+        <div class="num-cell best">-5<span class="idx">3</span></div>
+        <div class="num-cell best">3<span class="idx">4</span></div>
+        <div class="num-cell">3<span class="idx">5</span></div>
+        <div class="num-cell">6<span class="idx">6</span></div>
+        <div class="num-cell">7<span class="idx">7</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">滑动: sum = 4 - 12 + 3 = -5 → -5/3 = -1.667</div>
+        <div class="kv">maxAvg 保持 3.333</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">窗口 [3..5] sum=1 avg=0.333</span>
+      </div>
+      <div class="decision">
+        <div class="kv">滑动: sum = -5 - (-3) + 3 = 1 → avg = 1/3 = 0.333</div>
+        <div class="kv">maxAvg 保持 3.333</div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">窗口 [4..6] sum=12 avg=4.000</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell">1<span class="idx">0</span></div>
+        <div class="num-cell">12<span class="idx">1</span></div>
+        <div class="num-cell">-3<span class="idx">2</span></div>
+        <div class="num-cell best">-5<span class="idx">3</span></div>
+        <div class="num-cell best">3<span class="idx">4</span></div>
+        <div class="num-cell best">3<span class="idx">5</span></div>
+        <div class="num-cell best">6<span class="idx">6</span></div>
+        <div class="num-cell">7<span class="idx">7</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">滑动: sum = 1 - (-5) + 6 = 12 → avg = 12/3 = 4.0</div>
+        <div class="kv best">maxAvg = 4.0，刷新记录！</div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 6</span>
+        <span class="step-range">窗口 [5..7] sum=16 avg=5.333 <span style="background:#16a34a;color:white;font-family:'Geist Mono',monospace;font-size:9px;padding:2px 8px;border-radius:4px;margin-left:8px;">最终答案</span></span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell">1<span class="idx">0</span></div>
+        <div class="num-cell">12<span class="idx">1</span></div>
+        <div class="num-cell">-3<span class="idx">2</span></div>
+        <div class="num-cell">-5<span class="idx">3</span></div>
+        <div class="num-cell">3<span class="idx">4</span></div>
+        <div class="num-cell best">3<span class="idx">5</span></div>
+        <div class="num-cell best">6<span class="idx">6</span></div>
+        <div class="num-cell best">7<span class="idx">7</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">滑动: sum = 12 - 3 + 7 = 16 → avg = 16/3 = 5.333</div>
+        <div class="kv best">maxAvg = 5.333！超过之前的 4.0</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:#16a34a;font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：最大平均数 = 16/3 ≈ 5.333，窗口 [3,6,7]
+    </p>
+  </section>
+
+  <!-- Section 3: 代码模板 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <p class="section-sub">固定窗口三步：先算初始窗口 → 滑动（减左边加右边）→ O(1) 更新答案</p>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func findMaxAverage(nums []int, k int) float64 {
+    // 1. 先算第一个窗口的和
+    sum := 0
+    for i := 0; i < k; i++ {
+        sum += nums[i]
+    }
+    maxAvg := float64(sum) / float64(k)
+
+    // 2. 滑动窗口：减左边，加右边
+    for i := k; i < len(nums); i++ {
+        sum += nums[i]       // 加右边（新元素）
+        sum -= nums[i-k]     // 减左边（旧元素）
+        avg := float64(sum) / float64(k)
+        maxAvg = math.Max(maxAvg, avg)
+    }
+    return maxAvg
+}</pre>
+  </section>
+
+  <!-- Section 4: 模板总结 -->
+  <section>
+    <h2>固定窗口模板</h2>
+    <p class="section-sub">所有固定窗口问题都可以用这个模板</p>
+    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:24px;margin-top:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;">
+        <div>
+          <p style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--accent);margin:0 0 8px;text-transform:uppercase;">Step 1</p>
+          <p style="font-size:14px;color:var(--ink);font-weight:600;margin:0;">算初始窗口</p>
+          <p style="font-size:12px;color:var(--muted);margin:8px 0 0;">前 K 个元素的和/计数</p>
+        </div>
+        <div style="font-size:20px;color:var(--accent);">→</div>
+        <div>
+          <p style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--accent);margin:0 0 8px;text-transform:uppercase;">Step 2</p>
+          <p style="font-size:14px;color:var(--ink);font-weight:600;margin:0;">滑动窗口</p>
+          <p style="font-size:12px;color:var(--muted);margin:8px 0 0;">+右边，-左边</p>
+        </div>
+        <div style="font-size:20px;color:var(--accent);">→</div>
+        <div>
+          <p style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--accent);margin:0 0 8px;text-transform:uppercase;">Step 3</p>
+          <p style="font-size:14px;color:var(--ink);font-weight:600;margin:0;">O(1) 更新</p>
+          <p style="font-size:12px;color:var(--muted);margin:8px 0 0;">max/min/avg 立即可得</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">类型</p>
+      <h3><span class="dot"></span>固定窗口</h3>
+      <p>窗口大小始终为 K，不伸缩，只滑动</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">模板</p>
+      <h3><span class="dot"></span>减左边加右边</h3>
+      <p>sum += nums[R] - nums[L-K]，O(1) 维护窗口和</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">入门题</p>
+      <h3><span class="dot"></span>最简单的滑动窗口</h3>
+      <p>没有收缩逻辑，纯滑动求和</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/643.maximum-average-subarray.html</footer>
+</body>
+</html>
