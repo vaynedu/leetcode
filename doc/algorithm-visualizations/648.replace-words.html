@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>单词替换 · 图解 · LeetCode 648</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .trie-tree { font-family: 'Geist Mono', monospace; font-size: 12px; line-height: 1.7; color: var(--muted); margin: 16px 0; padding: 16px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; overflow-x: auto; }
+
+  .sentence { font-family: 'Geist Mono', monospace; font-size: 14px; padding: 12px 16px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; margin: 12px 0; line-height: 1.8; }
+  .word { display: inline; }
+  .word.replaced { color: #16a34a; font-weight: 600; }
+  .word.replaced::after { content: ' → ' attr(data-replacement); color: #ca8a04; font-weight: 400; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; margin: 10px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 12px; color: var(--muted); margin: 3px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 11px; background: rgba(28,25,23,0.05); padding: 1px 4px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.done { color: #16a34a; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 10px 14px; margin-top: 10px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 648 · Trie</p>
+  <h1>单词替换</h1>
+  <p class="subtitle">在句子中，将每个单词替换为词根前缀中最短的那个</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定一个词根字典和一个句子，将句子中的每个单词替换为词根字典中以该单词开头且最短的前缀。<br>
+      关键：<strong>用 Trie 存储词根，对每个单词从前缀树中找最短匹配词根</strong>。
+    </p>
+
+    <div class="trie-tree">
+root<br>
+├─ 'c'<br>
+│&nbsp;&nbsp;└─ 'a'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 't'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ isEnd=<span style="color:#16a34a;font-weight:700;">true</span> ✓ cat<br>
+├─ 'b'<br>
+│&nbsp;&nbsp;└─ 'a'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 't'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ isEnd=<span style="color:#16a34a;font-weight:700;">true</span> ✓ bat<br>
+└─ 'r'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;└─ 'a'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 't'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ isEnd=<span style="color:#16a34a;font-weight:700;">true</span> ✓ rat
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin:0;">词根: ["cat","bat","rat"]，每个节点标记 isEnd=true 的是词根</p>
+  </section>
+
+  <!-- Section 2: 替换过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">词根: <code>["cat","bat","rat"]</code>，句子: <code>"the cattle was rattled by the baby"</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="kv">处理 "the" → 在 Trie 中找不到前缀，保持原样</span>
+      </div>
+      <div class="decision">
+        <div class="kv">t→h→e：'t' 不在 root 子节点中 → 不替换</div>
+        <div class="kv done">the</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="kv">处理 "cattle" → c→a→t→t→l→e，catt 是词根 "cat" 的前缀</span>
+      </div>
+      <div class="decision">
+        <div class="kv">c→a→t：节点 isEnd=true，找到词根 "cat"</div>
+        <div class="kv done">cattle → cat</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="kv">处理 "was" → w 不在 Trie 中，不替换</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="kv">处理 "rattled" → r→a→t，rat 是词根</span>
+      </div>
+      <div class="decision">
+        <div class="kv done">rattled → rat</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">结果</span>
+        <span class="kv done">"the cat was rat by the baby"</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 代码 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func replaceWords(dictionary []string, sentence string) string {
+    // 1. 构建 Trie
+    root := NewTrieNode()
+    for _, word := range dictionary {
+        node := root
+        for _, ch := range word {
+            if _, ok := node.children[ch]; !ok {
+                node.children[ch] = NewTrieNode()
+            }
+            node = node.children[ch]
+        }
+        node.isEnd = true
+    }
+
+    // 2. 处理每个单词
+    words := strings.Split(sentence, " ")
+    for i, word := range words {
+        words[i] = findRoot(word, root)
+    }
+    return strings.Join(words, " ")
+}
+
+func findRoot(word string, root *TrieNode) string {
+    node := root
+    var prefix []byte
+    for _, ch := range []byte(word) {
+        if _, ok := node.children[ch]; !ok {
+            break
+        }
+        node = node.children[ch]
+        prefix = append(prefix, ch)
+        if node.isEnd {
+            return string(prefix)  // 找到最短词根
+        }
+    }
+    return word  // 没找到，返回原词
+}</pre>
+  </section>
+
+  <!-- Section 4: 复杂度 -->
+  <section>
+    <h2>复杂度分析</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">时间复杂度</p>
+        <p style="font-size:14px;color:var(--ink);margin:0;font-weight:600;">O(m × n)</p>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">m=平均词根长度，n=句子单词数</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">空间复杂度</p>
+        <p style="font-size:14px;color:var(--ink);margin:0;font-weight:600;">O(m × k)</p>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">m=词根数，k=平均词根长度</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>Trie 找最短前缀</h3>
+      <p>沿 Trie 走，遇到 isEnd=true 就停止</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>最短词根</h3>
+      <p>遇到第一个 isEnd=true 的节点就返回</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">应用</p>
+      <h3><span class="dot"></span>词根替换</h3>
+      <p>自然语言处理中的词干提取</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/648.replace-words.html</footer>
+</body>
+</html>
