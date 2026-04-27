@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>括号生成 · 图解 · LeetCode 22</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .bracket-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+  .bkt { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 700; border-radius: 4px; }
+  .bkt.o { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+  .bkt.c { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+  .bkt.empty { background: var(--paper); border: 1px dashed var(--rule); color: var(--soft); }
+
+  .combo-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  .combo { font-family: 'Geist Mono', monospace; font-size: 14px; padding: 6px 12px; border-radius: 6px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .combo.current { border-color: var(--accent); color: var(--accent); background: var(--accent-tint); }
+  .combo.done { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .combo.pruned { background: #fee2e2; border-color: #fecaca; color: #991b1b; opacity: 0.5; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.done { color: #16a34a; }
+  .kv.warn { color: #dc2626; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eye
+
+...
+
+<h3>复杂度分析</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">时间复杂度</p>
+        <p style="font-size:14px;color:var(--ink);margin:0;font-weight:600;">O(Catalan(n))</p>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">O(4ⁿ / n^(3/2))，第 n 个卡特兰数</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">空间复杂度</p>
+        <p style="font-size:14px;color:var(--ink);margin:0;font-weight:600;">O(n)</p>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">递归深度 = n</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">本质</p>
+      <h3><span class="dot"></span>卡特兰数</h3>
+      <p>合法括号序列数 = 第 n 个卡特兰数</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">约束</p>
+      <h3><span class="dot"></span>两个剪枝条件</h3>
+      <p>左&lt;n时加'('，右&lt;左时加')'</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">模板</p>
+      <h3><span class="dot"></span>index 位置无关</h3>
+      <p>只用 open 和 close 计数控制</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/22.generate-parentheses.html</footer>
+</body>
+</html>
