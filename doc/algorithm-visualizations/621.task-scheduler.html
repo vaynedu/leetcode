@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>621 任务调度器</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
+.phase span{color:#fbbf24}
+.counts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.8rem}
+.count-chip{width:48px;height:48px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;font-weight:bold;border:1px solid #334155}
+.chip-default{background:#1e293b;color:#94a3b8}
+.chip-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.1)}
+.chip-idle{background:#1e293b;color:#475569;border:1px dashed #475569}
+.schedule{display:flex;gap:4px;flex-wrap:wrap;margin:.8rem 0}
+.slot{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:bold;border:1px solid #334155;transition:all .2s}
+.slot-empty{background:#1e293b;color:#334155;border:1px dashed #334155}
+.slot-task{background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.slot-idle{background:#1e293b;color:#475569;border:1px dashed #475569}
+.result-row{display:flex;gap:1rem;margin-top:.5rem;font-size:.85rem}
+.result-label{color:#64748b}
+.result-value{color:#fbbf24;font-weight:bold}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>621. 任务调度器</h1>
+<p class="caption" style="color:#888;font-size:.85rem;margin-bottom:2rem">贪心：先排最多数量的任务，形成 idle 间隔填入其他任务</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">阶段: <span id="phase">-</span></div>
+    <div class="info-item">执行任务: <span id="cur-task">-</span></div>
+    <div class="info-item">时间片: <span id="cur-time">-</span></div>
+    <div class="info-item">冷却计时: <span id="cooldown">-</span></div>
+  </div>
+  <div class="phase" id="phase-desc">点击「下一步」开始</div>
+  <div class="counts" id="counts"></div>
+  <div class="schedule" id="schedule"></div>
+  <div class="result-row">
+    <span class="result-label">总时间:</span>
+    <span class="result-value" id="total-time">-</span>
+    <span class="result-label">空闲数:</span>
+    <span class="result-value" id="idle-count">-</span>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">leastInterval</span>(tasks, n) {
+  <span class="kw">const</span> cnt = {};
+  tasks.forEach(t => cnt[t] = (cnt[t]||<span class="num">0</span>)+<span class="num">1</span>);
+  <span class="kw">const</span> max = Math.<span class="hl">max</span>(...Object.values(cnt));
+  <span class="kw">const</span> maxCnt = Object.values(cnt).filter(v=>v===max).length;
+  <span class="kw">return</span> Math.<span class="hl">max</span>(tasks.length, (max-<span class="num">1</span>)*(n+<span class="num">1</span>)+maxCnt);
+}</pre>
+</div>
+
+<script>
+const tasks = ['A','A','A','B','B','B'];
+const n = 2; // 冷却时间
+// max=3, maxCnt=2, (3-1)*(2+1)+2=8
+// 调度: A B _ A B _ A = 8
+
+let counts = {};
+let remaining = {};
+let cooldown = 0;
+let schedule = []; // array of task char or null (idle)
+let step = -1;
+let maxCount = 0;
+
+function init() {
+  // Count tasks
+  const taskList = [...new Set(tasks)];
+  counts = {};
+  taskList.forEach(t => counts[t] = 0);
+  tasks.forEach(t => counts[t]++);
+  remaining = {...counts};
+  maxCount = Math.max(...Object.values(counts));
+
+  const countsEl = document.getElementById('counts');
+  countsEl.innerHTML = taskList.map(t =>
+    `<div class="count-chip chip-default" id="chip-${t}">
+      <span style="color:#fbbf24">${t}</span>
+      <span id="count-val-${t}">${counts[t]}</span>
+    </div>`
+  ).join('');
+
+  reset();
+}
+
+function reset() {
+  remaining = {...counts};
+  cooldown = 0;
+  schedule = [];
+  step = -1;
+  Object.keys(counts).forEach(t => {
+    const chip = document.getElementById(`chip-${t}`);
+    if (chip) chip.className = 'count-chip chip-default';
+    const val = document.getElementById(`count-val-${t}`);
+    if (val) val.textContent = counts[t];
+  });
+  renderSchedule();
+  document.getElementById('phase').textContent = '-';
+  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始调度';
+  document.getElementById('cur-task').textContent = '-';
+  document.getElementById('cur-time').textContent = '-';
+  document.getElementById('cooldown').textContent = '-';
+  document.getElementById('total-time').textContent = '-';
+  document.getElementById('idle-count').textContent = '-';
+}
+
+function renderSchedule() {
+  const el = document.getElementById('schedule');
+  el.innerHTML = schedule.map((t, idx) => {
+    if (t === null) return `<div class="slot slot-idle" title="idle">-</div>`;
+    return `<div class="slot slot-task" title="${t}">${t}</div>`;
+  }).join('');
+}
+
+function next() {
+  const available = Object.keys(remaining).filter(t => remaining[t] > 0 && !cooldown.includes(t));
+  if (available.length === 0) {
+    // idle
+    schedule.push(null);
+    cooldown = cooldown.filter(t => true); // decrement
+    cooldown = cooldown.map(t => t-1).filter(t => t > 0);
+    step++;
+    renderSchedule();
+    document.getElementById('phase').textContent = '空闲';
+    document.getElementById('phase-desc').innerHTML = '无任务可执行，<span>空闲一个时间片</span>';
+    document.getElementById('cur-task').textContent = '-';
+    document.getElementById('cur-time').textContent = step;
+    document.getElementById('cooldown').textContent = cooldown.join(', ');
+    return;
+  }
+  // Pick task with most remaining
+  available.sort((a,b) => remaining[b] - remaining[a]);
+  const task = available[0];
+  schedule.push(task);
+  remaining[task]--;
+  cooldown = [task, ...cooldown.map(t => t-1).filter(t => t > 0)];
+  step++;
+  renderSchedule();
+  // Update chips
+  Object.keys(remaining).forEach(t => {
+    const chip = document.getElementById(`chip-${t}`);
+    const val = document.getElementById(`count-val-${t}`);
+    if (val) val.textContent = remaining[t];
+    if (remaining[t] === 0) {
+      chip.className = 'count-chip chip-idle';
+    } else if (t === task) {
+      chip.className = 'count-chip chip-cur';
+    } else {
+      chip.className = 'count-chip chip-default';
+    }
+  });
+  document.getElementById('phase').textContent = '执行';
+  document.getElementById('phase-desc').innerHTML = `执行任务 <span>${task}</span>（剩余 ${remaining[task]+1}→${remaining[task]}）`;
+  document.getElementById('cur-task').textContent = task;
+  document.getElementById('cur-time').textContent = step;
+  document.getElementById('cooldown').textContent = cooldown.filter(t => typeof t === 'string').join(', ') || '-';
+  // Check done
+  const done = Object.values(remaining).every(v => v === 0);
+  if (done) {
+    document.getElementById('phase-desc').innerHTML = '所有任务执行完毕！';
+    const idleCount = schedule.filter(t => t === null).length;
+    document.getElementById('total-time').textContent = schedule.length;
+    document.getElementById('idle-count').textContent = idleCount;
+  }
+}
+
+function prev() {
+  if (schedule.length === 0) return;
+  const last = schedule.pop();
+  if (last === null) {
+    cooldown = cooldown.map(t => t-1).filter(t => t > 0);
+  } else {
+    remaining[last]++;
+    cooldown = [last, ...cooldown.map(t => t-1).filter(t => t > 0)];
+  }
+  step = schedule.length - 1;
+  renderSchedule();
+  // restore chips
+  Object.keys(remaining).forEach(t => {
+    const chip = document.getElementById(`chip-${t}`);
+    const val = document.getElementById(`count-val-${t}`);
+    if (val) val.textContent = remaining[t];
+    chip.className = remaining[t] > 0 ? 'count-chip chip-default' : 'count-chip chip-idle';
+  });
+  document.getElementById('phase').textContent = '回退';
+  document.getElementById('cur-task').textContent = schedule.length > 0 ? schedule[schedule.length-1] : '-';
+  document.getElementById('cur-time').textContent = schedule.length - 1;
+  document.getElementById('total-time').textContent = schedule.length;
+  document.getElementById('idle-count').textContent = schedule.filter(t => t === null).length;
+}
+
+init();
+</script>
+</body>
+</html>
