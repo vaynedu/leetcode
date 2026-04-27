@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>435 无重叠区间</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
+.phase span{color:#fbbf24}
+.input-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem}
+.input-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.timeline{position:relative;height:90px;margin:.5rem 0 1rem;padding-left:40px}
+.tick-col{position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;font-size:.6rem;color:#475569}
+.ticks{position:absolute;left:40px;right:0;top:0;bottom:20px}
+.tick-mark{position:absolute;top:0;bottom:0;width:1px;background:#334155}
+.axis-line{position:absolute;left:0;right:0;bottom:20px;height:1px;background:#334155}
+.bars-area{position:absolute;left:40px;right:0;top:0;bottom:20px;display:flex;flex-direction:column;gap:4px}
+.interval-bar{height:18px;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:.7rem;font-weight:bold;transition:all .3s}
+.bar-keep{background:#1e3a5f;color:#93c5fd;border:1px solid #3b5998}
+.bar-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;z-index:2}
+.bar-remove{background:#450a0a;color:#fca5a5;border:2px solid #ef4444;text-decoration:line-through}
+.result-area{margin-top:.5rem}
+.result-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
+.result-list{display:flex;gap:8px;flex-wrap:wrap}
+.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.result-badge-removed{background:#450a0a;color:#fca5a5;border:1px solid #ef4444}
+.count-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#78350f;color:#fcd34d;border:1px solid #f59e0b}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>435. 无重叠区间</h1>
+<p class="subtitle">贪心：移除最少区间使不重叠 → 按右边界排序，贪心保留结尾最早的</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">阶段: <span id="phase">-</span></div>
+    <div class="info-item">当前区间: <span id="cur-interval">-</span></div>
+    <div class="info-item">已移除: <span id="removed-count">0</span></div>
+    <div class="info-item">已保留: <span id="kept-count">0</span></div>
+  </div>
+  <div class="phase" id="phase-desc">点击「下一步」开始</div>
+  <div class="input-list" id="input-list"></div>
+  <div class="timeline">
+    <div class="tick-col" id="tick-col"></div>
+    <div class="ticks" id="ticks"></div>
+    <div class="axis-line"></div>
+    <div class="bars-area" id="bars-area"></div>
+  </div>
+  <div class="result-area">
+    <div class="result-label">结果</div>
+    <div class="result-list" id="result-list"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">eraseOverlapIntervals</span>(intervals) {
+  intervals.<span class="hl">sort</span>((a,b) => a[<span class="num">1</span>] - b[<span class="num">1</span>]);
+  <span class="kw">let</span> count = <span class="num">0</span>, end = intervals[<span class="num">0</span>][<span class="num">1</span>];
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i < intervals.length; i++) {
+    <span class="kw">if</span> (intervals[i][<span class="num">0</span>] < end)
+      count++;
+    <span class="kw">else</span>
+      end = intervals[i][<span class="num">1</span>];
+  }
+  <span class="kw">return</span> count;
+}</pre>
+</div>
+
+<script>
+const intervals = [[1,2],[2,3],[3,4],[1,3]];
+// 按右边界排序: [1,2], [2,3], [3,4], [1,3]
+// 保留 [1,2], end=2
+// [2,3]: 2<3 不重叠，保留, end=3
+// [3,4]: 3<4 不重叠，保留, end=4
+// [1,3]: 1<3 重叠，移除
+// 移除数: 1
+
+let sorted = [];
+let removed = new Set();
+let i = 0;
+let step = -1;
+
+const MIN = 0, MAX = 5;
+
+function buildTimeline() {
+  const tickCol = document.getElementById('tick-col');
+  const ticks = document.getElementById('ticks');
+  tickCol.innerHTML = '';
+  ticks.innerHTML = '';
+  for (let v = MIN; v <= MAX; v++) {
+    const pct = ((v - MIN) / (MAX - MIN)) * 100;
+    tickCol.innerHTML += `<div>${v}</div>`;
+    ticks.innerHTML += `<div class="tick-mark" style="left:${pct}%;top:0;bottom:0"></div>`;
+  }
+}
+
+function pct(v) { return ((v - MIN) / (MAX - MIN)) * 100; }
+
+function renderBars() {
+  const area = document.getElementById('bars-area');
+  area.innerHTML = '';
+  sorted.forEach((intv, idx) => {
+    const left = pct(intv[0]);
+    const right = pct(intv[1]);
+    const width = right - left;
+    let cls = 'interval-bar bar-keep';
+    if (removed.has(idx)) cls = 'interval-bar bar-remove';
+    if (idx === i && step >= 0) cls = 'interval-bar bar-cur';
+    area.innerHTML += `
+      <div class="${cls}" style="left:${left}%;width:${Math.max(width,4)}%">
+        [${intv[0]},${intv[1]}]
+      </div>`;
+  });
+}
+
+function renderInput() {
+  const list = document.getElementById('input-list');
+  list.innerHTML = intervals.map(iv =>
+    `<span class="input-badge">[${iv[0]},${iv[1]}]</span>`
+  ).join('');
+}
+
+function reset() {
+  sorted = [...intervals].sort((a,b) => a[1]-b[1]);
+  removed = new Set();
+  i = 0; step = -1;
+  document.getElementById('phase').textContent = '-';
+  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」按右边界排序后开始';
+  document.getElementById('cur-interval').textContent = '-';
+  document.getElementById('removed-count').textContent = '0';
+  document.getElementById('kept-count').textContent = '0';
+  document.getElementById('result-list').innerHTML = '';
+  buildTimeline();
+  renderInput();
+  renderBars();
+}
+
+function next() {
+  if (step >= sorted.length - 1) return;
+  step++;
+  if (step === 0) {
+    document.getElementById('phase').textContent = '排序';
+    document.getElementById('phase-desc').innerHTML = '按右边界 <span>从小到大</span> 排序';
+    document.getElementById('cur-interval').textContent = '-';
+    document.getElementById('kept-count').textContent = '1';
+    renderBars();
+  } else {
+    i = step;
+    const cur = sorted[i];
+    const prev = sorted[i-1];
+    const overlap = cur[0] < prev[1];
+    if (overlap) {
+      removed.add(i);
+      document.getElementById('phase').textContent = '移除';
+      document.getElementById('phase-desc').innerHTML =
+        `[${cur[0]},${cur[1]}] 与 [${prev[0]},${prev[1]}] <span>重叠</span>，移除`;
+    } else {
+      document.getElementById('phase').textContent = '保留';
+      document.getElementById('phase-desc').innerHTML =
+        `[${cur[0]},${cur[1]}] 不重叠，保留`;
+    }
+    document.getElementById('cur-interval').textContent = `[${cur[0]},${cur[1]}]`;
+    document.getElementById('removed-count').textContent = removed.size;
+    document.getElementById('kept-count').textContent = sorted.length - removed.size;
+    renderBars();
+    renderResult();
+  }
+}
+
+function prev() {
+  if (step < 0) return;
+  if (step === 0) { reset(); return; }
+  removed.delete(step);
+  step--;
+  i = step;
+  document.getElementById('phase').textContent = step === 0 ? '排序' : '处理中';
+  document.getElementById('cur-interval').textContent = sorted[step] ? `[${sorted[step][0]},${sorted[step][1]}]` : '-';
+  document.getElementById('removed-count').textContent = removed.size;
+  document.getElementById('kept-count').textContent = sorted.length - removed.size;
+  if (step > 0) {
+    document.getElementById('phase-desc').innerHTML = `回退一步`;
+  }
+  renderBars();
+  renderResult();
+}
+
+function renderResult() {
+  const list = document.getElementById('result-list');
+  const kept = sorted.map((iv, idx) => ({iv, idx})).filter(x => !removed.has(x.idx));
+  list.innerHTML = kept.map(x =>
+    `<span class="result-badge">[${x.iv[0]},${x.iv[1]}]</span>`
+  ).join('') +
+  (removed.size > 0 ? `<span class="count-badge">需移除 ${removed.size}</span>` : '');
+}
+
+reset();
+</script>
+</body>
+</html>
