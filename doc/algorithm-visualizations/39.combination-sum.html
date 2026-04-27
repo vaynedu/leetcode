@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>组合总和 · 图解 · LeetCode 39</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .num-row { display: flex; gap: 6px; align-items: center; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+  .num-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 600; color: var(--muted); border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); }
+  .num-cell.active { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); }
+  .num-cell.used { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+
+  .combo-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  .combo { font-family: 'Geist Mono', monospace; font-size: 13px; padding: 6px 12px; border-radius: 6px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .combo.done { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.done { color: #16a34a; }
+  .kv.pruned { color: #dc2626; text-decoration: line-through; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 39 · Backtracking</p>
+  <h1>组合总和</h1>
+  <p class="subtitle">在有序数组中找和为目标值的组合，每个元素可重复使用</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定无重复有序数组和目标值，找出所有和为目标值的组合。<br>
+      关键：<strong> candidates 升序排列 + 每个元素可重复选 + 组合不重复</strong>。
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">与 #40 组合总和 II 的区别</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">#39: candidates 无重复，每个元素可用多次<br>#40: candidates 有重复，每个元素只用一次</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">去重方法</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">通过 <strong>index 参数</strong>控制起点，同一层不回头选之前的元素，自然去重</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 手推 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">candidates = <code>[2,3,5]</code>，target = <code>8</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">初始</span>
+        <span class="kv">target=8, path=[]</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">选 2</span>
+        <span class="kv">target=8, path=[2], 继续从 2 开始选（可重复）</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell active">2</div>
+        <div class="num-cell">3</div>
+        <div class="num-cell">5</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">继续选 2</span>
+        <span class="kv">target=6, path=[2,2]</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell used">2</div>
+        <div class="num-cell">3</div>
+        <div class="num-cell">5</div>
+      </div>
+      <div class="decision">
+        <div class="kv">2+2+2=6，继续选 2</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">再选 2</span>
+        <span class="kv">target=4, path=[2,2,2]</span>
+      </div>
+      <div class="decision">
+        <div class="kv">2+2+2+2=8 → 找到一个！</div>
+        <div class="kv done">[2,2,2,2]</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">回溯</span>
+        <span class="kv">撤销最后一个 2，换成 3</span>
+      </div>
+      <div class="decision">
+        <div class="kv">path=[2,2,3] → 2+2+3=7 ≠ 8，撤销</div>
+        <div class="kv pruned">试 2+2+5=9 > 8，撤销</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">回溯到第二个 2</span>
+        <span class="kv">换 3</span>
+      </div>
+      <div class="num-row">
+        <div class="num-cell used">2</div>
+        <div class="num-cell active">3</div>
+        <div class="num-cell">5</div>
+      </div>
+      <div class="decision">
+        <div class="kv">path=[2,3], 2+3=5，继续</div>
+        <div class="kv">选 3 → [2,3,3]=8，找到！</div>
+        <div class="kv done">[2,3,3]</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">最终结果</span>
+        <span class="kv done">共 3 个组合</span>
+      </div>
+      <div class="combo-row">
+        <span class="combo done">[2,2,2,2]</span>
+        <span class="combo done">[2,3,3]</span>
+        <span class="combo done">[3,5]</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 代码 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func combinationSum(candidates []int, target int) [][]int {
+    sort.Ints(candidates)  // 排序，便于剪枝
+    var result [][]int
+    var path []int
+
+    var backtrack func(start, target int)
+    backtrack = func(start, target int) {
+        if target == 0 {
+            // 找到一组解
+            ans := make([]int, len(path))
+            copy(ans, path)
+            result = append(result, ans)
+            return
+        }
+        for i := start; i < len(candidates); i++ {
+            if candidates[i] > target {
+                // 剪枝：已排序，后面更大的数也不用试了
+                break
+            }
+            path = append(path, candidates[i])
+            backtrack(i, target-candidates[i])  // 关键：从 i 开始（可重复选自己）
+            path = path[:len(path)-1]           // 回溯
+        }
+    }
+
+    backtrack(0, target)
+    return result
+}</pre>
+  </section>
+
+  <!-- Section 4: 复杂度 -->
+  <section>
+    <h2>复杂度分析</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">时间复杂度</p>
+        <p style="font-size:14px;color:var(--ink);margin:0;font-weight:600;">O(n^(k-1))</p>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">n=candidates长度，k=平均深度，最坏情况指数级</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">空间复杂度</p>
+        <p style="font-size:14px;color:var(--ink);margin:0;font-weight:600;">O(k)</p>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">递归深度 = 解的长度</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>index 参数</h3>
+      <p>backtrack(i) 保证不回头选，自然去重</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">剪枝</p>
+      <h3><span class="dot"></span>排序 + 大于 target 跳过</h3>
+      <p>排序后 candidates[i] > target 直接 break</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">与40区别</p>
+      <h3><span class="dot"></span>可重复 vs 不可重复</h3>
+      <p>#39: backtrack(i)，#40: backtrack(i+1)</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/39.combination-sum.html
