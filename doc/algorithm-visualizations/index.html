@@ -192,6 +192,9 @@
   <button class="filter-btn" data-filter="stack">栈<span class="filter-count" id="count-stack">0</span></button>
   <button class="filter-btn" data-filter="design">设计<span class="filter-count" id="count-design">0</span></button>
   <button class="filter-btn" data-filter="trie">前缀树<span class="filter-count" id="count-trie">0</span></button>
+  <button class="filter-btn" data-filter="divide-and-conquer">分治<span class="filter-count" id="count-divide-and-conquer">0</span></button>
+  <button class="filter-btn" data-filter="greedy">贪心<span class="filter-count" id="count-greedy">0</span></button>
+  <button class="filter-btn" data-filter="sort">排序<span class="filter-count" id="count-sort">0</span></button>
   <button class="filter-btn" data-filter="other">其他<span class="filter-count" id="count-other">0</span></button>
 
   <div class="mastery-filter">
@@ -220,12 +223,12 @@ const cards = [
   { id: 2,  num: '112',  title: '路径总和',             file: '112.path-sum.html',                        tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'easy',   freq: 2 },
   { id: 3,  num: '113',  title: '路径总和 II',           file: '113.path-sum-ii.html',                     tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'medium', freq: 2 },
   { id: 4,  num: '146',  title: 'LRU 缓存',             file: '146.lru-cache.html',                        tags: ['hash-map', 'linked-list'], cat: 'design',         diff: 'hard',   freq: 3 },
-  { id: 5,  num: '215',  title: '数组第 K 大',           file: '215.kth-largest-element.html',              tags: ['heap', 'quick-select'],   cat: 'heap',           diff: 'medium', freq: 3 },
+  { id: 5,  num: '215',  title: '数组第 K 大',           file: '215.kth-largest-element.html',              tags: ['heap', 'quick-select'],   cats: ['heap', 'divide-and-conquer'], diff: 'medium', freq: 3 },
   { id: 6,  num: '23',   title: '合并 K 个链表',         file: '23.merge-k-sorted-lists.html',             tags: ['heap', 'merge'],           cat: 'heap',           diff: 'hard',   freq: 3 },
   { id: 7,  num: '236',  title: '最近公共祖先',           file: '236.lowest-common-ancestor.html',           tags: ['binary-tree', 'lca'],     cat: 'binary-tree',    diff: 'medium', freq: 3 },
   { id: 8,  num: '239',  title: '滑动窗口最大值',         file: '239.sliding-window-maximum.html',           tags: ['sliding-window', 'deque'],cat: 'sliding-window', diff: 'medium', freq: 3 },
   { id: 9,  num: '257',  title: '二叉树所有路径',         file: '257.binary-tree-paths.html',                tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'easy',   freq: 2 },
-  { id: 10, num: '32',   title: '最长有效括号',           file: '32.longest-valid-parentheses.html',          tags: ['stack', 'dp'],            cat: 'stack',          diff: 'hard',   freq: 3 },
+  { id: 10, num: '32',   title: '最长有效括号',           file: '32.longest-valid-parentheses.html',          tags: ['stack', 'dp'],            cats: ['stack', 'dp'],         diff: 'hard',   freq: 3 },
   { id: 11, num: '33',   title: '旋转数组搜索',           file: '33.rotated-array-search.html',              tags: ['binary-search'],          cat: 'binary-search',  diff: 'medium', freq: 3 },
   { id: 12, num: '34',   title: '二分查找边界',           file: '34.binary-search-boundary.html',             tags: ['binary-search'],          cat: 'binary-search',  diff: 'hard',   freq: 3 },
   { id: 13, num: '42',   title: '接雨水',                file: '42.trapping-rain-water.html',               tags: ['two-pointer', 'dp', 'stack'], cats: ['dp', 'two-pointer', 'stack'], diff: 'hard',   freq: 3 },
@@ -259,7 +262,7 @@ const cards = [
   { id: 41, num: '348', title: '设计井字棋',              file: '348.design-tic-tac-toe.html',                    tags: ['design', 'matrix'],      cat: 'design',        diff: 'medium', freq: 3 },
   { id: 42, num: '353', title: '设计贪吃蛇',               file: '353.design-snake-game.html',                    tags: ['design', 'deque', 'game'], cat: 'design',        diff: 'medium', freq: 3 },
   { id: 43, num: '284', title: '顶部迭代器',               file: '284.peeking-iterator.html',                     tags: ['design', 'iterator'],     cat: 'design',        diff: 'medium', freq: 3 },
-  { id: 44, num: '179', title: '最大数',                   file: '179.largest-number.html',                        tags: ['sort', 'greedy'],        cat: 'design',        diff: 'medium', freq: 3 },
+  { id: 44, num: '179', title: '最大数',                   file: '179.largest-number.html',                        tags: ['sort', 'greedy'],        cats: ['sort', 'greedy'],       diff: 'medium', freq: 3 },
   { id: 45, num: '362', title: '设计命中率计数器',          file: '362.design-hit-counter.html',                    tags: ['design', 'hash', 'queue'], cat: 'design',        diff: 'medium', freq: 3 },
   { id: 46, num: '460', title: 'LFU 缓存',                 file: '460.lfu-cache.html',                             tags: ['design', 'hash', 'linked-list'], cat: 'design',     diff: 'hard',   freq: 3 },
   { id: 47, num: '271', title: '字符串编码与解码',           file: '271.encode-and-decode-strings.html',              tags: ['design', 'string', 'encoding'], cat: 'design',   diff: 'medium', freq: 3 },
@@ -275,6 +278,9 @@ const catLabel = {
   'stack': '栈',
   'design': '设计',
   'trie': '前缀树',
+  'divide-and-conquer': '分治',
+  'greedy': '贪心',
+  'sort': '排序',
   'other': '其他',
 };
 const diffLabel = { easy: '简单', medium: '中等', hard: '困难' };
@@ -392,6 +398,9 @@ function updateStats() {
   document.getElementById('count-stack').textContent = byCat['stack'] || 0;
   document.getElementById('count-design').textContent = byCat['design'] || 0;
   document.getElementById('count-trie').textContent = byCat['trie'] || 0;
+  document.getElementById('count-divide-and-conquer').textContent = byCat['divide-and-conquer'] || 0;
+  document.getElementById('count-greedy').textContent = byCat['greedy'] || 0;
+  document.getElementById('count-sort').textContent = byCat['sort'] || 0;
   document.getElementById('count-other').textContent = byCat['other'] || 0;
 }
 
