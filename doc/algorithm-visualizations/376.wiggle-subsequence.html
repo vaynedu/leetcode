@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>376 摆动序列</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
+.phase span{color:#fbbf24}
+.nums{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.4rem}
+.num-cell{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:bold;border:1px solid #334155;transition:all .25s}
+.num-default{background:#1e293b;color:#94a3b8}
+.num-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.12)}
+.num-up{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
+.num-down{background:#7f1d1d;color:#fca5a5;border:2px solid #ef4444}
+.num-skip{background:#1e293b;color:#475569;border:1px dashed #475569;opacity:.5}
+.num-kept{background:#78350f;color:#fcd34d;border:2px solid #f59e0b}
+.diff-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.6rem}
+.diff-cell{width:48px;text-align:center;font-size:.75rem;color:#64748b;height:24px;display:flex;align-items:center;justify-content:center}
+.diff-up{color:#6ee7b7}.diff-down{color:#fca5a5}.diff-flat{color:#475569}
+.seq-area{margin-top:.5rem}
+.seq-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
+.seq-list{display:flex;gap:6px;flex-wrap:wrap}
+.seq-cell{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:bold;background:#78350f;color:#fcd34d;border:1px solid #f59e0b}
+.seq-placeholder{background:#1e293b;color:#334155;border:1px dashed #334155}
+.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>376. 摆动序列</h1>
+<p class="subtitle">贪心：统计连续上升/下降段的数量，结果=段数+1</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">当前差值: <span id="cur-diff">-</span></div>
+    <div class="info-item">预期方向: <span id="expect-dir">-</span></div>
+    <div class="info-item">摆动序列长度: <span id="seq-len">-</span></div>
+  </div>
+  <div class="phase" id="phase-desc">点击「下一步」开始</div>
+  <div class="nums" id="nums"></div>
+  <div class="diff-row" id="diff-row"></div>
+  <div class="seq-area">
+    <div class="seq-label">摆动序列</div>
+    <div class="seq-list" id="seq-list"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">wiggleMaxLength</span>(nums) {
+  <span class="kw">if</span> (nums.length &lt; <span class="num">2</span>) <span class="kw">return</span> nums.length;
+  <span class="kw">let</span> up=<span class="num">1</span>, down=<span class="num">1</span>;
+  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">1</span>; i&lt;nums.length; i++) {
+    <span class="kw">if</span> (nums[i] &gt; nums[i-<span class="num">1</span>]) up = down + <span class="num">1</span>;
+    <span class="kw">else if</span> (nums[i] &lt; nums[i-<span class="num">1</span>]) down = up + <span class="num">1</span>;
+  }
+  <span class="kw">return</span> Math.<span class="hl">max</span>(up, down);
+}</pre>
+</div>
+
+<script>
+const nums = [1, 7, 4, 9, 2, 5];
+// diffs: +6, -3, +5, -7, +3
+// up=1, down=1
+// i=1: +6 > 0 → up=2
+// i=2: -3 < 0 → down=up+1=3
+// i=3: +5 > 0 → up=down+1=4
+// i=4: -7 < 0 → down=up+1=5
+// i=5: +3 > 0 → up=down+1=6
+// return max(6,5)=6
+
+let i = 1;
+let up = 1, down = 1;
+let seq = [nums[0]];
+let step = -1;
+
+function init() {
+  const el = document.getElementById('nums');
+  const diffEl = document.getElementById('diff-row');
+  el.innerHTML = '';
+  diffEl.innerHTML = '';
+  for (let j = 0; j < nums.length; j++) {
+    el.innerHTML += `<div class="num-cell num-default" id="num-${j}">${nums[j]}</div>`;
+  }
+  for (let j = 0; j < nums.length - 1; j++) {
+    const d = nums[j+1] - nums[j];
+    const cls = d > 0 ? 'diff-up' : d < 0 ? 'diff-down' : 'diff-flat';
+    const arrow = d > 0 ? '↑' : d < 0 ? '↓' : '—';
+    diffEl.innerHTML += `<div class="diff-cell ${cls}" id="diff-${j}">${arrow} ${d > 0 ? '+' : ''}${d}</div>`;
+  }
+  reset();
+}
+
+function reset() {
+  i = 1; up = 1; down = 1; seq = [nums[0]]; step = -1;
+  for (let j = 0; j < nums.length; j++) {
+    const el = document.getElementById(`num-${j}`);
+    el.className = 'num-cell num-default';
+    el.textContent = nums[j];
+  }
+  document.getElementById('cur-diff').textContent = '-';
+  document.getElementById('expect-dir').textContent = '-';
+  document.getElementById('seq-len').textContent = '1';
+  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  updateSeq();
+}
+
+function updateSeq() {
+  const list = document.getElementById('seq-list');
+  list.innerHTML = seq.map((v, idx) =>
+    `<div class="seq-cell">${v}</div>`
+  ).join('') +
+  `<div class="seq-cell seq-placeholder">?</div>`.repeat(Math.max(0, nums.length - seq.length));
+  document.getElementById('seq-len').textContent = seq.length;
+}
+
+function next() {
+  if (i >= nums.length) return;
+  step++;
+  const diff = nums[i] - nums[i-1];
+  const diffEl = document.getElementById(`diff-${i-1}`);
+  const curEl = document.getElementById(`num-${i}`);
+  const prevEl = document.getElementById(`num-${i-1}`);
+  // highlight
+  prevEl.className = 'num-cell num-cur';
+  curEl.className = 'num-cell num-cur';
+  document.getElementById('cur-diff').textContent = `${diff > 0 ? '+' : ''}${diff}`;
+  diffEl.className = diff > 0 ? 'diff-cell diff-up' : diff < 0 ? 'diff-cell diff-down' : 'diff-cell diff-flat';
+  if (diff > 0) {
+    document.getElementById('expect-dir').textContent = '上升（期待下降）';
+    if (up === down) {
+      up = down + 1;
+      seq.push(nums[i]);
+      prevEl.className = 'num-cell num-up';
+      curEl.className = 'num-cell num-up';
+      document.getElementById('phase-desc').innerHTML = `差值+${diff}，up=${up-1}→<span>${up}</span>（与down相等，up++），序列+1`;
+    } else {
+      document.getElementById('phase-desc').innerHTML = `差值+${diff}，up=${up}不变（不需要+1，因为刚经历过下降）`;
+    }
+  } else if (diff < 0) {
+    document.getElementById('expect-dir').textContent = '下降（期待上升）';
+    if (down === up) {
+      down = up + 1;
+      seq.push(nums[i]);
+      prevEl.className = 'num-cell num-down';
+      curEl.className = 'num-cell num-down';
+      document.getElementById('phase-desc').innerHTML = `差值${diff}，down=${down-1}→<span>${down}</span>（与up相等，down++），序列+1`;
+    } else {
+      document.getElementById('phase-desc').innerHTML = `差值${diff}，down=${down}不变`;
+    }
+  } else {
+    document.getElementById('expect-dir').textContent = '平坡，跳过';
+    document.getElementById('phase-desc').innerHTML = `差值=0，<span>平坡跳过</span>，不计入序列`;
+    curEl.className = 'num-cell num-skip';
+  }
+  if (i === nums.length - 1) {
+    document.getElementById('phase-desc').innerHTML += `，最大摆动长度=<span>${Math.max(up, down)}</span>`;
+  }
+  updateSeq();
+  i++;
+}
+
+function prev() {
+  if (i <= 1) return;
+  i--;
+  const diff = nums[i] - nums[i-1];
+  if (diff > 0) up = Math.max(1, up - 1);
+  else if (diff < 0) down = Math.max(1, down - 1);
+  if (seq[seq.length - 1] === nums[i]) seq.pop();
+  document.getElementById('cur-diff').textContent = `${diff > 0 ? '+' : ''}${diff}`;
+  document.getElementById('phase-desc').innerHTML = '已回退一步';
+  document.getElementById('num-' + i).className = 'num-cell num-default';
+  updateSeq();
+}
+
+init();
+</script>
+</body>
+</html>

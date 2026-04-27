@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>134 加油站</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
+.phase span{color:#fbbf24}
+.stations{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem}
+.station{width:52px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.st-bar{width:32px;background:#334155;border-radius:4px 4px 0 0;transition:all .3s;display:flex;flex-direction:column;align-items:center;padding-bottom:4px;font-size:.65rem;font-weight:bold;min-height:16px}
+.st-gas{color:#6ee7b7;justify-content:flex-end;padding-bottom:2px}
+.st-cost{color:#fca5a5;justify-content:flex-start;padding-top:2px}
+.st-net{color:#fbbf24;font-size:.6rem}
+.st-label{font-size:.65rem;color:#475569}
+.st-default{background:#1e293b}
+.st-cur{background:#0369a1}
+.st-ok{background:#065f46;border-color:#34d399}
+.st-fail{background:#450a0a;border-color:#ef4444;opacity:.55}
+.net-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.6rem}
+.net-cell{width:52px;text-align:center;font-size:.7rem;color:#64748b}
+.net-positive{color:#6ee7b7}.net-negative{color:#fca5a5}
+.status{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
+.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>134. 加油站</h1>
+<p class="subtitle">贪心：如果 total &lt; 0 无解；否则从 0 开始，累加负则换起点</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">当前站点: <span id="cur-station">-</span></div>
+    <div class="info-item">油箱: <span id="tank">0</span></div>
+    <div class="info-item">总油差: <span id="total-diff">-</span></div>
+    <div class="info-item">起点: <span id="start-station">-</span></div>
+  </div>
+  <div class="phase" id="phase-desc">点击「下一步」开始</div>
+  <div class="stations" id="stations"></div>
+  <div class="net-row" id="net-row"></div>
+  <div class="status" id="status"></div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">canCompleteCircuit</span>(gas, cost) {
+  <span class="kw">let</span> total=<span class="num">0</span>, tank=<span class="num">0</span>, start=<span class="num">0</span>;
+  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;gas.length; i++) {
+    total += gas[i] - cost[i];
+    tank += gas[i] - cost[i];
+    <span class="kw">if</span> (tank &lt; <span class="num">0</span>) { start = i+<span class="num">1</span>; tank = <span class="num">0</span>; }
+  }
+  <span class="kw">return</span> total &lt; <span class="num">0</span> ? -<span class="num">1</span> : start;
+}</pre>
+</div>
+
+<script>
+const gas = [1, 2, 3, 4, 5];
+const cost = [3, 4, 5, 1, 2];
+// net: -2, -2, -2, +3, +3
+// total = 0 → 有解
+// i=0: tank=-2 → start=1, tank=0
+// i=1: tank=-2 → start=2, tank=0
+// i=2: tank=-2 → start=3, tank=0
+// i=3: tank=+3
+// i=4: tank=+6 → return 3
+
+let i = 0, tank = 0, start = 0, total = 0, step = -1;
+
+function init() {
+  const el = document.getElementById('stations');
+  const netRow = document.getElementById('net-row');
+  el.innerHTML = '';
+  netRow.innerHTML = '';
+  for (let j = 0; j < gas.length; j++) {
+    const net = gas[j] - cost[j];
+    const maxNet = Math.max(...gas.map((g,idx) => g - cost[idx]).map(Math.abs));
+    const gasH = Math.round((gas[j] / (Math.max(...gas) || 1)) * 60) + 10;
+    const costH = Math.round((cost[j] / (Math.max(...cost) || 1)) * 60) + 10;
+    el.innerHTML += `
+      <div class="station">
+        <div class="st-bar st-gas st-default" id="bar-${j}" style="height:${gasH}px">+${gas[j]}</div>
+        <div class="st-bar st-cost st-default" style="height:${costH}px">-${cost[j]}</div>
+        <div class="st-net" id="net-${j}">${net>=0?'+':''}${net}</div>
+        <div class="st-label">Station ${j}</div>
+      </div>`;
+    netRow.innerHTML += `<div class="net-cell ${net>=0?'net-positive':'net-negative'}" id="nc-${j}">${net>=0?'+':''}${net}</div>`;
+  }
+  reset();
+}
+
+function reset() {
+  i = 0; tank = 0; start = 0; total = 0; step = -1;
+  for (let j = 0; j < gas.length; j++) {
+    const bar = document.getElementById(`bar-${j}`);
+    bar.className = 'st-bar st-gas st-default';
+    const nc = document.getElementById(`nc-${j}`);
+    const net = gas[j] - cost[j];
+    nc.className = `net-cell ${net>=0?'net-positive':'net-negative'}`;
+  }
+  document.getElementById('tank').textContent = '0';
+  document.getElementById('total-diff').textContent = gas.reduce((s, g, i) => s + g - cost[i], 0);
+  document.getElementById('start-station').textContent = '-';
+  document.getElementById('cur-station').textContent = '-';
+  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  document.getElementById('status').innerHTML = '';
+}
+
+function next() {
+  if (i >= gas.length) return;
+  step++;
+  const net = gas[i] - cost[i];
+  total += net;
+  tank += net;
+  // reset all bars
+  for (let j = 0; j < gas.length; j++) {
+    const bar = document.getElementById(`bar-${j}`);
+    bar.className = 'st-bar st-gas st-default';
+  }
+  // highlight station i
+  const bar = document.getElementById(`bar-${i}`);
+  bar.className = tank >= 0 ? 'st-bar st-gas st-ok' : 'st-bar st-gas st-fail';
+  document.getElementById('cur-station').textContent = `Station ${i}`;
+  document.getElementById('tank').textContent = tank;
+  if (tank < 0) {
+    start = i + 1;
+    tank = 0;
+    document.getElementById('phase-desc').innerHTML =
+      `Station ${i}: 油箱=${tank+net}，<span style="color:#fca5a5">不够到下一站</span>，换起点为 ${start}`;
+    document.getElementById('start-station').textContent = start < gas.length ? `Station ${start}` : '无解';
+  } else {
+    document.getElementById('phase-desc').innerHTML =
+      `Station ${i}: +${gas[i]}-${cost[i]}=${net}，油箱=${tank}，<span style="color:#6ee7b7">足够</span>`;
+  }
+  if (i === gas.length - 1) {
+    const ans = total >= 0 ? start : -1;
+    document.getElementById('status').innerHTML = total >= 0
+      ? `<span class="result-badge">答案: Station ${ans}，可绕一圈！</span>`
+      : `<span style="color:#fca5a5">无解，总油量 &lt; 总消耗</span>`;
+  }
+  i++;
+}
+
+function prev() {
+  if (i <= 0) return;
+  i--;
+  tank -= (gas[i] - cost[i]);
+  total -= (gas[i] - cost[i]);
+  if (start === i + 1) start = 0;
+  document.getElementById('cur-station').textContent = `Station ${i}`;
+  document.getElementById('tank').textContent = tank;
+  document.getElementById('start-station').textContent = start < gas.length ? `Station ${start}` : '-';
+  document.getElementById('phase-desc').innerHTML = '已回退一步';
+}
+
+init();
+</script>
+</body>
+</html>

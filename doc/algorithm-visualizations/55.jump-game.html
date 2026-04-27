@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>55 跳跃游戏</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
+.phase span{color:#fbbf24}
+.jumps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.8rem}
+.jump-cell{width:52px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.jump-bar{width:36px;background:#1e3a5f;border-radius:4px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-size:.75rem;font-weight:bold;color:#93c5fd;transition:all .3s;min-height:20px}
+.jump-reach{background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.jump-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.1)}
+.jump-blocked{background:#450a0a;color:#fca5a5;border:1px solid #ef4444;opacity:.6}
+.jump-label{font-size:.65rem;color:#475569}
+.reach-bar{height:8px;background:#334155;border-radius:4px;margin-top:4px;transition:all .3s;position:relative}
+.reach-fill{height:100%;background:#065f46;border-radius:4px;transition:all .3s}
+.index-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.6rem}
+.idx-cell{width:52px;text-align:center;font-size:.6rem;color:#475569}
+.idx-active{color:#38bdf8;font-weight:bold}
+.status{font-size:.85rem;margin:.4rem 0}
+.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.result-fail{background:#450a0a;color:#fca5a5;border:1px solid #ef4444}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>55. 跳跃游戏</h1>
+<p class="subtitle">贪心：维护能到达的最远距离，逐步扩展</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">当前索引: <span id="cur-idx">-</span></div>
+    <div class="info-item">当前步长: <span id="cur-jump">-</span></div>
+    <div class="info-item">最远可达: <span id="far-reach">-</span></div>
+    <div class="info-item">终点: <span id="target">-</span></div>
+  </div>
+  <div class="phase" id="phase-desc">点击「下一步」开始</div>
+  <div class="jumps" id="jumps"></div>
+  <div class="reach-bar" id="reach-bar"><div class="reach-fill" id="reach-fill"></div></div>
+  <div class="index-row" id="index-row"></div>
+  <div class="status" id="status"></div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">canJump</span>(nums) {
+  <span class="kw">let</span> reach = <span class="num">0</span>;
+  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;nums.length; i++) {
+    <span class="kw">if</span> (i &gt; reach) <span class="kw">return</span> <span class="kw">false</span>;
+    reach = Math.<span class="hl">max</span>(reach, i + nums[i]);
+  }
+  <span class="kw">return</span> <span class="kw">true</span>;
+}</pre>
+</div>
+
+<script>
+const nums = [2, 3, 1, 1, 4];
+// reach evolves: max(0,0+2)=2 → max(2,1+3)=5 → max(5,2+1)=5 → max(5,3+1)=5 → max(5,4+4)=8
+// i=0: reach=2, i=1: reach=5, i=2: reach=5, i=3: reach=5, i=4: reach=8 → true
+
+let reach = 0;
+let i = 0;
+let step = -1;
+
+function init() {
+  const el = document.getElementById('jumps');
+  const idxRow = document.getElementById('index-row');
+  el.innerHTML = '';
+  idxRow.innerHTML = '';
+  for (let j = 0; j < nums.length; j++) {
+    const h = Math.round((nums[j] / Math.max(...nums)) * 60) + 20;
+    el.innerHTML += `
+      <div class="jump-cell">
+        <div class="jump-bar jump-default" id="bar-${j}" style="height:${h}px">${nums[j]}</div>
+        <div class="jump-label">i=${j}</div>
+      </div>`;
+    idxRow.innerHTML += `<div class="idx-cell" id="idx-${j}">${j}</div>`;
+  }
+  reset();
+}
+
+function reset() {
+  reach = 0; i = 0; step = -1;
+  for (let j = 0; j < nums.length; j++) {
+    const bar = document.getElementById(`bar-${j}`);
+    bar.className = 'jump-bar jump-default';
+    document.getElementById(`idx-${j}`).className = 'idx-cell';
+  }
+  updateReachBar(0);
+  document.getElementById('cur-idx').textContent = '-';
+  document.getElementById('cur-jump').textContent = '-';
+  document.getElementById('far-reach').textContent = '0';
+  document.getElementById('target').textContent = `index ${nums.length - 1}`;
+  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  document.getElementById('status').innerHTML = '';
+}
+
+function updateReachBar(r) {
+  const fill = document.getElementById('reach-fill');
+  const pct = Math.min(100, (r / (nums.length - 1)) * 100);
+  fill.style.width = pct + '%';
+}
+
+function next() {
+  if (i >= nums.length) return;
+  step++;
+  // reset
+  for (let j = 0; j < nums.length; j++) {
+    const bar = document.getElementById(`bar-${j}`);
+    if (j < i) {
+      bar.className = 'jump-bar jump-reach';
+    } else if (j === i) {
+      bar.className = 'jump-bar jump-cur';
+    } else {
+      bar.className = 'jump-bar jump-default';
+    }
+  }
+  document.getElementById(`idx-${i}`).className = 'idx-cell idx-active';
+  document.getElementById('cur-idx').textContent = i;
+  document.getElementById('cur-jump').textContent = nums[i];
+  if (i > reach) {
+    document.getElementById('phase-desc').innerHTML =
+      `i=${i} > reach=${reach}，<span style="color:#fca5a5">无法到达此处</span>，失败！`;
+    document.getElementById('status').innerHTML = `<span class="result-fail result-badge">无法到达</span>`;
+    document.getElementById(`bar-${i}`).className = 'jump-bar jump-blocked';
+    i++;
+    return;
+  }
+  const oldReach = reach;
+  reach = Math.max(reach, i + nums[i]);
+  updateReachBar(reach);
+  document.getElementById('far-reach').textContent = reach;
+  if (reach === oldReach) {
+    document.getElementById('phase-desc').innerHTML =
+      `i=${i}，reach=${reach} 不变（i+nums[i]=${i}+${nums[i]}=${i+nums[i]}）`;
+  } else {
+    document.getElementById('phase-desc').innerHTML =
+      `i=${i}，reach=${oldReach} → <span>${reach}</span>（扩展 i+nums[i]=${i}+${nums[i]}）`;
+  }
+  if (i === nums.length - 1) {
+    document.getElementById('status').innerHTML = `<span class="result-badge">可以到达终点！</span>`;
+    document.getElementById('phase-desc').innerHTML = '完成！可以到达终点';
+  }
+  i++;
+}
+
+function prev() {
+  if (i <= 0) return;
+  i--;
+  if (i < nums.length) {
+    const bar = document.getElementById(`bar-${i}`);
+    bar.className = 'jump-bar jump-default';
+    document.getElementById(`idx-${i}`).className = 'idx-cell';
+  }
+  // recompute reach
+  reach = 0;
+  for (let j = 0; j < i; j++) {
+    reach = Math.max(reach, j + nums[j]);
+  }
+  updateReachBar(reach);
+  document.getElementById('far-reach').textContent = reach;
+  document.getElementById('cur-idx').textContent = i;
+  document.getElementById('cur-jump').textContent = nums[i];
+  document.getElementById('phase-desc').innerHTML = '已回退一步';
+}
+
+init();
+</script>
+</body>
+</html>
