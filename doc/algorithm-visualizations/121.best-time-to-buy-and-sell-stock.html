@@ -2,204 +2,359 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>121 买卖股票最佳时机</title>
+<title>121 买卖股票最佳时机 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.prices{display:flex;gap:10px;margin-bottom:.5rem;flex-wrap:wrap}
-.price-bar{width:54px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.bar-fill{width:36px;border-radius:4px 4px 0 0;transition:all .3s;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-size:.7rem;font-weight:bold;min-height:20px}
-.bar-label{font-size:.65rem;color:#64748b;height:16px}
-.bar-default{background:#334155;color:#94a3b8}
-.bar-cur{background:#0369a1;color:#fff}
-.bar-buy{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
-.bar-sell{background:#7f1d1d;color:#fca5a5;border:2px solid #ef4444}
-.bar-profit{background:#78350f;color:#fcd34d}
-.price-num{font-size:.65rem;color:#475569;margin-top:2px}
-.status-bar{display:flex;gap:1rem;margin-top:.8rem;font-size:.85rem;flex-wrap:wrap}
-.status-item{color:#94a3b8}.status-item span{color:#fbbf24;font-weight:bold}
-.profit-area{width:100%;height:40px;position:relative;margin:.8rem 0 .4rem}
-.profit-bar{position:absolute;bottom:0;width:54px;border-radius:0 0 4px 4px;transition:all .3s}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root {
+    --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917;
+    --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* ---- INTERACTIVE ---- */
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .price-chart { display: flex; gap: 6px; align-items: flex-end; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+  .price-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .price-bar { width: 36px; border-radius: 4px 4px 0 0; transition: all 0.3s; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; font-size: 10px; font-weight: 600; font-family: 'Geist Mono', monospace; min-height: 20px; }
+  .bar-default { background: #c8d5e1; color: #3a4a5a; }
+  .bar-cur { background: var(--accent); color: white; transform: scaleX(1.1); box-shadow: 0 2px 8px rgba(181,82,58,0.3); }
+  .bar-buy  { background: #065f46; color: #6ee7b7; border: 2px solid #34d399; }
+  .bar-sell { background: #7f1d1d; color: #fca5a5; border: 2px solid #ef4444; }
+  .price-label { font-size: 9px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .result-row { display: flex; gap: 24px; margin-top: 16px; font-size: 13px; flex-wrap: wrap; }
+  .result-item { color: var(--muted); }
+  .result-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
-<h1>121. 买卖股票最佳时机</h1>
-<p class="subtitle">贪心：在最低价买入，在最高价卖出</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">当前价格: <span id="cur-price">-</span></div>
-    <div class="info-item">最低价: <span id="min-price">-</span></div>
-    <div class="info-item">最大利润: <span id="max-profit">0</span></div>
-    <div class="info-item">最佳买卖: <span id="best-range">-</span></div>
-  </div>
-  <div class="label" style="font-size:.75rem;color:#64748b;margin-bottom:.4rem">价格柱状图（越高越贵）</div>
-  <div class="prices" id="prices"></div>
-  <div class="profit-area" id="profit-area"></div>
-  <div class="status-bar">
-    <div class="status-item">买入日: <span id="buy-day">-</span></div>
-    <div class="status-item">卖出日: <span id="sell-day">-</span></div>
-    <div class="status-item">当前利润: <span id="cur-profit">-</span></div>
-  </div>
-</div>
+  <p class="eyebrow">LeetCode 121 · Greedy</p>
+  <h1>买卖股票最佳时机</h1>
+  <p class="subtitle">一次遍历：边跟踪历史最低价，边计算当前卖出的最大利润 — 贪心体现在"只关心到今天为止的最低价"</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：在某天买入、某天卖出，求最大利润（只能先买后卖一次）。<br>
+      关键：<strong>不必枚举所有买卖组合，只需在遍历时维护"到今天为止的最低价"</strong>，
+      每次用当前价格减去历史最低价，就是以今天卖出的最大利润。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>利润 = 卖出价 − 买入价</h3>
+        <p>想最大化利润，等价于：对于每个卖出日，找到之前最便宜的买入日。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>维护历史最低价</h3>
+        <p>一次遍历中，minPrice 永远记录「之前出现过的最低价格」，每次比较当前利润更新 maxProfit。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>只遍历一次，两个变量 minPrice 和 maxProfit 是常量级空间。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">maxProfit</span>(prices) {
-  <span class="kw">let</span> minP = prices[<span class="num">0</span>], maxP = <span class="num">0</span>;
-  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < prices.length; i++) {
-    minP = Math.<span class="hl">min</span>(minP, prices[i]);
-    maxP = Math.<span class="hl">max</span>(maxP, prices[i] - minP);
-  }
-  <span class="kw">return</span> maxP;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">prices = <code>[7,1,5,3,6,4]</code>，求最大利润</p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">i=0 price=7 minPrice=7 maxProfit=0</span>
+      </div>
+      <div class="kv">初始化：minPrice=7（第一个价格），maxProfit=0（还不确定能否赚钱）</div>
+      <div class="kv focal">以今天卖出利润 = 7-7 = 0，不更新 maxProfit</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">i=1 price=1 → minPrice=1 maxProfit=0</span>
+      </div>
+      <div class="kv">遇到更低价：1 < 7 → minPrice = 1</div>
+      <div class="kv focal">以今天卖出利润 = 1-1 = 0，maxProfit 保持 0</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">i=2 price=5 minPrice=1 maxProfit=4</span>
+      </div>
+      <div class="kv">5 ≥ minPrice(1)，minPrice 不变</div>
+      <div class="kv focal">以今天卖出利润 = 5-1 = <strong>4</strong> > maxProfit(0) → maxProfit=4！</div>
+      <div class="kv">找到了一个盈利方案：在第1天(价格1)买入，第2天(价格5)卖出</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">i=3 price=3 minPrice=1 maxProfit=4</span>
+      </div>
+      <div class="kv">3 ≥ minPrice(1)，minPrice 不变</div>
+      <div class="kv focal">以今天卖出利润 = 3-1 = 2 < 4，不更新</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">i=4 price=6 minPrice=1 maxProfit=5</span>
+      </div>
+      <div class="kv focal">以今天卖出利润 = 6-1 = <strong>5</strong> > 4 → maxProfit=5！</div>
+      <div class="kv">最佳方案更新：在第1天(价格1)买入，第4天(价格6)卖出</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 6</span>
+        <span class="step-range">i=5 price=4 minPrice=1 maxProfit=5</span>
+      </div>
+      <div class="kv focal">以今天卖出利润 = 4-1 = 3 < 5，不更新</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：最大利润 = <strong>5</strong>（第1天买入 price=1，第4天卖出 price=6）
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">一次遍历，维护最低价和最大利润</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">maxProfit</span>(prices []<span class="typ">int</span>) <span class="typ">int</span> {
+    minPrice := <span class="typ">int</span>(<span class="num">1e9</span>) <span class="cmt">// 初始化为极大值</span>
+    maxProfit := <span class="num">0</span>
+
+    <span class="kw">for</span> _, price := <span class="kw">range</span> prices {
+        <span class="cmt">// 更新历史最低价</span>
+        <span class="kw">if</span> price < minPrice {
+            minPrice = price
+        }
+        <span class="cmt">// 以今天价格卖出的利润 = 今天价格 - 历史最低价</span>
+        profit := price - minPrice
+        <span class="kw">if</span> profit > maxProfit {
+            maxProfit = profit
+        }
+    }
+    <span class="kw">return</span> maxProfit
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">这题看似简单，但初始化和比较顺序容易出错</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：minPrice 初始化为 prices[0]</p>
+        <pre><span class="cmt">// 如果 prices 为空，数组越界</span>
+minPrice := prices[<span class="num">0</span>]
+<span class="kw">for</span> i := <span class="num">1</span>; i < len(prices); i++ { ... }</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">空数组时 panic。若不用空数组保护，最小值初始化为一个大数更安全。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：minPrice 初始化为 math.MaxInt</p>
+        <pre>minPrice := <span class="typ">int</span>(<span class="num">1e9</span>) <span class="cmt">// 或 math.MaxInt</span>
+<span class="kw">for</span> _, price := <span class="kw">range</span> prices {
+    <span class="kw">if</span> price < minPrice { minPrice = price }
+    maxProfit = max(maxProfit, price-minPrice)
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">先比价再更新 maxProfit 的顺序很重要——确保 minPrice 是「当前价格之前」的最低价。</p>
+      </div>
+    </div>
+    <p class="section-sub" style="margin-top:20px;">
+      <strong>另一个陷阱：先更新 maxProfit 还是先更新 minPrice？</strong><br>
+      如果先算 profit 再更新 minPrice，price-minPrice 会用刚更新的 minPrice（等于当前 price），利润为 0。
+      正确顺序是：<strong>先更新 minPrice，再计算 profit</strong>。
+    </p>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">用 prices = [7,1,5,3,6,4] 走一遍算法，观察 minPrice 和 maxProfit 的实时变化</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前价格: <span id="ai-price">-</span></div>
+      <div class="anim-info-item">历史最低价: <span id="ai-min">-</span></div>
+      <div class="anim-info-item">本次利润: <span id="ai-profit">-</span></div>
+      <div class="anim-info-item">最大利润: <span id="ai-max">0</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="price-chart" id="ai-chart"></div>
+    <div class="result-row">
+      <div class="result-item">买入日: <span id="ai-buy">-</span></div>
+      <div class="result-item">卖出日: <span id="ai-sell">-</span></div>
+    </div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>一次遍历 + 两个变量</h3>
+      <p>minPrice 维护历史最低买入价，maxProfit 记录遍历过程中出现的最大差值。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心证明</p>
+      <h3><span class="dot"></span>最优子结构</h3>
+      <p>以第 i 天卖出的最优利润，只取决于 [0..i-1] 的最低价，与之后无关。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>先更新 minPrice，再算 profit</h3>
+      <p>顺序错误会导致当前价格被当作最低价，profit 变成 0。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/121.best-time-to-buy-and-sell-stock.html</footer>
 
 <script>
-const prices = [7, 1, 5, 3, 6, 4];
-let i = 0, minP = 0, maxP = 0, buyDay = 0, sellDay = 0, step = -1;
+const prices = [7,1,5,3,6,4];
+let i = 0, step = -1;
+let minPrice = Infinity, maxProfit = 0;
+let buyDay = -1, sellDay = -1;
 
-function maxBar() { return Math.max(...prices); }
-
-function init() {
-  const container = document.getElementById('prices');
-  const profitArea = document.getElementById('profit-area');
-  container.innerHTML = '';
-  profitArea.innerHTML = '';
-  const max = maxBar();
-  for (let d = 0; d < prices.length; d++) {
-    const h = Math.round((prices[d] / max) * 160) + 20;
-    container.innerHTML += `
-      <div class="price-bar" id="bar-${d}">
-        <div class="bar-fill bar-default" id="fill-${d}" style="height:${h}px">${prices[d]}</div>
-        <div class="bar-label">Day ${d}</div>
-        <div class="price-num">$${prices[d]}</div>
-      </div>`;
-    profitArea.innerHTML += `<div class="profit-bar" id="pbar-${d}" style="left:${d*64}px;height:0;background:#78350f"></div>`;
-  }
-  reset();
+function renderChart(highlight, buyIdx, sellIdx) {
+  const chart = document.getElementById('ai-chart');
+  const max = Math.max(...prices);
+  chart.innerHTML = prices.map((p, idx) => {
+    const h = Math.round((p / max) * 100);
+    let cls = 'bar-default';
+    if (idx === highlight) cls = 'bar-cur';
+    else if (idx === buyIdx) cls = 'bar-buy';
+    else if (idx === sellIdx) cls = 'bar-sell';
+    return `<div class="price-col">
+      <div class="price-bar ${cls}" style="height:${h}px">${p}</div>
+      <div class="price-label">${idx}</div>
+    </div>`;
+  }).join('');
 }
 
-function reset() {
-  i = 0; minP = prices[0]; maxP = 0; buyDay = 0; sellDay = 0; step = -1;
-  for (let d = 0; d < prices.length; d++) {
-    const f = document.getElementById(`fill-${d}`);
-    const max = maxBar();
-    f.style.height = Math.round((prices[d] / max) * 160) + 20 + 'px';
-    f.className = 'bar-fill bar-default';
-    f.textContent = prices[d];
-    const pb = document.getElementById(`pbar-${d}`);
-    pb.style.height = '0';
-    document.getElementById(`bar-${d}`).querySelector('.bar-label').textContent = `Day ${d}`;
-  }
-  // highlight min
-  const mf = document.getElementById(`fill-0`);
-  mf.className = 'bar-fill bar-buy';
-  updateInfo();
+function render() {
+  document.getElementById('ai-price').textContent = step >= 0 ? prices[i] : '-';
+  document.getElementById('ai-min').textContent = minPrice === Infinity ? '-' : minPrice;
+  document.getElementById('ai-max').textContent = maxProfit;
+  const profit = step >= 0 ? prices[i] - minPrice : '-';
+  document.getElementById('ai-profit').textContent = profit;
+  document.getElementById('ai-buy').textContent = buyDay >= 0 ? `Day ${buyDay} ($${prices[buyDay]})` : '-';
+  document.getElementById('ai-sell').textContent = sellDay >= 0 ? `Day ${sellDay} ($${prices[sellDay]})` : '-';
+  renderChart(step >= 0 ? i : -1, buyDay, sellDay);
 }
 
-function updateInfo() {
-  document.getElementById('cur-price').textContent = '$' + prices[i];
-  document.getElementById('min-price').textContent = '$' + minP;
-  document.getElementById('max-profit').textContent = maxP;
-  document.getElementById('best-range').textContent = buyDay === sellDay ? '-' : `Buy D${buyDay} → Sell D${sellDay}`;
-  document.getElementById('buy-day').textContent = buyDay === sellDay ? '-' : `Day ${buyDay}`;
-  document.getElementById('sell-day').textContent = buyDay === sellDay ? '-' : `Day ${sellDay}`;
-  document.getElementById('cur-profit').textContent = (i > buyDay && prices[i] - prices[buyDay] > 0) ? prices[i] - prices[buyDay] : '-';
+function animReset() {
+  i = 0; step = -1; minPrice = Infinity; maxProfit = 0; buyDay = -1; sellDay = -1;
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
 }
 
-function next() {
-  if (i >= prices.length - 1) return;
-  i++;
-  const prevMin = minP;
-  if (prices[i] < minP) {
-    minP = prices[i];
-    buyDay = i;
+function animNext() {
+  if (step >= prices.length - 1) return;
+  step++;
+  i = step;
+  if (prices[i] < minPrice) {
+    minPrice = prices[i];
+    document.getElementById('ai-desc').innerHTML = `Day ${i}: 价格 ${prices[i]}，更新历史最低价 → <span>minPrice=${minPrice}</span>`;
+  } else {
+    const profit = prices[i] - minPrice;
+    document.getElementById('ai-desc').innerHTML = `Day ${i}: 价格 ${prices[i]}，利润 = ${prices[i]}-${minPrice}=<span>${profit}</span>`;
+    if (profit > maxProfit) {
+      maxProfit = profit;
+      sellDay = i;
+      document.getElementById('ai-desc').innerHTML += `，超过当前最大利润 → <span>maxProfit=${maxProfit}</span>`;
+    }
   }
-  const profit = prices[i] - prevMin;
-  if (profit > maxP) {
-    maxP = profit;
-    sellDay = i;
-  }
-  // update all fills
-  for (let d = 0; d <= i; d++) {
-    const f = document.getElementById(`fill-${d}`);
-    f.className = 'bar-fill bar-default';
-    document.getElementById(`bar-${d}`).querySelector('.bar-label').textContent = `Day ${d}`;
-  }
-  // buy bar
-  document.getElementById(`fill-${buyDay}`).className = 'bar-fill bar-buy';
-  document.getElementById(`bar-${buyDay}`).querySelector('.bar-label').textContent = 'Buy';
-  // profit bars up to i
-  const max = maxBar();
-  for (let d = buyDay + 1; d <= i; d++) {
-    const profit = prices[d] - prices[buyDay];
-    const h = Math.round(Math.max(0, profit) / max * 160);
-    const pb = document.getElementById(`pbar-${d}`);
-    pb.style.height = h + 'px';
-    pb.style.background = profit === maxP ? '#f59e0b' : '#78350f';
-  }
-  // sell bar
-  document.getElementById(`fill-${sellDay}`).className = 'bar-fill bar-sell';
-  document.getElementById(`bar-${sellDay}`).querySelector('.bar-label').textContent = 'Sell';
-  updateInfo();
+  render();
 }
 
-function prev() {
-  if (i <= 0) return;
-  // reset profit bars
-  for (let d = 0; d <= i; d++) {
-    const pb = document.getElementById(`pbar-${d}`);
-    pb.style.height = '0';
-    document.getElementById(`fill-${d}`).className = 'bar-fill bar-default';
-    document.getElementById(`bar-${d}`).querySelector('.bar-label').textContent = `Day ${d}`;
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  step--;
+  i = step;
+  // 简单重置到 step 位置
+  minPrice = Infinity; maxProfit = 0; buyDay = -1; sellDay = -1;
+  for (let j = 0; j <= step; j++) {
+    if (prices[j] < minPrice) minPrice = prices[j];
+    const p = prices[j] - minPrice;
+    if (p > maxProfit) { maxProfit = p; sellDay = j; }
   }
-  i--;
-  // recompute minP and maxP
-  minP = prices[0]; maxP = 0; buyDay = 0; sellDay = 0;
-  for (let d = 0; d <= i; d++) {
-    if (prices[d] < minP) { minP = prices[d]; buyDay = d; }
-    const p = prices[d] - minP;
-    if (p > maxP) { maxP = p; sellDay = d; }
-  }
-  // redraw profit bars up to i
-  const max = maxBar();
-  for (let d = buyDay + 1; d <= i; d++) {
-    const profit = prices[d] - prices[buyDay];
-    const h = Math.round(Math.max(0, profit) / max * 160);
-    const pb = document.getElementById(`pbar-${d}`);
-    pb.style.height = h + 'px';
-    pb.style.background = profit === maxP ? '#f59e0b' : '#78350f';
-  }
-  if (buyDay !== sellDay) {
-    document.getElementById(`fill-${buyDay}`).className = 'bar-fill bar-buy';
-    document.getElementById(`bar-${buyDay}`).querySelector('.bar-label').textContent = 'Buy';
-    document.getElementById(`fill-${sellDay}`).className = 'bar-fill bar-sell';
-    document.getElementById(`bar-${sellDay}`).querySelector('.bar-label').textContent = 'Sell';
-  }
-  updateInfo();
+  document.getElementById('ai-desc').innerHTML = `回退到 Day ${step}，价格 ${prices[step]}`;
+  render();
 }
 
-init();
+animReset();
 </script>
 </body>
 </html>

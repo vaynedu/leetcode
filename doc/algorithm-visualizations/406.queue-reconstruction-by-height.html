@@ -2,227 +2,348 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>406 根据身高重建队列</title>
+<title>406 根据身高重建队列 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
-.phase span{color:#fbbf24}
-.input-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem}
-.input-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;background:#1e293b;color:#94a3b8;border:1px solid #334155}
-.queue-area{margin-bottom:.6rem}
-.queue-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
-.queue{display:flex;gap:6px;flex-wrap:wrap;min-height:48px;align-items:center;padding:8px;background:#0d1117;border-radius:8px;border:1px solid #21262d}
-.queue-slot{width:72px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:bold;border:1px dashed #334155;color:#334155;transition:all .25s}
-.queue-slot.filled{background:#1e3a5f;color:#93c5fd;border:1px solid #3b5998;color:#fff}
-.queue-slot.cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.08)}
-.people{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.6rem}
-.person{width:64px;height:44px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;font-weight:bold;transition:all .25s;border:1px solid #334155}
-.person-default{background:#1e293b;color:#94a3b8}
-.person-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.1)}
-.person-placed{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
-.person-skip{opacity:.4;background:#1e293b;color:#475569}
-.result-area{margin-top:.5rem}
-.result-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
-.result-list{display:flex;gap:8px;flex-wrap:wrap}
-.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .people-grid { display: flex; gap: 6px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+  .person-chip { width: 48px; height: 48px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; font-family: 'Geist Mono', monospace; transition: all 0.3s; }
+  .p-default { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .p-cur { background: var(--accent); color: white; border: 2px solid var(--accent); transform: scale(1.15); box-shadow: 0 4px 12px rgba(181,82,58,0.4); z-index: 2; }
+  .p-done { background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; }
+  .p-waiting { background: #e8d5a0; color: #6b4a10; border: 1px solid #c9a84c; }
+  .queue-display { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; min-height: 60px; border: 1px dashed var(--rule); border-radius: 8px; padding: 12px; }
+  .queue-slot { width: 48px; height: 48px; border-radius: 50%; border: 1px dashed var(--rule); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--soft); font-family: 'Geist Mono', monospace; transition: all 0.3s; }
+  .queue-slot.filled { border: none; background: #b8d4c0; color: #2d5a3d; font-weight: 600; }
+  .result-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .result-badge { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
-<h1>406. 根据身高重建队列</h1>
-<p class="subtitle">贪心：按身高降序排列，按 k 值插入对应位置</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">阶段: <span id="phase">-</span></div>
-    <div class="info-item">当前人物: <span id="cur-person">-</span></div>
-    <div class="info-item">插入位置: <span id="insert-pos">-</span></div>
-  </div>
-  <div class="phase" id="phase-desc">点击「下一步」开始</div>
-  <div class="input-list" id="input-list"></div>
-  <div class="people" id="people"></div>
-  <div class="queue-area">
-    <div class="queue-label">队列</div>
-    <div class="queue" id="queue"></div>
-  </div>
-  <div class="result-area">
-    <div class="result-label">当前队列</div>
-    <div class="result-list" id="result-list"></div>
-  </div>
-</div>
+  <p class="eyebrow">LeetCode 406 · Greedy</p>
+  <h1>根据身高重建队列</h1>
+  <p class="subtitle">按身高降序排列后，按 k 值插入 — 贪心的精髓：高个子先排好序，低个子依次按 k 插入时自然满足所有约束</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：people = [[身高,k], ...]，k 是前面不低于此人身高的个数，重建队列。<br>
+      关键：<strong>按身高降序排列后，高个子已经就位，此时 k 值就是它在当前队列中的位置</strong>。
+      依次把每个人插入到下标 k 的位置，低个子不会影响高个子。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>高个子不受低个子影响</h3>
+        <p>把高个子排好后，低个子插入时，高个子的相对顺序不变。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>先处理最高的</h3>
+        <p>每次插入一个人到位置 k，插入后队列仍然有序，因为所有人都是按身高从高到低处理的。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n log n) 排序 + O(n²) 插入</h3>
+        <p>排序是主要瓶颈。插入操作 O(n)，整体 O(n²)。用链表可优化到 O(n)。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">reconstructQueue</span>(people) {
-  people.<span class="hl">sort</span>((a,b) => b[<span class="num">0</span>] - a[<span class="num">0</span>] || a[<span class="num">1</span>] - b[<span class="num">1</span>]);
-  <span class="kw">const</span> res = [];
-  <span class="kw">for</span> (<span class="kw">const</span> p <span class="kw">of</span> people) {
-    res.<span class="hl">splice</span>(p[<span class="num">1</span>], <span class="num">0</span>, p);
-  }
-  <span class="kw">return</span> res;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">people = <code>[[7,0],[6,1],[7,0],[5,0],[5,2],[4,4]]</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">排序后: [7,0],[7,0],[6,1],[5,0],[5,2],[4,4]</span>
+      </div>
+      <div class="kv">按身高降序，身高相同时按 k 升序</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">插入 [7,0] 到位置 0</span>
+      </div>
+      <div class="kv">队列: [[7,0]]</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">插入 [7,0] 到位置 0</span>
+      </div>
+      <div class="kv">队列: [[7,0],[7,0]]（位置 0 被占用，原来的往后移）</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">插入 [6,1] 到位置 1</span>
+      </div>
+      <div class="kv">队列: [[7,0],[6,1],[7,0]]</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">插入 [5,0] 到位置 0</span>
+      </div>
+      <div class="kv">队列: [[5,0],[7,0],[6,1],[7,0]]</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 6</span>
+        <span class="step-range">插入 [5,2] 到位置 2</span>
+      </div>
+      <div class="kv">队列: [[5,0],[5,2],[7,0],[6,1],[7,0]]</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 7</span>
+        <span class="step-range">插入 [4,4] 到位置 4</span>
+      </div>
+      <div class="kv">队列: [[5,0],[5,2],[7,0],[6,1],[4,4],[7,0]]</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：<strong>[[5,0],[5,2],[7,0],[6,1],[4,4],[7,0]]</strong>
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">按身高降序 + k 升序排序，然后依次插入</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">reconstructQueue</span>(people [][]<span class="typ">int</span>) [][]<span class="typ">int</span> {
+    <span class="cmt">// 1. 按身高降序，k 升序排序</span>
+    sort.Slice(people, <span class="kw">func</span>(i, j <span class="typ">int</span>) <span class="typ">bool</span> {
+        <span class="kw">if</span> people[i][<span class="num">0</span>] != people[j][<span class="num">0</span>] {
+            <span class="kw">return</span> people[i][<span class="num">0</span>] > people[j][<span class="num">0</span>] <span class="cmt">// 身高降序</span>
+        }
+        <span class="kw">return</span> people[i][<span class="num">1</span>] < people[j][<span class="num">1</span>]   <span class="cmt">// k 升序</span>
+    })
+
+    <span class="cmt">// 2. 依次插入到位置 k</span>
+    result := [][]<span class="typ">int</span>{}
+    <span class="kw">for</span> _, p := <span class="kw">range</span> people {
+        k := p[<span class="num">1</span>]
+        <span class="cmt">// 插入到下标 k 的位置（后面元素后移）</span>
+        result = <span class="hl">append</span>(result, []<span class="typ">int</span>{})
+        copy(result[k+<span class="num">1</span>:], result[k:])
+        result[k] = p
+    }
+    <span class="kw">return</span> result
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">排序顺序是核心，必须先高后低，否则插入时会破坏高个子的约束</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：按身高升序排列</p>
+        <pre>sort.Slice(people, <span class="kw">func</span>(i,j <span class="typ">int</span>)<span class="typ">bool</span>{
+    <span class="kw">return</span> people[i][<span class="num">0</span>] < people[j][<span class="num">0</span>] <span class="cmt">// 升序！</span>
+})
+<span class="cmt">// 矮个子先处理，插入后被高个子打乱，无法恢复</span></pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">升序时，先插入矮个子，高个子后来时无法正确插入，因为会破坏已有的身高顺序。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：按身高降序排列</p>
+        <pre><span class="cmt">// 排序后: [7,0],[7,0],[6,1],[5,0],[5,2],[4,4]</span>
+<span class="cmt">// 依次插入: [7,0]→pos0, [7,0]→pos0, [6,1]→pos1 ...</span>
+<span class="cmt">// 高个子先占位，低个子不会影响身高约束</span></pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">降序保证了每次插入时，所有更高的人已经就位，k 值就是当前应该插入的位置。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">people = [[7,0],[6,1],[7,0],[5,0],[5,2],[4,4]]</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前人物: <span id="ai-cur">-</span></div>
+      <div class="anim-info-item">插入位置: <span id="ai-pos">-</span></div>
+      <div class="anim-info-item">队列长度: <span id="ai-len">0</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="people-grid" id="ai-pending"></div>
+    <div class="queue-display" id="ai-queue"></div>
+    <div class="result-list" id="ai-result"></div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>先高后低依次插入</h3>
+      <p>按身高降序排序后，依次插入到位置 k，高个子的相对顺序不受低个子影响。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心证明</p>
+      <h3><span class="dot"></span>最高的人位置是确定的</h3>
+      <p>最高的人 k 值就是它最终位置，因为没有人比它高。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>身高降序，相等时 k 升序</h3>
+      <p>相等身高按 k 升序，保证插入位置不越界。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/406.queue-reconstruction-by-height.html</footer>
 
 <script>
-const people = [[7,0],[4,4],[7,1],[5,0],[6,1],[5,2]];
-// Sort by height desc: [[7,0],[7,1],[6,1],[5,0],[5,2],[4,4]]
-// Insert [7,0] at pos 0 → [[7,0]]
-// Insert [7,1] at pos 1 → [[7,0],[7,1]]
-// Insert [6,1] at pos 1 → [[7,0],[6,1],[7,1]]
-// Insert [5,0] at pos 0 → [[5,0],[7,0],[6,1],[7,1]]
-// Insert [5,2] at pos 2 → [[5,0],[7,0],[5,2],[6,1],[7,1]]
-// Insert [4,4] at pos 4 → [[5,0],[7,0],[5,2],[4,4],[6,1],[7,1]]
+const people = [[7,0],[6,1],[7,0],[5,0],[5,2],[4,4]];
+let sorted = [], queue = [], i = 0, step = -1;
 
-let sorted = [];
-let queue = [];
-let placed = new Set();
-let i = 0;
-let step = -1;
-
-function init() {
-  sorted = [...people].sort((a,b) => b[0]-a[0] || a[1]-b[1]);
-  const input = document.getElementById('input-list');
-  input.innerHTML = people.map(p =>
-    `<span class="input-badge">[${p[0]},${p[1]}]</span>`
-  ).join('');
-  const peopleEl = document.getElementById('people');
-  peopleEl.innerHTML = sorted.map((p, idx) =>
-    `<div class="person person-default" id="p-${idx}">[${p[0]},${p[1]}]</div>`
-  ).join('');
-  const queueEl = document.getElementById('queue');
-  queueEl.innerHTML = '';
-  for (let j = 0; j < sorted.length; j++) {
-    queueEl.innerHTML += `<div class="queue-slot" id="slot-${j}">-</div>`;
-  }
-  reset();
-}
-
-function reset() {
-  queue = [];
-  placed = new Set();
-  i = 0; step = -1;
-  sorted.forEach((_, idx) => {
-    const el = document.getElementById(`p-${idx}`);
-    el.className = 'person person-default';
-    const slot = document.getElementById(`slot-${idx}`);
-    slot.className = 'queue-slot';
-    slot.textContent = '-';
+function buildSorted() {
+  sorted = [...people].sort((a, b) => {
+    if (a[0] !== b[0]) return b[0] - a[0];
+    return a[1] - b[1];
   });
-  document.getElementById('phase').textContent = '-';
-  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」按身高降序后开始插入';
-  document.getElementById('cur-person').textContent = '-';
-  document.getElementById('insert-pos').textContent = '-';
-  document.getElementById('result-list').innerHTML = '';
 }
 
-function next() {
-  if (i >= sorted.length) return;
+function render() {
+  const pendingEl = document.getElementById('ai-pending');
+  pendingEl.innerHTML = sorted.map((p, idx) => {
+    let cls = 'person-chip p-default';
+    if (idx < i) cls = 'p-done';
+    else if (idx === i && step >= 0) cls = 'p-cur';
+    else cls = 'p-waiting';
+    return `<div class="${cls}">${p[0]}<br>k=${p[1]}</div>`;
+  }).join('');
+
+  const queueEl = document.getElementById('ai-queue');
+  const totalSlots = people.length;
+  queueEl.innerHTML = Array.from({length: totalSlots}, (_, idx) => {
+    if (idx < queue.length) {
+      const p = queue[idx];
+      return `<div class="queue-slot filled">${p[0]},k${p[1]}</div>`;
+    }
+    return `<div class="queue-slot">-</div>`;
+  }).join('');
+
+  const resultEl = document.getElementById('ai-result');
+  resultEl.innerHTML = queue.map(p => `<span class="result-badge">[${p[0]},${p[1]}]</span>`).join('');
+
+  document.getElementById('ai-cur').textContent = step >= 0 ? `[${sorted[i][0]},${sorted[i][1]}]` : '-';
+  document.getElementById('ai-pos').textContent = step >= 0 ? sorted[i][1] : '-';
+  document.getElementById('ai-len').textContent = queue.length;
+}
+
+function animReset() {
+  buildSorted();
+  queue = []; i = 0; step = -1;
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
+}
+
+function animNext() {
+  if (step >= sorted.length - 1) return;
   step++;
-  const person = sorted[i];
-  const k = person[1];
-  // highlight current
-  sorted.forEach((_, idx) => {
-    const el = document.getElementById(`p-${idx}`);
-    if (placed.has(idx)) {
-      el.className = 'person person-placed';
-    } else if (idx === i) {
-      el.className = 'person person-cur';
-    } else {
-      el.className = 'person person-default';
-    }
-  });
-  if (step === 0) {
-    document.getElementById('phase').textContent = '排序';
-    document.getElementById('phase-desc').innerHTML = '按身高 <span>降序</span>，相同身高按 k <span>升序</span>';
-    document.getElementById('cur-person').textContent = '-';
-    document.getElementById('insert-pos').textContent = '-';
-    // show sorted order
-    document.getElementById('result-list').innerHTML = sorted.map(p =>
-      `<span class="result-badge">[${p[0]},${p[1]}]</span>`
-    ).join('');
-  } else {
-    document.getElementById('phase').textContent = '插入';
-    document.getElementById('phase-desc').innerHTML =
-      `插入 [${person[0]},${person[1]}] 到队列位置 <span>${k}</span>`;
-    document.getElementById('cur-person').textContent = `[${person[0]},${person[1]}]`;
-    document.getElementById('insert-pos').textContent = `pos ${k}`;
-    // splice into queue
-    queue.splice(k, 0, person);
-    placed.add(i);
-    // update queue slots
-    for (let j = 0; j < sorted.length; j++) {
-      const slot = document.getElementById(`slot-${j}`);
-      if (j < queue.length) {
-        slot.className = 'queue-slot filled';
-        slot.textContent = `[${queue[j][0]},${queue[j][1]}]`;
-      } else {
-        slot.className = 'queue-slot';
-        slot.textContent = '-';
-      }
-    }
-    // highlight slot k
-    const slotK = document.getElementById(`slot-${k}`);
-    slotK.className = 'queue-slot cur';
-    document.getElementById('result-list').innerHTML = queue.map(p =>
-      `<span class="result-badge">[${p[0]},${p[1]}]</span>`
-    ).join('');
-  }
-  i++;
+  i = step;
+  const p = sorted[i];
+  const k = p[1];
+  queue.splice(k, 0, p);
+  document.getElementById('ai-desc').innerHTML = `插入 [${p[0]},${p[1]}] 到位置 <span>${k}</span>`;
+  render();
 }
 
-function prev() {
-  if (step <= 0) { reset(); return; }
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
   step--;
-  i--;
-  placed.delete(i);
-  const person = sorted[i];
-  const k = person[1];
-  queue.splice(k, 1);
-  // restore slots
-  for (let j = 0; j < sorted.length; j++) {
-    const slot = document.getElementById(`slot-${j}`);
-    if (j < queue.length) {
-      slot.className = 'queue-slot filled';
-      slot.textContent = `[${queue[j][0]},${queue[j][1]}]`;
-    } else {
-      slot.className = 'queue-slot';
-      slot.textContent = '-';
-    }
+  queue = [];
+  i = 0;
+  for (let j = 0; j <= step; j++) {
+    const p = sorted[j];
+    queue.splice(p[1], 0, p);
   }
-  document.getElementById('phase').textContent = '插入';
-  document.getElementById('cur-person').textContent = `[${person[0]},${person[1]}]`;
-  document.getElementById('insert-pos').textContent = `pos ${k}`;
-  document.getElementById('result-list').innerHTML = queue.map(p =>
-    `<span class="result-badge">[${p[0]},${p[1]}]</span>`
-  ).join('');
-  sorted.forEach((_, idx) => {
-    const el = document.getElementById(`p-${idx}`);
-    if (placed.has(idx)) el.className = 'person person-placed';
-    else if (idx === i) el.className = 'person person-cur';
-    else el.className = 'person person-default';
-  });
+  i = step;
+  document.getElementById('ai-desc').innerHTML = `回退一步`;
+  render();
 }
 
-init();
+animReset();
 </script>
 </body>
 </html>

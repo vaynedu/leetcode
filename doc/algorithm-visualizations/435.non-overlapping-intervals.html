@@ -2,219 +2,359 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>435 无重叠区间</title>
+<title>435 无重叠区间 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
-.phase span{color:#fbbf24}
-.input-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem}
-.input-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;background:#1e293b;color:#94a3b8;border:1px solid #334155}
-.timeline{position:relative;height:90px;margin:.5rem 0 1rem;padding-left:40px}
-.tick-col{position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;font-size:.6rem;color:#475569}
-.ticks{position:absolute;left:40px;right:0;top:0;bottom:20px}
-.tick-mark{position:absolute;top:0;bottom:0;width:1px;background:#334155}
-.axis-line{position:absolute;left:0;right:0;bottom:20px;height:1px;background:#334155}
-.bars-area{position:absolute;left:40px;right:0;top:0;bottom:20px;display:flex;flex-direction:column;gap:4px}
-.interval-bar{height:18px;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:.7rem;font-weight:bold;transition:all .3s}
-.bar-keep{background:#1e3a5f;color:#93c5fd;border:1px solid #3b5998}
-.bar-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;z-index:2}
-.bar-remove{background:#450a0a;color:#fca5a5;border:2px solid #ef4444;text-decoration:line-through}
-.result-area{margin-top:.5rem}
-.result-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
-.result-list{display:flex;gap:8px;flex-wrap:wrap}
-.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.result-badge-removed{background:#450a0a;color:#fca5a5;border:1px solid #ef4444}
-.count-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#78350f;color:#fcd34d;border:1px solid #f59e0b}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .anim-timeline-wrap { position: relative; height: 90px; margin: 16px 0; padding-left: 48px; }
+  .anim-tick-col { position: absolute; left: 0; top: 0; bottom: 20px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .anim-axis { position: absolute; left: 48px; right: 0; bottom: 20px; height: 1px; background: var(--rule); }
+  .anim-bars-area { position: absolute; left: 48px; right: 0; top: 0; bottom: 20px; display: flex; flex-direction: column; gap: 4px; }
+  .anim-bar { position: absolute; height: 20px; border-radius: 4px; display: flex; align-items: center; padding: 0 6px; font-size: 10px; font-weight: 600; font-family: 'Geist Mono', monospace; transition: all 0.3s; }
+  .bar-default { background: #c8d5e1; color: #3a4a5a; }
+  .bar-cur { background: var(--accent); color: white; transform: scaleX(1.05); box-shadow: 0 2px 8px rgba(181,82,58,0.3); z-index: 2; }
+  .bar-keep { background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; }
+  .bar-remove { background: #fca5a5; color: #7f1d1d; border: 1px solid #ef4444; opacity: 0.7; text-decoration: line-through; }
+  .result-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .result-badge { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; font-family: 'Geist Mono', monospace; }
+  .remove-badge { background: #fca5a5; color: #7f1d1d; border-color: #ef4444; }
 </style>
 </head>
 <body>
-<h1>435. 无重叠区间</h1>
-<p class="subtitle">贪心：移除最少区间使不重叠 → 按右边界排序，贪心保留结尾最早的</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">阶段: <span id="phase">-</span></div>
-    <div class="info-item">当前区间: <span id="cur-interval">-</span></div>
-    <div class="info-item">已移除: <span id="removed-count">0</span></div>
-    <div class="info-item">已保留: <span id="kept-count">0</span></div>
-  </div>
-  <div class="phase" id="phase-desc">点击「下一步」开始</div>
-  <div class="input-list" id="input-list"></div>
-  <div class="timeline">
-    <div class="tick-col" id="tick-col"></div>
-    <div class="ticks" id="ticks"></div>
-    <div class="axis-line"></div>
-    <div class="bars-area" id="bars-area"></div>
-  </div>
-  <div class="result-area">
-    <div class="result-label">结果</div>
-    <div class="result-list" id="result-list"></div>
-  </div>
-</div>
+  <p class="eyebrow">LeetCode 435 · Greedy</p>
+  <h1>无重叠区间</h1>
+  <p class="subtitle">移除最少区间使剩余区间不重叠 — 贪心的精髓：按右边界排序，优先保留结束最早的区间，给后面留更多空间</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给出若干区间，问至少移除多少个区间使剩余不重叠。<br>
+      关键：<strong>按右边界升序排序后，遍历时比较相邻两个区间的左边界和上一个保留区间的右边界</strong>。
+      贪心策略：优先保留结束最早的区间，因为它给后面所有区间留了最大空间。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>按右端点排序</h3>
+        <p>排序后，每个区间只需要和上一个保留区间比较。不重叠时加入，结果互不影响。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>保留结束最早的</h3>
+        <p>遇到重叠时，移除右端点更大的区间（即结束更晚的），因为它更可能和更多后续区间冲突。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n log n)</h3>
+        <p>瓶颈在排序。遍历本身 O(n)，只用一个变量跟踪上一个保留区间的右端点。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">eraseOverlapIntervals</span>(intervals) {
-  intervals.<span class="hl">sort</span>((a,b) => a[<span class="num">1</span>] - b[<span class="num">1</span>]);
-  <span class="kw">let</span> count = <span class="num">0</span>, end = intervals[<span class="num">0</span>][<span class="num">1</span>];
-  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i < intervals.length; i++) {
-    <span class="kw">if</span> (intervals[i][<span class="num">0</span>] < end)
-      count++;
-    <span class="kw">else</span>
-      end = intervals[i][<span class="num">1</span>];
-  }
-  <span class="kw">return</span> count;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">intervals = <code>[[1,2],[2,3],[3,4],[1,3]]</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">排序后: [1,2] [2,3] [3,4] [1,3]</span>
+      </div>
+      <div class="kv">按右端点升序：[1,2]→2, [2,3]→3, [3,4]→4, [1,3]→3</div>
+      <div class="kv focal">count=0, prev_end=1（第一个区间保留）</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">处理 [2,3]</span>
+      </div>
+      <div class="kv">当前区间 [2,3]，上一个保留 [1,2]，prev_end=2</div>
+      <div class="kv focal">2 ≥ 2？<strong>是，重叠</strong>。count++ → 移除 [2,3]</div>
+      <div class="kv">prev_end 保持 2（不更新）</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">处理 [3,4]</span>
+      </div>
+      <div class="kv">当前区间 [3,4]，上一个保留 [1,2]，prev_end=2</div>
+      <div class="kv focal">3 ≥ 2？<strong>否，不重叠</strong>，保留！count 保持 1</div>
+      <div class="kv">prev_end = 4（更新为当前区间右端点）</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">处理 [1,3]</span>
+      </div>
+      <div class="kv">当前区间 [1,3]，上一个保留 [3,4]，prev_end=4</div>
+      <div class="kv focal">1 ≥ 4？<strong>否，不重叠</strong>，保留！count 保持 1</div>
+      <div class="kv">prev_end = 3（更新，但不影响最终结果）</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：移除 <strong>1</strong> 个区间（[2,3]），剩余 [[1,2],[3,4],[1,3]]
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">按右端点排序，遍历时移除和上一保留区间重叠的区间</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">eraseOverlapIntervals</span>(intervals [][]<span class="typ">int</span>) <span class="typ">int</span> {
+    <span class="kw">if</span> len(intervals) == <span class="num">0</span> {
+        <span class="kw">return</span> <span class="num">0</span>
+    }
+
+    <span class="cmt">// 1. 按右端点升序排序</span>
+    sort.Slice(intervals, <span class="kw">func</span>(i, j <span class="typ">int</span>) <span class="typ">bool</span> {
+        <span class="kw">return</span> intervals[i][<span class="num">1</span>] < intervals[j][<span class="num">1</span>]
+    })
+
+    <span class="cmt">// 2. 第一个区间作为基准</span>
+    count := <span class="num">0</span>
+    prevEnd := intervals[<span class="num">0</span>][<span class="num">1</span>]
+
+    <span class="cmt">// 3. 遍历剩余区间</span>
+    <span class="kw">for</span> i := <span class="num">1</span>; i < len(intervals); i++ {
+        cur := intervals[i]
+        <span class="kw">if</span> cur[<span class="num">0</span>] >= prevEnd {
+            <span class="cmt">// 不重叠：保留，更新 prevEnd</span>
+            prevEnd = cur[<span class="num">1</span>]
+        } <span class="kw">else</span> {
+            <span class="cmt">// 重叠：移除当前区间（贪心：保留结束更早的）</span>
+            count++
+        }
+    }
+    <span class="kw">return</span> count
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">和 56 合并区间类似，容易在排序方式和比较符号上出错</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：按左端点排序</p>
+        <pre><span class="cmt">// 按左端点排序：[[1,2],[1,3],[2,3],[3,4]]</span>
+sort.Slice(intervals, <span class="kw">func</span>(i,j <span class="typ">int</span>)<span class="typ">bool</span>{
+    <span class="kw">return</span> intervals[i][<span class="num">0</span>] < intervals[j][<span class="num">0</span>]
+})
+<span class="cmt">// 遍历时 prevEnd=2, [1,3]重叠但左端点1不更新prevEnd，逻辑混乱</span></pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">按左端点排序时，相邻区间可能跨多个重叠，贪心策略失效。必须按<strong>右端点</strong>排序。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：按右端点排序</p>
+        <pre>sort.Slice(intervals, <span class="kw">func</span>(i,j <span class="typ">int</span>)<span class="typ">bool</span>{
+    <span class="kw">return</span> intervals[i][<span class="num">1</span>] < intervals[j][<span class="num">1</span>]
+})
+<span class="cmt">// 排序后: [[1,2],[2,3],[1,3],[3,4]]</span>
+<span class="cmt">// 遍历: 保留[1,2]，移除[2,3]，保留[3,4]，保留[1,3] → 移除1个</span></pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">按右端点排序后，每个区间只可能和上一个保留区间冲突，贪心选择才有意义。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">intervals = [[1,2],[2,3],[3,4],[1,3]]，观察移除过程</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前区间: <span id="ai-cur">-</span></div>
+      <div class="anim-info-item">已移除: <span id="ai-removed">0</span></div>
+      <div class="anim-info-item">剩余: <span id="ai-kept">1</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="anim-timeline-wrap">
+      <div class="anim-tick-col" id="ai-ticks"></div>
+      <div class="anim-axis"></div>
+      <div class="anim-bars-area" id="ai-bars"></div>
+    </div>
+    <div class="result-list" id="ai-result"></div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>按右端点 + 贪心移除</h3>
+      <p>排序后，遇到重叠就移除当前区间，保留结束最早的，给后面留更多空间。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心证明</p>
+      <h3><span class="dot"></span>局部的最优 → 全局最优</h3>
+      <p>移除结束最晚的区间永远不比移除结束更早的差，因为它对后续区间的影响范围更大。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>按右端点排序，不是左端点</h3>
+      <p>排序方式决定贪心策略是否有效。按左端点排序会让问题变得更复杂。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/435.non-overlapping-intervals.html</footer>
 
 <script>
 const intervals = [[1,2],[2,3],[3,4],[1,3]];
-// 按右边界排序: [1,2], [2,3], [3,4], [1,3]
-// 保留 [1,2], end=2
-// [2,3]: 2<3 不重叠，保留, end=3
-// [3,4]: 3<4 不重叠，保留, end=4
-// [1,3]: 1<3 重叠，移除
-// 移除数: 1
-
-let sorted = [];
-let removed = new Set();
-let i = 0;
-let step = -1;
-
+let sorted = [], kept = [], removed = [], i = 0, step = -1;
 const MIN = 0, MAX = 5;
-
-function buildTimeline() {
-  const tickCol = document.getElementById('tick-col');
-  const ticks = document.getElementById('ticks');
-  tickCol.innerHTML = '';
-  ticks.innerHTML = '';
-  for (let v = MIN; v <= MAX; v++) {
-    const pct = ((v - MIN) / (MAX - MIN)) * 100;
-    tickCol.innerHTML += `<div>${v}</div>`;
-    ticks.innerHTML += `<div class="tick-mark" style="left:${pct}%;top:0;bottom:0"></div>`;
-  }
-}
 
 function pct(v) { return ((v - MIN) / (MAX - MIN)) * 100; }
 
-function renderBars() {
-  const area = document.getElementById('bars-area');
+function buildTicks() {
+  document.getElementById('ai-ticks').innerHTML = [0,1,2,3,4,5].map(v => `<div>${v}</div>`).join('');
+}
+
+function buildBars() {
+  const area = document.getElementById('ai-bars');
   area.innerHTML = '';
-  sorted.forEach((intv, idx) => {
-    const left = pct(intv[0]);
-    const right = pct(intv[1]);
-    const width = right - left;
-    let cls = 'interval-bar bar-keep';
-    if (removed.has(idx)) cls = 'interval-bar bar-remove';
-    if (idx === i && step >= 0) cls = 'interval-bar bar-cur';
-    area.innerHTML += `
-      <div class="${cls}" style="left:${left}%;width:${Math.max(width,4)}%">
-        [${intv[0]},${intv[1]}]
-      </div>`;
+  sorted.forEach((iv, idx) => {
+    const L = pct(iv[0]), R = pct(iv[1]), W = Math.max(R - L, 4);
+    area.innerHTML += `<div class="anim-bar bar-default" id="abar-${idx}" style="left:${L}%;width:${W}%">[${iv[0]},${iv[1]}]</div>`;
   });
 }
 
-function renderInput() {
-  const list = document.getElementById('input-list');
-  list.innerHTML = intervals.map(iv =>
-    `<span class="input-badge">[${iv[0]},${iv[1]}]</span>`
-  ).join('');
+function render() {
+  intervals.forEach((_, idx) => {
+    const bar = document.getElementById(`abar-${idx}`);
+    if (!bar) return;
+    if (removed.includes(idx)) bar.className = 'anim-bar bar-remove';
+    else if (kept.includes(idx)) bar.className = 'anim-bar bar-keep';
+    else if (idx === i && step >= 0) bar.className = 'anim-bar bar-cur';
+    else bar.className = 'anim-bar bar-default';
+  });
+  const resultEl = document.getElementById('ai-result');
+  if (kept.length === 0 && removed.length === 0) {
+    resultEl.innerHTML = '';
+  } else {
+    const keptBadges = kept.map(idx => `<span class="result-badge">[${sorted[idx][0]},${sorted[idx][1]}]</span>`).join('');
+    const removedBadges = removed.map(idx => `<span class="result-badge remove-badge">[${sorted[idx][0]},${sorted[idx][1]}]</span>`).join('');
+    resultEl.innerHTML = keptBadges + removedBadges;
+  }
+  document.getElementById('ai-removed').textContent = removed.length;
+  document.getElementById('ai-kept').textContent = kept.length;
 }
 
-function reset() {
+function animReset() {
   sorted = [...intervals].sort((a,b) => a[1]-b[1]);
-  removed = new Set();
-  i = 0; step = -1;
-  document.getElementById('phase').textContent = '-';
-  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」按右边界排序后开始';
-  document.getElementById('cur-interval').textContent = '-';
-  document.getElementById('removed-count').textContent = '0';
-  document.getElementById('kept-count').textContent = '0';
-  document.getElementById('result-list').innerHTML = '';
-  buildTimeline();
-  renderInput();
-  renderBars();
+  kept = [0]; removed = []; i = 0; step = -1;
+  buildTicks(); buildBars();
+  document.getElementById('ai-cur').textContent = '-';
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
 }
 
-function next() {
+function animNext() {
   if (step >= sorted.length - 1) return;
   step++;
-  if (step === 0) {
-    document.getElementById('phase').textContent = '排序';
-    document.getElementById('phase-desc').innerHTML = '按右边界 <span>从小到大</span> 排序';
-    document.getElementById('cur-interval').textContent = '-';
-    document.getElementById('kept-count').textContent = '1';
-    renderBars();
-  } else {
-    i = step;
-    const cur = sorted[i];
-    const prev = sorted[i-1];
-    const overlap = cur[0] < prev[1];
-    if (overlap) {
-      removed.add(i);
-      document.getElementById('phase').textContent = '移除';
-      document.getElementById('phase-desc').innerHTML =
-        `[${cur[0]},${cur[1]}] 与 [${prev[0]},${prev[1]}] <span>重叠</span>，移除`;
-    } else {
-      document.getElementById('phase').textContent = '保留';
-      document.getElementById('phase-desc').innerHTML =
-        `[${cur[0]},${cur[1]}] 不重叠，保留`;
-    }
-    document.getElementById('cur-interval').textContent = `[${cur[0]},${cur[1]}]`;
-    document.getElementById('removed-count').textContent = removed.size;
-    document.getElementById('kept-count').textContent = sorted.length - removed.size;
-    renderBars();
-    renderResult();
-  }
-}
-
-function prev() {
-  if (step < 0) return;
-  if (step === 0) { reset(); return; }
-  removed.delete(step);
-  step--;
   i = step;
-  document.getElementById('phase').textContent = step === 0 ? '排序' : '处理中';
-  document.getElementById('cur-interval').textContent = sorted[step] ? `[${sorted[step][0]},${sorted[step][1]}]` : '-';
-  document.getElementById('removed-count').textContent = removed.size;
-  document.getElementById('kept-count').textContent = sorted.length - removed.size;
-  if (step > 0) {
-    document.getElementById('phase-desc').innerHTML = `回退一步`;
+  const cur = sorted[i];
+  const lastKeptIdx = kept[kept.length - 1];
+  const prevEnd = sorted[lastKeptIdx][1];
+  document.getElementById('ai-cur').textContent = `[${cur[0]},${cur[1]}]`;
+
+  if (cur[0] >= prevEnd) {
+    kept.push(i);
+    document.getElementById('ai-desc').innerHTML = `[${cur[0]},${cur[1]}] 与 [${sorted[lastKeptIdx][0]},${prevEnd}] <span>不重叠</span>，保留`;
+  } else {
+    removed.push(i);
+    document.getElementById('ai-desc').innerHTML = `[${cur[0]},${cur[1]}] 与 [${sorted[lastKeptIdx][0]},${prevEnd}] <span>重叠</span>，移除（贪心：保留结束更早的）`;
   }
-  renderBars();
-  renderResult();
+  render();
 }
 
-function renderResult() {
-  const list = document.getElementById('result-list');
-  const kept = sorted.map((iv, idx) => ({iv, idx})).filter(x => !removed.has(x.idx));
-  list.innerHTML = kept.map(x =>
-    `<span class="result-badge">[${x.iv[0]},${x.iv[1]}]</span>`
-  ).join('') +
-  (removed.size > 0 ? `<span class="count-badge">需移除 ${removed.size}</span>` : '');
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  step--;
+  // rebuild kept/removed up to step
+  kept = [0]; removed = [];
+  for (let j = 1; j <= step; j++) {
+    const cur = sorted[j];
+    const prevEnd = sorted[kept[kept.length-1]][1];
+    if (cur[0] >= prevEnd) kept.push(j); else removed.push(j);
+  }
+  i = step;
+  document.getElementById('ai-cur').textContent = `[${sorted[i][0]},${sorted[i][1]}]`;
+  document.getElementById('ai-desc').innerHTML = `回退到处理 [${sorted[i][0]},${sorted[i][1]}]`;
+  render();
 }
 
-reset();
+animReset();
 </script>
 </body>
 </html>

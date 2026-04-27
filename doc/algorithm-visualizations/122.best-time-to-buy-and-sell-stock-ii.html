@@ -2,194 +2,338 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>122 买卖股票最佳时机 II</title>
+<title>122 买卖股票 II · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.diff-row{display:flex;gap:10px;margin-bottom:.4rem;flex-wrap:wrap}
-.diff-cell{width:54px;display:flex;flex-direction:column;align-items:center}
-.diff-arrow{font-size:.7rem;color:#64748b;height:18px}
-.diff-val{font-size:.7rem;font-weight:bold;padding:.15rem .3rem;border-radius:4px}
-.diff-up{background:#065f46;color:#6ee7b7}.diff-down{background:#7f1d1d;color:#fca5a5}.diff-zero{background:#1e293b;color:#475569}
-.prices{display:flex;gap:10px;margin-bottom:.5rem;flex-wrap:wrap}
-.price-bar{width:54px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.bar-fill{width:36px;border-radius:4px 4px 0 0;transition:all .3s;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-size:.7rem;font-weight:bold;min-height:20px}
-.bar-label{font-size:.65rem;color:#64748b;height:16px}
-.bar-default{background:#334155;color:#94a3b8}
-.bar-cur{background:#0369a1;color:#fff}
-.bar-buy{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
-.bar-sell{background:#7f1d1d;color:#fca5a5;border:2px solid #ef4444}
-.bar-hold{background:#1e3a5f;color:#93c5fd}
-.price-num{font-size:.65rem;color:#475569;margin-top:2px}
-.trades{margin-top:.8rem;min-height:24px;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
-.trade-badge{font-size:.75rem;padding:.2rem .6rem;border-radius:20px;font-weight:bold}
-.trade-buy{background:#065f46;color:#6ee7b7}
-.trade-sell{background:#7f1d1d;color:#fca5a5}
-.trade-none{color:#475569;font-size:.8rem}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .price-chart { display: flex; gap: 6px; align-items: flex-end; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+  .price-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .price-bar { width: 36px; border-radius: 4px 4px 0 0; transition: all 0.3s; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; font-size: 10px; font-weight: 600; font-family: 'Geist Mono', monospace; min-height: 20px; }
+  .bar-default { background: #c8d5e1; color: #3a4a5a; }
+  .bar-cur { background: var(--accent); color: white; transform: scaleX(1.1); box-shadow: 0 2px 8px rgba(181,82,58,0.3); }
+  .bar-up { background: #065f46; color: #6ee7b7; border-top: 3px solid #34d399; }
+  .bar-down { background: #7f1d1d; color: #fca5a5; border-top: 3px solid #ef4444; }
+  .price-label { font-size: 9px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .trade-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .trade-badge { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .trade-buy { background: #065f46; color: #6ee7b7; border: 1px solid #34d399; }
+  .trade-sell { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+  .trade-profit { background: #78350f; color: #fcd34d; border: 1px solid #f59e0b; }
+  .result-row { display: flex; gap: 24px; margin-top: 12px; font-size: 13px; flex-wrap: wrap; }
+  .result-item { color: var(--muted); }
+  .result-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
-<h1>122. 买卖股票最佳时机 II</h1>
-<p class="subtitle">贪心：所有上涨段都买卖，收益最大化</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">累计利润: <span id="total-profit">0</span></div>
-    <div class="info-item">当前操作: <span id="cur-action">-</span></div>
-    <div class="info-item">买入日期: <span id="cur-buy">-</span></div>
-    <div class="info-item">当前日期: <span id="cur-day">-</span></div>
-  </div>
-  <div class="label" style="font-size:.75rem;color:#64748b;margin-bottom:.4rem">相邻日价格差（↑累加利润，↓跳过）</div>
-  <div class="diff-row" id="diff-row"></div>
-  <div class="label" style="font-size:.75rem;color:#64748b;margin:.6rem 0 .4rem">价格柱状图</div>
-  <div class="prices" id="prices"></div>
-  <div class="trades" id="trades"><span class="trade-none">操作记录...</span></div>
-</div>
+  <p class="eyebrow">LeetCode 122 · Greedy</p>
+  <h1>买卖股票最佳时机 II</h1>
+  <p class="subtitle">可以多次买卖，问最大利润 — 贪心的精髓：累加所有上升段，利润 = Σ(每个上升段的终点 - 起点)</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：可以无限次买卖（先买后卖，不能卖空），求最大利润。<br>
+      关键：<strong>把利润看作所有上升段的累加：每天如果价格比昨天高，就等于昨天买今天卖</strong>。
+      这个贪心成立因为没有交易次数限制，持有时间越长利润越少，所以只累加正收益。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>上升段 = 连续的正差值</h3>
+        <p>prices[i] - prices[i-1] > 0 说明存在利润空间。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>累加所有正差值</h3>
+        <p>如果有上涨就持有（或买入），每天都计算和前一天的差值，正值就计入利润。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>一次遍历，只维护一个 profit 变量。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">maxProfitII</span>(prices) {
-  <span class="kw">let</span> profit = <span class="num">0</span>;
-  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i < prices.length; i++) {
-    <span class="comment">// 累加所有上涨段</span>
-    profit += Math.<span class="hl">max</span>(<span class="num">0</span>, prices[i] - prices[i-<span class="num">1</span>]);
-  }
-  <span class="kw">return</span> profit;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">prices = <code>[7,1,5,3,6,4]</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Day 0→1</span>
+        <span class="step-range">7 → 1，下降 6</span>
+      </div>
+      <div class="kv">diff = 1 - 7 = -6</div>
+      <div class="kv focal">diff < 0，不计入利润</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Day 1→2</span>
+        <span class="step-range">1 → 5，上涨 4</span>
+      </div>
+      <div class="kv">diff = 5 - 1 = +4</div>
+      <div class="kv focal">profit += 4，profit = 4</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Day 2→3</span>
+        <span class="step-range">5 → 3，下降 2</span>
+      </div>
+      <div class="kv">diff = 3 - 5 = -2</div>
+      <div class="kv focal">diff < 0，不计入利润</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Day 3→4</span>
+        <span class="step-range">3 → 6，上涨 3</span>
+      </div>
+      <div class="kv">diff = 6 - 3 = +3</div>
+      <div class="kv focal">profit += 3，profit = 7</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Day 4→5</span>
+        <span class="step-range">6 → 4，下降 2</span>
+      </div>
+      <div class="kv">diff = 4 - 6 = -2</div>
+      <div class="kv focal">diff < 0，不计入利润</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终利润 = <strong>7</strong>（Day1买入→Day2卖出 +4，Day3买入→Day4卖出 +3）
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">累加所有正差值</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">maxProfit</span>(prices []<span class="typ">int</span>) <span class="typ">int</span> {
+    profit := <span class="num">0</span>
+    <span class="kw">for</span> i := <span class="num">1</span>; i < len(prices); i++ {
+        diff := prices[i] - prices[i-<span class="num">1</span>]
+        <span class="kw">if</span> diff > <span class="num">0</span> {
+            profit += diff
+        }
+    }
+    <span class="kw">return</span> profit
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">和 121 的区别：121 只能一次买卖，122 可以无限次，正差值累加是 122 独有的</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：找最高点和最低点</p>
+        <pre><span class="cmt">// 122 中找全局最高/最低点不适用，因为有无限次交易</span>
+buy := min(prices)
+sell := max(prices)
+profit := sell - buy <span class="cmt">// 这只能做一次交易</span></pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">对于 [1,5,3,6]，最低1最高6，但分段交易 1→5(+4) + 3→6(+3)=7 > 5。所以不能直接用最大-最小。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：累加所有正差值</p>
+        <pre><span class="kw">for</span> i := <span class="num">1</span>; i < len(prices); i++ {
+    diff := prices[i] - prices[i-<span class="num">1</span>]
+    <span class="kw">if</span> diff > <span class="num">0</span> { profit += diff }
+}
+<span class="cmt">// [1,5,3,6]: (5-1)+(6-3) = 4+3 = 7</span></pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">累加正差值等价于在每个谷买入、峰卖出，但不需要显式找峰谷。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">prices = [7,1,5,3,6,4]，观察每天差值和利润累加</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前价格: <span id="ai-price">-</span></div>
+      <div class="anim-info-item">差值: <span id="ai-diff">-</span></div>
+      <div class="anim-info-item">总利润: <span id="ai-profit">0</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="price-chart" id="ai-chart"></div>
+    <div class="trade-list" id="ai-trades"></div>
+    <div class="result-row">
+      <div class="result-item">总利润: <span id="ai-result">0</span></div>
+    </div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>累加正差值</h3>
+      <p>遍历每天的差值，正值就加到利润里，等价于在每个局部谷买入、峰卖出。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心证明</p>
+      <h3><span class="dot"></span>无交易限制时成立</h3>
+      <p>因为可以无限次交易，每天持有到明天再卖的收益不小于今天卖，所以上升段持有更优。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>累加 diff > 0，不是 >=
+</h3>
+      <p>等于 0 时不计入，但也不亏损，正好处于持平状态。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/122.best-time-to-buy-and-sell-stock-ii.html</footer>
 
 <script>
-const prices = [7, 1, 5, 3, 6, 4];
-// 差分:       -6  +4  -2  +3  -2
-// 贪心: 上涨段 D1→D2 (+4), D3→D4 (+3) = 总利润 7
-let i = 0; // 当前处理到 diff[i] 即 prices[i] vs prices[i+1]
-let profit = 0;
-let trades = [];
-let step = -1;
+const prices = [7,1,5,3,6,4];
+let profit = 0, i = 0, step = -1, trades = [];
 
-function init() {
-  const container = document.getElementById('prices');
-  const diffRow = document.getElementById('diff-row');
-  container.innerHTML = '';
-  diffRow.innerHTML = '';
+function renderChart() {
+  const chart = document.getElementById('ai-chart');
   const max = Math.max(...prices);
-  for (let d = 0; d < prices.length; d++) {
-    const h = Math.round((prices[d] / max) * 120) + 20;
-    container.innerHTML += `
-      <div class="price-bar">
-        <div class="bar-fill bar-default" id="fill-${d}" style="height:${h}px">${prices[d]}</div>
-        <div class="bar-label" id="label-${d}">Day ${d}</div>
-        <div class="price-num">$${prices[d]}</div>
-      </div>`;
-  }
-  for (let d = 0; d < prices.length - 1; d++) {
-    const diff = prices[d + 1] - prices[d];
-    const cls = diff > 0 ? 'diff-up' : diff < 0 ? 'diff-down' : 'diff-zero';
-    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '—';
-    diffRow.innerHTML += `
-      <div class="diff-cell">
-        <div class="diff-val ${cls}" id="diff-${d}">${arrow} ${diff > 0 ? '+' : ''}${diff}</div>
-        <div class="diff-arrow">D${d}→D${d+1}</div>
-      </div>`;
-  }
-  reset();
+  chart.innerHTML = prices.map((p, idx) => {
+    const h = Math.round((p / max) * 100);
+    let cls = 'bar-default';
+    if (idx === i && step >= 0) cls = 'bar-cur';
+    else if (idx > 0 && prices[idx] > prices[idx-1]) cls = 'bar-up';
+    else if (idx > 0 && prices[idx] < prices[idx-1]) cls = 'bar-down';
+    return `<div class="price-col">
+      <div class="price-bar ${cls}" style="height:${h}px">${p}</div>
+      <div class="price-label">d${idx}</div>
+    </div>`;
+  }).join('');
 }
 
-function reset() {
-  i = 0; profit = 0; trades = []; step = -1;
-  for (let d = 0; d < prices.length; d++) {
-    const f = document.getElementById(`fill-${d}`);
-    f.className = 'bar-fill bar-default';
-    document.getElementById(`label-${d}`).textContent = `Day ${d}`;
-  }
-  document.getElementById('total-profit').textContent = '0';
-  document.getElementById('cur-action').textContent = '-';
-  document.getElementById('cur-buy').textContent = '-';
-  document.getElementById('cur-day').textContent = 'Day 0';
-  document.getElementById('trades').innerHTML = '<span class="trade-none">操作记录...</span>';
+function render() {
+  document.getElementById('ai-price').textContent = step >= 0 ? prices[i] : '-';
+  const diff = step >= 1 ? prices[i] - prices[i-1] : '-';
+  document.getElementById('ai-diff').textContent = diff;
+  document.getElementById('ai-profit').textContent = profit;
+  document.getElementById('ai-result').textContent = profit;
+  const tradeEl = document.getElementById('ai-trades');
+  tradeEl.innerHTML = trades.map(t =>
+    `<span class="trade-badge ${t.type === 'buy' ? 'trade-buy' : t.type === 'sell' ? 'trade-sell' : 'trade-profit'}">${t.label}</span>`
+  ).join('');
+  renderChart();
 }
 
-function next() {
-  if (i >= prices.length - 1) return;
-  step = i;
-  const diff = prices[i + 1] - prices[i];
-  if (diff > 0) {
-    profit += diff;
-    trades.push({ buy: i, sell: i + 1, profit: diff });
-    document.getElementById(`fill-${i}`).className = 'bar-fill bar-buy';
-    document.getElementById(`label-${i}`).textContent = 'Buy';
-    document.getElementById(`fill-${i + 1}`).className = 'bar-fill bar-sell';
-    document.getElementById(`label-${i + 1}`).textContent = 'Sell';
-    document.getElementById('cur-action').textContent = `买入 D${i} $${prices[i]} → 卖出 D${i+1} $${prices[i+1]}，利润 +${diff}`;
-    document.getElementById('cur-buy').textContent = `Day ${i} ($${prices[i]})`;
+function animReset() {
+  profit = 0; i = 0; step = -1; trades = [];
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
+}
+
+function animNext() {
+  if (step >= prices.length - 1) return;
+  step++;
+  i = step;
+  if (step >= 1) {
+    const diff = prices[i] - prices[i-1];
+    document.getElementById('ai-diff').textContent = (diff >= 0 ? '+' : '') + diff;
+    if (diff > 0) {
+      profit += diff;
+      trades.push({ type: 'profit', label: `+${diff} (d${i-1}→d${i})` });
+      document.getElementById('ai-desc').innerHTML = `d${i-1}→d${i}: ${prices[i-1]}→${prices[i]}，差值 <span>+${diff}</span>，加入利润`;
+    } else {
+      document.getElementById('ai-desc').innerHTML = `d${i-1}→d${i}: ${prices[i-1]}→${prices[i]}，差值 ${diff}，跳过`;
+    }
   } else {
-    document.getElementById(`fill-${i}`).className = 'bar-fill bar-default';
-    document.getElementById(`fill-${i + 1}`).className = 'bar-fill bar-cur';
-    document.getElementById(`label-${i + 1}`).textContent = 'cur';
-    document.getElementById('cur-action').textContent = `下跌 ${diff}，跳过`;
-    document.getElementById('cur-buy').textContent = '-';
+    document.getElementById('ai-desc').innerHTML = `Day ${i}: 价格 ${prices[i]}，作为起始点`;
   }
-  document.getElementById('cur-day').textContent = `Day ${i + 1}`;
-  document.getElementById('total-profit').textContent = profit;
-  updateTrades();
-  i++;
+  render();
 }
 
-function prev() {
-  if (i <= 0) return;
-  i--;
-  // undo step i
-  if (trades.length > 0 && trades[trades.length - 1].sell === i) {
-    const t = trades.pop();
-    profit -= t.profit;
-    document.getElementById(`fill-${t.buy}`).className = 'bar-fill bar-default';
-    document.getElementById(`label-${t.buy}`).textContent = `Day ${t.buy}`;
-    document.getElementById(`fill-${t.sell}`).className = 'bar-fill bar-default';
-    document.getElementById(`label-${t.sell}`).textContent = `Day ${t.sell}`;
-    document.getElementById('cur-action').textContent = '撤销上一笔交易';
-  } else {
-    document.getElementById(`fill-${i + 1}`).className = 'bar-fill bar-default';
-    document.getElementById(`label-${i + 1}`).textContent = `Day ${i + 1}`;
-    document.getElementById('cur-action').textContent = '已回退';
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  profit = 0; trades = [];
+  for (let k = 1; k < step; k++) {
+    const diff = prices[k] - prices[k-1];
+    if (diff > 0) { profit += diff; trades.push({ type: 'profit', label: `+${diff}` }); }
   }
-  document.getElementById('cur-day').textContent = i === 0 ? 'Day 0' : `Day ${i}`;
-  document.getElementById('total-profit').textContent = profit;
-  document.getElementById('cur-buy').textContent = '-';
-  updateTrades();
+  step--;
+  i = step;
+  document.getElementById('ai-desc').innerHTML = `回退到 d${i}`;
+  render();
 }
 
-function updateTrades() {
-  const el = document.getElementById('trades');
-  if (trades.length === 0) {
-    el.innerHTML = '<span class="trade-none">操作记录...</span>';
-    return;
-  }
-  el.innerHTML = trades.map((t, idx) =>
-    `<span class="trade-badge trade-buy">#${idx+1} Buy D${t.buy}</span>` +
-    `<span class="trade-badge trade-sell">#${idx+1} Sell D${t.sell} +$${t.profit}</span>`
-  ).join(' ');
-}
-
-init();
+animReset();
 </script>
 </body>
 </html>

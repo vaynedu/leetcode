@@ -2,219 +2,342 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>621 任务调度器</title>
+<title>621 任务调度器 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
-.phase span{color:#fbbf24}
-.counts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.8rem}
-.count-chip{width:48px;height:48px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;font-weight:bold;border:1px solid #334155}
-.chip-default{background:#1e293b;color:#94a3b8}
-.chip-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.1)}
-.chip-idle{background:#1e293b;color:#475569;border:1px dashed #475569}
-.schedule{display:flex;gap:4px;flex-wrap:wrap;margin:.8rem 0}
-.slot{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:bold;border:1px solid #334155;transition:all .2s}
-.slot-empty{background:#1e293b;color:#334155;border:1px dashed #334155}
-.slot-task{background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.slot-idle{background:#1e293b;color:#475569;border:1px dashed #475569}
-.result-row{display:flex;gap:1rem;margin-top:.5rem;font-size:.85rem}
-.result-label{color:#64748b}
-.result-value{color:#fbbf24;font-weight:bold}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .formula-box { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; margin: 16px 0; text-align: center; }
+  .formula { font-size: 20px; font-family: 'Geist Mono', monospace; color: var(--accent); font-weight: 600; }
+  .bucket-display { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+  .bucket { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bucket-label { font-size: 11px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .bucket-cells { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+  .task-chip { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .t-A { background: #7f1d1d; color: #fca5a5; } .t-B { background: #1e3a5f; color: #93c5fd; } .t-other { background: var(--paper-2); color: var(--muted); border: 1px solid var(--rule); }
+  .idle-chip { background: var(--paper); color: var(--soft); border: 1px dashed var(--rule); border-radius: 6px; font-size: 11px; font-family: 'Geist Mono', monospace; }
+  .result-row { display: flex; gap: 24px; margin-top: 12px; font-size: 13px; flex-wrap: wrap; }
+  .result-item { color: var(--muted); }
+  .result-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
-<h1>621. 任务调度器</h1>
-<p class="caption" style="color:#888;font-size:.85rem;margin-bottom:2rem">贪心：先排最多数量的任务，形成 idle 间隔填入其他任务</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">阶段: <span id="phase">-</span></div>
-    <div class="info-item">执行任务: <span id="cur-task">-</span></div>
-    <div class="info-item">时间片: <span id="cur-time">-</span></div>
-    <div class="info-item">冷却计时: <span id="cooldown">-</span></div>
-  </div>
-  <div class="phase" id="phase-desc">点击「下一步」开始</div>
-  <div class="counts" id="counts"></div>
-  <div class="schedule" id="schedule"></div>
-  <div class="result-row">
-    <span class="result-label">总时间:</span>
-    <span class="result-value" id="total-time">-</span>
-    <span class="result-label">空闲数:</span>
-    <span class="result-value" id="idle-count">-</span>
-  </div>
-</div>
+  <p class="eyebrow">LeetCode 621 · Greedy</p>
+  <h1>任务调度器</h1>
+  <p class="subtitle">给定任务频率和冷却时间 n，求完成所有任务的最短时间 — 贪心的精髓：时间片由出现最多的任务决定，其他任务填入间隔即可</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：任务 A-Z，每个任务执行后需冷却 n 个时间单位，求完成所有任务的最短时间。<br>
+      关键：<strong>总时间由出现最多的任务决定：有 maxCount 个 A，则至少需要 (maxCount-1)*(n+1) + maxCount 个时间单位</strong>。
+      其他任务（包括同频的）填入这些槽位，不够则追加。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>时间片 = 频率最高的任务决定</h3>
+        <p>maxCount 个 A 被 n 间隔开，形成 (maxCount-1) 个完整槽，每个槽长 n+1。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>其他任务填入间隔</h3>
+        <p>用其他任务（或 idle）填满每个槽，槽满后多余的同类任务追加到末尾。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">公式</p>
+        <h3><span class="dot"></span>len(formula) = max((maxCount-1)*(n+1), total)</h3>
+        <p>理论槽位和实际任务数取最大值——实际任务更多时无需等待。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">leastInterval</span>(tasks, n) {
-  <span class="kw">const</span> cnt = {};
-  tasks.forEach(t => cnt[t] = (cnt[t]||<span class="num">0</span>)+<span class="num">1</span>);
-  <span class="kw">const</span> max = Math.<span class="hl">max</span>(...Object.values(cnt));
-  <span class="kw">const</span> maxCnt = Object.values(cnt).filter(v=>v===max).length;
-  <span class="kw">return</span> Math.<span class="hl">max</span>(tasks.length, (max-<span class="num">1</span>)*(n+<span class="num">1</span>)+maxCnt);
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">tasks = <code>['A','A','A','B','B','B']</code>，n = <code>2</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">统计频率</span>
+      </div>
+      <div class="kv">A=3, B=3，maxCount=3</div>
+      <div class="kv focal">桶的数量 = maxCount-1 = 2，每个桶容量 = n+1 = 3</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">构建槽位</span>
+      </div>
+      <div class="kv">槽 1: [A, B, B]（填 A 及其冷却后第一个可用的 B）</div>
+      <div class="kv">槽 2: [A, B, B]</div>
+      <div class="kv">末尾追加: [A]（剩余的 A）</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">计算结果</span>
+      </div>
+      <div class="kv">公式: (3-1)*(2+1) + 3 = 2*3+3 = <strong>9</strong></div>
+      <div class="kv focal">实际时间线: A B B A B B A = 7 < 9？实际是 A B idle A B idle A = <strong>7</strong>？</div>
+      <div class="kv">等等……我们来用贪心模拟一下</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：<strong>8</strong> 个时间单位（A B B A B B A B）
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">先统计频率，套公式计算</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">leastInterval</span>(tasks []<span class="typ">byte</span>, n <span class="typ">int</span>) <span class="typ">int</span> {
+    <span class="cmt">// 1. 统计每个任务出现次数</span>
+    cnt := [<span class="num">26</span>]<span class="typ">int</span>{}
+    <span class="kw">for</span> _, t := <span class="kw">range</span> tasks {
+        cnt[t-<span class="str">'A'</span>]++
+    }
+
+    <span class="cmt">// 2. 找到最大频率 maxCount</span>
+    maxCount := <span class="num">0</span>
+    <span class="kw">for</span> _, c := <span class="kw">range</span> cnt {
+        <span class="kw">if</span> c > maxCount { maxCount = c }
+    }
+
+    <span class="cmt">// 3. 计算有多少个最高频任务（决定槽数）</span>
+    maxFreqTasks := <span class="num">0</span>
+    <span class="kw">for</span> _, c := <span class="kw">range</span> cnt {
+        <span class="kw">if</span> c == maxCount { maxFreqTasks++ }
+    }
+
+    <span class="cmt">// 4. 公式</span>
+    partLen := (maxCount - <span class="num">1</span>) * (n + <span class="num">1</span>) + maxFreqTasks
+    <span class="kw">return</span> max(partLen, len(tasks))
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">公式里的 + maxFreqTasks 不是 +1，而是 + 最高频任务的种类数</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：末尾加 1</p>
+        <pre><span class="cmt">// AAAA, n=2: maxCount=4, 应该是 (4-1)*(2+1)+1=10</span>
+<span class="kw">return</span> max((maxCount-<span class="num">1</span>)*(n+<span class="num">1</span>)+<span class="num">1</span>, len(tasks))
+<span class="cmt">// 但如果是 AAAA BBB: maxCount=3, maxFreqTasks=2</span>
+<span class="cmt">// 用 +1 结果是 (3-1)*3+1=7，但实际是 A B _ A B _ A B = 8</span></pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">当有多个最高频任务时，最后一排不只一个位置，需要加所有最高频任务的数量。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：末尾加 maxFreqTasks</p>
+        <pre><span class="cmt">// AAAA BBB, n=2: maxCount=3, maxFreqTasks=2</span>
+<span class="kw">return</span> max((<span class="num">3</span>-<span class="num">1</span>)*(<span class="num">2</span>+<span class="num">1</span>)+<span class="num">2</span>, len(tasks))
+<span class="cmt">// = max(8, 7) = 8</span></pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">最后一排包含了所有最高频的任务，每个最高频任务占一个槽位。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">tasks = ['A','A','A','B','B','B']，n = 2</p>
+
+    <div class="formula-box">
+      <p class="formula" id="ai-formula">-</p>
+    </div>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">最大频率: <span id="ai-maxcount">-</span></div>
+      <div class="anim-info-item">最高频任务数: <span id="ai-maxfreq">-</span></div>
+      <div class="anim-info-item">冷却时间 n: <span id="ai-n">-</span></div>
+      <div class="anim-info-item">结果: <span id="ai-result">-</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="bucket-display" id="ai-buckets"></div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>公式化简</h3>
+      <p>总时间 = max((maxCount-1)*(n+1) + maxFreqTasks, len(tasks))。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心直觉</p>
+      <h3><span class="dot"></span>最高频任务决定槽位数</h3>
+      <p>槽数 = maxCount-1，每个槽容量 = n+1，末尾特殊处理。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>末尾加的是 maxFreqTasks 不是 1</h3>
+      <p>有多个最高频任务时，最后一排需要把它们都放进去。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/621.task-scheduler.html</footer>
 
 <script>
 const tasks = ['A','A','A','B','B','B'];
-const n = 2; // 冷却时间
-// max=3, maxCnt=2, (3-1)*(2+1)+2=8
-// 调度: A B _ A B _ A = 8
-
-let counts = {};
-let remaining = {};
-let cooldown = 0;
-let schedule = []; // array of task char or null (idle)
+const n = 2;
 let step = -1;
-let maxCount = 0;
 
-function init() {
-  // Count tasks
-  const taskList = [...new Set(tasks)];
-  counts = {};
-  taskList.forEach(t => counts[t] = 0);
-  tasks.forEach(t => counts[t]++);
-  remaining = {...counts};
-  maxCount = Math.max(...Object.values(counts));
+function buildBuckets(maxCount, maxFreqTasks, filled) {
+  const bucketsEl = document.getElementById('ai-buckets');
+  const totalBuckets = maxCount;
+  bucketsEl.innerHTML = '';
+  for (let b = 0; b < totalBuckets; b++) {
+    const bucketDiv = document.createElement('div');
+    bucketDiv.className = 'bucket';
 
-  const countsEl = document.getElementById('counts');
-  countsEl.innerHTML = taskList.map(t =>
-    `<div class="count-chip chip-default" id="chip-${t}">
-      <span style="color:#fbbf24">${t}</span>
-      <span id="count-val-${t}">${counts[t]}</span>
-    </div>`
-  ).join('');
+    const label = document.createElement('div');
+    label.className = 'bucket-label';
+    label.textContent = b === totalBuckets - 1 ? '末尾' : `槽${b+1}`;
+    bucketDiv.appendChild(label);
 
-  reset();
-}
-
-function reset() {
-  remaining = {...counts};
-  cooldown = 0;
-  schedule = [];
-  step = -1;
-  Object.keys(counts).forEach(t => {
-    const chip = document.getElementById(`chip-${t}`);
-    if (chip) chip.className = 'count-chip chip-default';
-    const val = document.getElementById(`count-val-${t}`);
-    if (val) val.textContent = counts[t];
-  });
-  renderSchedule();
-  document.getElementById('phase').textContent = '-';
-  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始调度';
-  document.getElementById('cur-task').textContent = '-';
-  document.getElementById('cur-time').textContent = '-';
-  document.getElementById('cooldown').textContent = '-';
-  document.getElementById('total-time').textContent = '-';
-  document.getElementById('idle-count').textContent = '-';
-}
-
-function renderSchedule() {
-  const el = document.getElementById('schedule');
-  el.innerHTML = schedule.map((t, idx) => {
-    if (t === null) return `<div class="slot slot-idle" title="idle">-</div>`;
-    return `<div class="slot slot-task" title="${t}">${t}</div>`;
-  }).join('');
-}
-
-function next() {
-  const available = Object.keys(remaining).filter(t => remaining[t] > 0 && !cooldown.includes(t));
-  if (available.length === 0) {
-    // idle
-    schedule.push(null);
-    cooldown = cooldown.filter(t => true); // decrement
-    cooldown = cooldown.map(t => t-1).filter(t => t > 0);
-    step++;
-    renderSchedule();
-    document.getElementById('phase').textContent = '空闲';
-    document.getElementById('phase-desc').innerHTML = '无任务可执行，<span>空闲一个时间片</span>';
-    document.getElementById('cur-task').textContent = '-';
-    document.getElementById('cur-time').textContent = step;
-    document.getElementById('cooldown').textContent = cooldown.join(', ');
-    return;
-  }
-  // Pick task with most remaining
-  available.sort((a,b) => remaining[b] - remaining[a]);
-  const task = available[0];
-  schedule.push(task);
-  remaining[task]--;
-  cooldown = [task, ...cooldown.map(t => t-1).filter(t => t > 0)];
-  step++;
-  renderSchedule();
-  // Update chips
-  Object.keys(remaining).forEach(t => {
-    const chip = document.getElementById(`chip-${t}`);
-    const val = document.getElementById(`count-val-${t}`);
-    if (val) val.textContent = remaining[t];
-    if (remaining[t] === 0) {
-      chip.className = 'count-chip chip-idle';
-    } else if (t === task) {
-      chip.className = 'count-chip chip-cur';
-    } else {
-      chip.className = 'count-chip chip-default';
+    const cells = document.createElement('div');
+    cells.className = 'bucket-cells';
+    const slots = n + 1;
+    for (let s = 0; s < slots; s++) {
+      const chip = document.createElement('span');
+      chip.className = 'task-chip';
+      if (b < filled.length && s < filled[b].length) {
+        const t = filled[b][s];
+        chip.textContent = t === 'idle' ? '_' : t;
+        chip.className = t === 'idle' ? 'idle-chip' : `task-chip t-${t}`;
+      } else {
+        chip.textContent = '_';
+        chip.className = 'idle-chip';
+      }
+      cells.appendChild(chip);
     }
-  });
-  document.getElementById('phase').textContent = '执行';
-  document.getElementById('phase-desc').innerHTML = `执行任务 <span>${task}</span>（剩余 ${remaining[task]+1}→${remaining[task]}）`;
-  document.getElementById('cur-task').textContent = task;
-  document.getElementById('cur-time').textContent = step;
-  document.getElementById('cooldown').textContent = cooldown.filter(t => typeof t === 'string').join(', ') || '-';
-  // Check done
-  const done = Object.values(remaining).every(v => v === 0);
-  if (done) {
-    document.getElementById('phase-desc').innerHTML = '所有任务执行完毕！';
-    const idleCount = schedule.filter(t => t === null).length;
-    document.getElementById('total-time').textContent = schedule.length;
-    document.getElementById('idle-count').textContent = idleCount;
+    bucketDiv.appendChild(cells);
+    bucketsEl.appendChild(bucketDiv);
   }
 }
 
-function prev() {
-  if (schedule.length === 0) return;
-  const last = schedule.pop();
-  if (last === null) {
-    cooldown = cooldown.map(t => t-1).filter(t => t > 0);
+function animReset() {
+  step = -1;
+  document.getElementById('ai-formula').textContent = '-';
+  document.getElementById('ai-maxcount').textContent = '-';
+  document.getElementById('ai-maxfreq').textContent = '-';
+  document.getElementById('ai-n').textContent = '-';
+  document.getElementById('ai-result').textContent = '-';
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  document.getElementById('ai-buckets').innerHTML = '';
+}
+
+function animNext() {
+  if (step >= 2) return;
+  step++;
+  if (step === 0) {
+    const cnt = {};
+    tasks.forEach(t => cnt[t] = (cnt[t]||0)+1);
+    const maxCount = Math.max(...Object.values(cnt));
+    const maxFreqTasks = Object.values(cnt).filter(v => v === maxCount).length;
+    const formula = `(maxCount-1)*(n+1)+maxFreqTasks = (${maxCount}-1)*(${n}+1)+${maxFreqTasks} = ${(maxCount-1)*(n+1)+maxFreqTasks}`;
+    document.getElementById('ai-formula').textContent = formula;
+    document.getElementById('ai-maxcount').textContent = maxCount;
+    document.getElementById('ai-maxfreq').textContent = maxFreqTasks;
+    document.getElementById('ai-n').textContent = n;
+    document.getElementById('ai-desc').innerHTML = 'maxCount=3（A和B各3次），maxFreqTasks=2，n=2';
+    buildBuckets(maxCount, maxFreqTasks, [['A','B','B'],['A','B','B'],['A','B']]);
+  } else if (step === 1) {
+    document.getElementById('ai-desc').innerHTML = '槽位排列：每槽容量=3（A的冷却间隔）';
+    buildBuckets(3, 2, [['A','B','B'],['A','B','B'],['A','B']]);
   } else {
-    remaining[last]++;
-    cooldown = [last, ...cooldown.map(t => t-1).filter(t => t > 0)];
+    const len = Math.max((3-1)*(2+1)+2, tasks.length);
+    document.getElementById('ai-result').textContent = len;
+    document.getElementById('ai-desc').innerHTML = `最终结果 = max(${8}, ${tasks.length}) = <span>${len}</span>`;
   }
-  step = schedule.length - 1;
-  renderSchedule();
-  // restore chips
-  Object.keys(remaining).forEach(t => {
-    const chip = document.getElementById(`chip-${t}`);
-    const val = document.getElementById(`count-val-${t}`);
-    if (val) val.textContent = remaining[t];
-    chip.className = remaining[t] > 0 ? 'count-chip chip-default' : 'count-chip chip-idle';
-  });
-  document.getElementById('phase').textContent = '回退';
-  document.getElementById('cur-task').textContent = schedule.length > 0 ? schedule[schedule.length-1] : '-';
-  document.getElementById('cur-time').textContent = schedule.length - 1;
-  document.getElementById('total-time').textContent = schedule.length;
-  document.getElementById('idle-count').textContent = schedule.filter(t => t === null).length;
 }
 
-init();
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  step--;
+  if (step === 0) {
+    document.getElementById('ai-formula').textContent = '-';
+    document.getElementById('ai-buckets').innerHTML = '';
+    document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  }
+}
+
+animReset();
 </script>
 </body>
 </html>

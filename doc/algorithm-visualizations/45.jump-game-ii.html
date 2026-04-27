@@ -2,179 +2,329 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>45 跳跃游戏 II</title>
+<title>45 跳跃游戏 II · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
-.phase span{color:#fbbf24}
-.jumps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.6rem}
-.jump-cell{width:52px;display:flex;flex-direction:column;align-items:center;gap:2px}
-.jump-bar{width:36px;background:#1e3a5f;border-radius:4px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-size:.75rem;font-weight:bold;color:#93c5fd;transition:all .3s;min-height:20px}
-.jump-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.1)}
-.jump-in{background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.jump-reach{background:#334155;color:#64748b}
-.jump-label{font-size:.65rem;color:#475569}
-.path-row{display:flex;gap:6px;flex-wrap:wrap;margin:.4rem 0;min-height:28px;align-items:center}
-.path-cell{font-size:.75rem;padding:.2rem .5rem;border-radius:20px;font-weight:bold}
-.path-jump{background:#0369a1;color:#fff}
-.path-dash{color:#475569}
-.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.status{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .jump-timeline { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+  .jump-step { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .jump-chip { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .j-hop { background: var(--accent); color: white; }
+  .j-arrow { color: var(--soft); font-size: 14px; }
+  .grid-display { display: flex; gap: 4px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+  .grid-cell { width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 10px; font-weight: 600; font-family: 'Geist Mono', monospace; transition: all 0.2s; }
+  .g-default { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .g-cur { background: var(--accent); color: white; border: 2px solid var(--accent); transform: scale(1.15); box-shadow: 0 2px 8px rgba(181,82,58,0.3); }
+  .g-reachable { background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; }
+  .g-in-range { background: #e8d5a0; color: #6b4a10; border: 1px solid #c9a84c; }
+  .result-row { display: flex; gap: 24px; margin-top: 12px; font-size: 13px; flex-wrap: wrap; }
+  .result-item { color: var(--muted); }
+  .result-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
-<h1>45. 跳跃游戏 II</h1>
-<p class="subtitle">贪心：每次在当前步范围内选能跳最远的，跳数+1</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">当前索引: <span id="cur-idx">-</span></div>
-    <div class="info-item">当前步范围: <span id="cur-range">-</span></div>
-    <div class="info-item">下一步范围: <span id="next-range">-</span></div>
-    <div class="info-item">最小步数: <span id="min-steps">-</span></div>
-  </div>
-  <div class="phase" id="phase-desc">点击「下一步」开始</div>
-  <div class="jumps" id="jumps"></div>
-  <div class="path-row" id="path-row"></div>
-  <div class="status" id="status"></div>
-</div>
+  <p class="eyebrow">LeetCode 45 · Greedy</p>
+  <h1>跳跃游戏 II</h1>
+  <p class="subtitle">求到达最后一个位置的最少跳数 — 贪心的精髓：在当前覆盖范围内选择能跳最远的下一步，步数最少</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：nums[i] 表示从 i 能跳的最远距离，求到末尾的最少跳数。<br>
+      关键：<strong>维护当前步能到的最远边界 curEnd，和这一步覆盖范围内的最远扩展 curFarthest</strong>。
+      当遍历到 curEnd 时，增加一步，用 curFarthest 更新 curEnd。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>BFS 等价于贪心</h3>
+        <p>每一步的选择构成 BFS 的层，最少跳数 = BFS 的最小深度，但不需要构建 BFS 树。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>每步选能跳最远的</h3>
+        <p>在当前覆盖范围内，用 curFarthest 决定下一步跳到哪。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>一次遍历，三个变量：steps、curEnd、curFarthest。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">jump</span>(nums) {
-  <span class="kw">let</span> jumps=<span class="num">0</span>, curEnd=<span class="num">0</span>, far=<span class="num">0</span>;
-  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;nums.length-<span class="num">1</span>; i++) {
-    far = Math.<span class="hl">max</span>(far, i+nums[i]);
-    <span class="kw">if</span> (i === curEnd) {
-      jumps++;
-      curEnd = far;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">nums = <code>[2,3,1,1,4]</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">初始化</span>
+        <span class="step-range">steps=0 curEnd=0 curFarthest=0</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=0</span>
+        <span class="step-range">curFarthest=max(0,0+2)=2</span>
+      </div>
+      <div class="kv">i=0 在 curEnd=0 范围内，扩展 curFarthest=2</div>
+      <div class="kv focal">i == curEnd(0) → steps++, curEnd=curFarthest=2</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=1,2</span>
+        <span class="step-range">curEnd=2</span>
+      </div>
+      <div class="kv">i=1: curFarthest=max(2,1+3)=4；i=2: curFarthest=max(4,2+1)=4</div>
+      <div class="kv focal">i==curEnd(2) → steps++, curEnd=curFarthest=4</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=3,4</span>
+        <span class="step-range">curEnd=4 ≥ len-1，结束</span>
+      </div>
+      <div class="kv focal">curEnd=4 已覆盖末尾，steps=2</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：最少 <strong>2</strong> 步（0→1→4 或 0→2→4）
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">贪心 BFS，O(n) 一次遍历</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">jump</span>(nums []<span class="typ">int</span>) <span class="typ">int</span> {
+    steps := <span class="num">0</span>
+    curEnd := <span class="num">0</span>
+    curFarthest := <span class="num">0</span>
+
+    <span class="kw">for</span> i := <span class="num">0</span>; i < len(nums)-<span class="num">1</span>; i++ {
+        <span class="cmt">// 扩展最远可达</span>
+        curFarthest = max(curFarthest, i+nums[i])
+
+        <span class="cmt">// 到达当前步的边界，增加一步</span>
+        <span class="kw">if</span> i == curEnd {
+            steps++
+            curEnd = curFarthest
+        }
     }
-  }
-  <span class="kw">return</span> jumps;
+    <span class="kw">return</span> steps
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">curEnd 的更新时机容易出错，必须在 i == curEnd 时才增加步数</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：没有 curEnd 边界判断</p>
+        <pre><span class="cmt">// 每次都选最大跳距，但跳跃次数可能不是最少的</span>
+reach := <span class="num">0</span>; steps := <span class="num">0</span>
+<span class="kw">for</span> i := <span class="num">0</span>; i < len(nums)-<span class="num">1</span>; {
+    reach = max(reach, i+nums[i])
+    i = reach <span class="cmt">// 跳到最远，不一定是当前步最优</span>
+    steps++
+}</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">[2,3,1,1,4] 中从 0 直接跳到 2（reach=2）再加到 4 是 2 步，但可能跳过头。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：curEnd 边界 + curFarthest</p>
+        <pre>curEnd := <span class="num">0</span>
+curFarthest := <span class="num">0</span>
+steps := <span class="num">0</span>
+<span class="kw">for</span> i := <span class="num">0</span>; i < len(nums)-<span class="num">1</span>; i++ {
+    curFarthest = max(curFarthest, i+nums[i])
+    <span class="kw">if</span> i == curEnd {
+        steps++
+        curEnd = curFarthest
+    }
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">在 curEnd 边界内积累所有扩展，边界到了才跳，确保每跳都是当前能达到最远的 BFS 层。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">nums = [2,3,1,1,4]，观察每步覆盖范围</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前索引: <span id="ai-i">-</span></div>
+      <div class="anim-info-item">curFarthest: <span id="ai-far">0</span></div>
+      <div class="anim-info-item">curEnd: <span id="ai-end">0</span></div>
+      <div class="anim-info-item">已跳: <span id="ai-steps">0</span> 步</div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="grid-display" id="ai-grid"></div>
+    <div class="jump-timeline" id="ai-timeline"></div>
+    <div class="result-row">
+      <div class="result-item">最少跳数: <span id="ai-result">-</span></div>
+    </div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>curEnd + curFarthest</h3>
+      <p>遍历时扩展 curFarthest，到达 curEnd 时跳一步，更新 curEnd。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心证明</p>
+      <h3><span class="dot"></span>BFS 层的最小跳数</h3>
+      <p>每一步的 curEnd 是当前步能到的最远边界，贪心取最大扩展。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>i == curEnd 时才跳</h3>
+      <p>在边界内积累所有扩展，边界到了才增加步数，保证最少。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/45.jump-game-ii.html</footer>
 
 <script>
-const nums = [2, 3, 1, 1, 4];
-// i=0: far=max(0,0+2)=2, curEnd=0 → jumps=1, curEnd=2
-// i=1: far=max(2,1+3)=4
-// i=2: far=max(4,2+1)=4
-// i=2 === curEnd(2): jumps=2, curEnd=4 → curEnd >= n-1 → return 2
-// 路径: 0 → 1 → 4
+const nums = [2,3,1,1,4];
+let i = 0, step = -1, steps = 0, curEnd = 0, curFarthest = 0, jumps = [];
 
-let jumps = 0, curEnd = 0, far = 0;
-let i = 0;
-let step = -1;
-let path = [];
+function render() {
+  const gridEl = document.getElementById('ai-grid');
+  gridEl.innerHTML = nums.map((n, idx) => {
+    let cls = 'grid-cell g-default';
+    if (idx === i && step >= 0) cls = 'grid-cell g-cur';
+    else if (idx <= curFarthest && step >= 0) cls = 'grid-cell g-reachable';
+    return `<div class="${cls}">${n}<br><span style="font-size:8px">→${idx+n}</span></div>`;
+  }).join('');
 
-function init() {
-  const el = document.getElementById('jumps');
-  el.innerHTML = '';
-  for (let j = 0; j < nums.length; j++) {
-    const h = Math.round((nums[j] / Math.max(...nums)) * 50) + 20;
-    el.innerHTML += `
-      <div class="jump-cell">
-        <div class="jump-bar jump-reach" id="bar-${j}" style="height:${h}px">${nums[j]}</div>
-        <div class="jump-label">i=${j}</div>
-      </div>`;
-  }
-  reset();
-}
-
-function reset() {
-  jumps = 0; curEnd = 0; far = 0; i = 0; step = -1; path = [];
-  for (let j = 0; j < nums.length; j++) {
-    const bar = document.getElementById(`bar-${j}`);
-    bar.className = 'jump-bar jump-reach';
-  }
-  document.getElementById('cur-idx').textContent = '-';
-  document.getElementById('cur-range').textContent = '-';
-  document.getElementById('next-range').textContent = '-';
-  document.getElementById('min-steps').textContent = '-';
-  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始';
-  document.getElementById('status').innerHTML = '';
-  document.getElementById('path-row').innerHTML = '';
-}
-
-function next() {
-  if (i >= nums.length - 1) return;
-  step++;
-  // mark bar i as cur
-  for (let j = 0; j < nums.length; j++) {
-    const bar = document.getElementById(`bar-${j}`);
-    if (path.includes(j)) {
-      bar.className = 'jump-bar jump-in';
-    } else if (j === i) {
-      bar.className = 'jump-bar jump-cur';
-    } else {
-      bar.className = 'jump-bar jump-reach';
-    }
-  }
-  far = Math.max(far, i + nums[i]);
-  document.getElementById('cur-idx').textContent = i;
-  document.getElementById('cur-range').textContent = `[${i}, ${curEnd}]`;
-  document.getElementById('next-range').textContent = `[${i}, ${far}]`;
-  document.getElementById('min-steps').textContent = jumps;
-  if (i === curEnd) {
-    jumps++;
-    curEnd = far;
-    path.push(i);
-    document.getElementById('phase-desc').innerHTML =
-      `i=${i} 到达当前步边界，<span>跳数+1=${jumps}</span>，下一跳边界=${far}`;
-    document.getElementById('status').innerHTML = `<span class="result-badge">跳 ${jumps}: index ${i}</span>`;
-    document.getElementById('path-row').innerHTML = path.map((p, idx) =>
-      `<span class="path-cell path-jump">${p}</span>` +
-      (idx < path.length - 1 ? `<span class="path-cell path-dash">→</span>` : '')
-    ).join('');
-    if (curEnd >= nums.length - 1) {
-      document.getElementById('phase-desc').innerHTML = `curEnd=${curEnd} ≥ ${nums.length-1}，到达终点！`;
-    }
+  const tlEl = document.getElementById('ai-timeline');
+  if (jumps.length === 0) {
+    tlEl.innerHTML = '';
   } else {
-    document.getElementById('phase-desc').innerHTML =
-      `far=${far}（i+nums[i]=${i}+${nums[i]}），在当前步范围内，继续`;
+    tlEl.innerHTML = jumps.map(j => `<div class="jump-step"><div class="jump-chip j-hop">${j}</div></div>`).join('<div class="j-arrow">→</div>');
   }
-  i++;
+
+  document.getElementById('ai-i').textContent = step >= 0 ? i : '-';
+  document.getElementById('ai-far').textContent = curFarthest;
+  document.getElementById('ai-end').textContent = curEnd;
+  document.getElementById('ai-steps').textContent = steps;
+  document.getElementById('ai-result').textContent = step >= 0 ? steps : '-';
 }
 
-function prev() {
-  if (i <= 0) return;
-  i--;
-  jumps = Math.max(0, jumps - 1);
-  curEnd = Math.max(0, curEnd - 1);
-  path.pop();
-  for (let j = 0; j < nums.length; j++) {
-    const bar = document.getElementById(`bar-${j}`);
-    bar.className = 'jump-bar jump-reach';
-  }
-  document.getElementById('cur-idx').textContent = i;
-  document.getElementById('phase-desc').innerHTML = '已回退一步';
-  document.getElementById('path-row').innerHTML = path.map((p, idx) =>
-    `<span class="path-cell path-jump">${p}</span>` +
-    (idx < path.length - 1 ? `<span class="path-cell path-dash">→</span>` : '')
-  ).join('');
+function animReset() {
+  i = 0; step = -1; steps = 0; curEnd = 0; curFarthest = 0; jumps = [];
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
 }
 
-init();
+function animNext() {
+  if (step >= nums.length - 1) return;
+  step++;
+  i = step;
+  curFarthest = Math.max(curFarthest, i + nums[i]);
+  if (i === curEnd) {
+    steps++;
+    jumps.push(`从${curEnd}→${curFarthest}`);
+    document.getElementById('ai-desc').innerHTML = `i=${i}: 到达 curEnd=${curEnd}，跳一步！<span>steps=${steps}</span>，curEnd=${curFarthest}`;
+    curEnd = curFarthest;
+  } else {
+    document.getElementById('ai-desc').innerHTML = `i=${i}: 扩展 curFarthest=${curFarthest}，curEnd=${curEnd} 未到达，继续`;
+  }
+  render();
+}
+
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  steps = 0; curEnd = 0; curFarthest = 0; jumps = [];
+  for (let k = 0; k < step; k++) {
+    curFarthest = Math.max(curFarthest, k + nums[k]);
+    if (k === curEnd) { steps++; curEnd = curFarthest; jumps.push(`从${curEnd}→${curFarthest}`); }
+  }
+  step--;
+  i = step;
+  document.getElementById('ai-desc').innerHTML = `回退到 i=${i}`;
+  render();
+}
+
+animReset();
 </script>
 </body>
 </html>

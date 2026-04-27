@@ -2,190 +2,286 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>55 跳跃游戏</title>
+<title>55 跳跃游戏 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
-.phase span{color:#fbbf24}
-.jumps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.8rem}
-.jump-cell{width:52px;display:flex;flex-direction:column;align-items:center;gap:2px}
-.jump-bar{width:36px;background:#1e3a5f;border-radius:4px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-size:.75rem;font-weight:bold;color:#93c5fd;transition:all .3s;min-height:20px}
-.jump-reach{background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.jump-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.1)}
-.jump-blocked{background:#450a0a;color:#fca5a5;border:1px solid #ef4444;opacity:.6}
-.jump-label{font-size:.65rem;color:#475569}
-.reach-bar{height:8px;background:#334155;border-radius:4px;margin-top:4px;transition:all .3s;position:relative}
-.reach-fill{height:100%;background:#065f46;border-radius:4px;transition:all .3s}
-.index-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.6rem}
-.idx-cell{width:52px;text-align:center;font-size:.6rem;color:#475569}
-.idx-active{color:#38bdf8;font-weight:bold}
-.status{font-size:.85rem;margin:.4rem 0}
-.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.result-fail{background:#450a0a;color:#fca5a5;border:1px solid #ef4444}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .grid-display { display: flex; gap: 4px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+  .grid-cell { width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 10px; font-weight: 600; font-family: 'Geist Mono', monospace; transition: all 0.2s; }
+  .g-default { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .g-cur { background: var(--accent); color: white; border: 2px solid var(--accent); transform: scale(1.15); box-shadow: 0 2px 8px rgba(181,82,58,0.3); }
+  .g-reachable { background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; }
+  .g-unreachable { background: #fca5a5; color: #7f1d1d; border: 1px solid #ef4444; opacity: 0.6; }
+  .reach-bar { height: 4px; background: var(--accent); border-radius: 2px; transition: all 0.3s; margin-top: 4px; }
+  .result-row { display: flex; gap: 24px; margin-top: 12px; font-size: 13px; flex-wrap: wrap; }
+  .result-item { color: var(--muted); }
+  .result-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
-<h1>55. 跳跃游戏</h1>
-<p class="subtitle">贪心：维护能到达的最远距离，逐步扩展</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">当前索引: <span id="cur-idx">-</span></div>
-    <div class="info-item">当前步长: <span id="cur-jump">-</span></div>
-    <div class="info-item">最远可达: <span id="far-reach">-</span></div>
-    <div class="info-item">终点: <span id="target">-</span></div>
-  </div>
-  <div class="phase" id="phase-desc">点击「下一步」开始</div>
-  <div class="jumps" id="jumps"></div>
-  <div class="reach-bar" id="reach-bar"><div class="reach-fill" id="reach-fill"></div></div>
-  <div class="index-row" id="index-row"></div>
-  <div class="status" id="status"></div>
-</div>
+  <p class="eyebrow">LeetCode 55 · Greedy</p>
+  <h1>跳跃游戏</h1>
+  <p class="subtitle">判断能否到达最后一个位置 — 贪心的精髓：维护「当前能到的最远位置」，遍历时持续扩展，遇到死胡同则失败</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：nums[i] 表示从 i 能跳的最远距离，问能否到达最后一个位置。<br>
+      关键：<strong>维护一个「最远可达位置」reach，遍历时不断更新 reach = max(reach, i+nums[i])</strong>。
+      如果在某位置 i > reach，说明前面没有任何点能跳到 i，死胡同。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>i > reach = 死胡同</h3>
+        <p>如果当前索引超过了已知的最远可达范围，说明到达 i 的路径不存在。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>持续扩展最远边界</h3>
+        <p>每次更新 reach 为 max(reach, i+nums[i])，代表目前已知能跳到的最远位置。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>一次遍历，只用一个变量记录最远边界。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">canJump</span>(nums) {
-  <span class="kw">let</span> reach = <span class="num">0</span>;
-  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;nums.length; i++) {
-    <span class="kw">if</span> (i &gt; reach) <span class="kw">return</span> <span class="kw">false</span>;
-    reach = Math.<span class="hl">max</span>(reach, i + nums[i]);
-  }
-  <span class="kw">return</span> <span class="kw">true</span>;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">nums = <code>[2,3,1,1,4]</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">i=0 nums[0]=2 → reach=2</span>
+      </div>
+      <div class="kv">从位置 0 最多跳到索引 2</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">i=1 reach=2 → 更新 reach=max(2,1+3)=4</span>
+      </div>
+      <div class="kv">reach = max(2, 4) = 4，已超过最后一个索引 4</div>
+      <div class="kv focal">可以到达！</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：<strong>true</strong>（reach=4 ≥ len-1=4）
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">一次遍历，维护最远可达位置</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">canJump</span>(nums []<span class="typ">int</span>) <span class="typ">bool</span> {
+    reach := <span class="num">0</span>
+
+    <span class="kw">for</span> i, jump := <span class="kw">range</span> nums {
+        <span class="cmt">// 当前索引超出已知最远范围 → 死胡同</span>
+        <span class="kw">if</span> i > reach {
+            <span class="kw">return</span> <span class="kw">false</span>
+        }
+        <span class="cmt">// 扩展最远可达范围</span>
+        reach = max(reach, i+jump)
+    }
+    <span class="kw">return</span> <span class="kw">true</span>
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">容易写成 BFS 遍历所有路径，但其实是 O(n) 的贪心</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：每次取最大跳跃距离</p>
+        <pre><span class="cmt">// nums=[3,2,1,0,4] 时会出错</span>
+pos := <span class="num">0</span>
+<span class="kw">for</span> i := <span class="num">0</span>; i < len(nums); i++ {
+    pos = max(pos, nums[i]) <span class="cmt">// 没有考虑当前位置</span>
+}
+<span class="cmt">// pos=3，但实际从0跳不到3（3步跳不到4步的距离）</span></pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">没有用 i+jump 更新，只取最大值会忽略路径可达性。[3,2,1,0,4] 的答案是 false。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：用 i+jump 更新</p>
+        <pre>reach := <span class="num">0</span>
+<span class="kw">for</span> i, jump := <span class="kw">range</span> nums {
+    <span class="kw">if</span> i > reach { <span class="kw">return</span> <span class="kw">false</span> }
+    reach = max(reach, i+jump)
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">必须用 i+jump 更新，因为每次跳跃都从当前索引出发，不是从原点。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">nums = [2,3,1,1,4]，观察 reach 扩展过程</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前索引: <span id="ai-i">-</span></div>
+      <div class="anim-info-item">该位置可跳: <span id="ai-jump">-</span></div>
+      <div class="anim-info-item">reach: <span id="ai-reach">0</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="grid-display" id="ai-grid"></div>
+    <div class="result-row">
+      <div class="result-item">结果: <span id="ai-result">-</span></div>
+    </div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>维护最远可达边界</h3>
+      <p>reach 记录目前已知能跳到的最远位置，不断用 i+jump 扩展。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心证明</p>
+      <h3><span class="dot"></span>局部扩展 → 全局最优</h3>
+      <p>能到达最远的点，一定是从之前某点可达的。不需要搜索所有路径。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>i > reach → 失败</h3>
+      <p>当遍历到超出可达范围的索引，说明路径断裂，直接返回 false。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/55.jump-game.html</footer>
 
 <script>
-const nums = [2, 3, 1, 1, 4];
-// reach evolves: max(0,0+2)=2 → max(2,1+3)=5 → max(5,2+1)=5 → max(5,3+1)=5 → max(5,4+4)=8
-// i=0: reach=2, i=1: reach=5, i=2: reach=5, i=3: reach=5, i=4: reach=8 → true
+const nums = [2,3,1,1,4];
+let i = 0, step = -1, reach = 0;
 
-let reach = 0;
-let i = 0;
-let step = -1;
-
-function init() {
-  const el = document.getElementById('jumps');
-  const idxRow = document.getElementById('index-row');
-  el.innerHTML = '';
-  idxRow.innerHTML = '';
-  for (let j = 0; j < nums.length; j++) {
-    const h = Math.round((nums[j] / Math.max(...nums)) * 60) + 20;
-    el.innerHTML += `
-      <div class="jump-cell">
-        <div class="jump-bar jump-default" id="bar-${j}" style="height:${h}px">${nums[j]}</div>
-        <div class="jump-label">i=${j}</div>
-      </div>`;
-    idxRow.innerHTML += `<div class="idx-cell" id="idx-${j}">${j}</div>`;
-  }
-  reset();
+function render() {
+  const gridEl = document.getElementById('ai-grid');
+  gridEl.innerHTML = nums.map((n, idx) => {
+    let cls = 'grid-cell g-default';
+    if (idx === i && step >= 0) cls = 'grid-cell g-cur';
+    else if (idx <= reach && step >= 0) cls = 'grid-cell g-reachable';
+    return `<div class="${cls}">${n}<br><span style="font-size:8px">→${idx+n}</span></div>`;
+  }).join('');
+  document.getElementById('ai-i').textContent = step >= 0 ? i : '-';
+  document.getElementById('ai-jump').textContent = step >= 0 ? nums[i] : '-';
+  document.getElementById('ai-reach').textContent = reach;
+  document.getElementById('ai-result').textContent = step >= 0 ? (reach >= nums.length - 1 ? '可达 ✓' : '不可达 ✗') : '-';
 }
 
-function reset() {
-  reach = 0; i = 0; step = -1;
-  for (let j = 0; j < nums.length; j++) {
-    const bar = document.getElementById(`bar-${j}`);
-    bar.className = 'jump-bar jump-default';
-    document.getElementById(`idx-${j}`).className = 'idx-cell';
-  }
-  updateReachBar(0);
-  document.getElementById('cur-idx').textContent = '-';
-  document.getElementById('cur-jump').textContent = '-';
-  document.getElementById('far-reach').textContent = '0';
-  document.getElementById('target').textContent = `index ${nums.length - 1}`;
-  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始';
-  document.getElementById('status').innerHTML = '';
+function animReset() {
+  i = 0; step = -1; reach = 0;
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
 }
 
-function updateReachBar(r) {
-  const fill = document.getElementById('reach-fill');
-  const pct = Math.min(100, (r / (nums.length - 1)) * 100);
-  fill.style.width = pct + '%';
-}
-
-function next() {
-  if (i >= nums.length) return;
+function animNext() {
+  if (step >= nums.length - 1) return;
   step++;
-  // reset
-  for (let j = 0; j < nums.length; j++) {
-    const bar = document.getElementById(`bar-${j}`);
-    if (j < i) {
-      bar.className = 'jump-bar jump-reach';
-    } else if (j === i) {
-      bar.className = 'jump-bar jump-cur';
-    } else {
-      bar.className = 'jump-bar jump-default';
-    }
-  }
-  document.getElementById(`idx-${i}`).className = 'idx-cell idx-active';
-  document.getElementById('cur-idx').textContent = i;
-  document.getElementById('cur-jump').textContent = nums[i];
+  i = step;
   if (i > reach) {
-    document.getElementById('phase-desc').innerHTML =
-      `i=${i} > reach=${reach}，<span style="color:#fca5a5">无法到达此处</span>，失败！`;
-    document.getElementById('status').innerHTML = `<span class="result-fail result-badge">无法到达</span>`;
-    document.getElementById(`bar-${i}`).className = 'jump-bar jump-blocked';
-    i++;
+    document.getElementById('ai-desc').innerHTML = `i=${i} > reach=${reach} → <span>死胡同！失败</span>`;
+    render();
     return;
   }
-  const oldReach = reach;
   reach = Math.max(reach, i + nums[i]);
-  updateReachBar(reach);
-  document.getElementById('far-reach').textContent = reach;
-  if (reach === oldReach) {
-    document.getElementById('phase-desc').innerHTML =
-      `i=${i}，reach=${reach} 不变（i+nums[i]=${i}+${nums[i]}=${i+nums[i]}）`;
-  } else {
-    document.getElementById('phase-desc').innerHTML =
-      `i=${i}，reach=${oldReach} → <span>${reach}</span>（扩展 i+nums[i]=${i}+${nums[i]}）`;
-  }
-  if (i === nums.length - 1) {
-    document.getElementById('status').innerHTML = `<span class="result-badge">可以到达终点！</span>`;
-    document.getElementById('phase-desc').innerHTML = '完成！可以到达终点';
-  }
-  i++;
+  document.getElementById('ai-desc').innerHTML = `i=${i}: 可跳 ${nums[i]}，reach=max(${reach-nums[i]}, ${i}+${nums[i]}=${reach}) = <span>${reach}</span>`;
+  render();
 }
 
-function prev() {
-  if (i <= 0) return;
-  i--;
-  if (i < nums.length) {
-    const bar = document.getElementById(`bar-${i}`);
-    bar.className = 'jump-bar jump-default';
-    document.getElementById(`idx-${i}`).className = 'idx-cell';
-  }
-  // recompute reach
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
   reach = 0;
-  for (let j = 0; j < i; j++) {
-    reach = Math.max(reach, j + nums[j]);
+  for (let k = 0; k < step; k++) {
+    if (k > reach) break;
+    reach = Math.max(reach, k + nums[k]);
   }
-  updateReachBar(reach);
-  document.getElementById('far-reach').textContent = reach;
-  document.getElementById('cur-idx').textContent = i;
-  document.getElementById('cur-jump').textContent = nums[i];
-  document.getElementById('phase-desc').innerHTML = '已回退一步';
+  step--;
+  i = step;
+  document.getElementById('ai-desc').innerHTML = `回退到 i=${i}`;
+  render();
 }
 
-init();
+animReset();
 </script>
 </body>
 </html>

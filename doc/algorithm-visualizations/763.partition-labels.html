@@ -2,201 +2,378 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>763 划分字母区间</title>
+<title>763 划分字母区间 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.chars{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.8rem}
-.char-cell{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-weight:bold;font-size:.9rem;transition:all .25s}
-.ch-default{background:#1e293b;color:#94a3b8;border:1px solid #334155}
-.ch-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.15)}
-.ch-done{background:#1e293b;color:#475569;border:1px solid #334155;opacity:.5}
-.ch-segment{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
-.ch-exceed{background:#7f1d1d;color:#fca5a5;border:2px solid #ef4444}
-.last-col{font-size:.7rem;color:#475569;margin-bottom:.3rem;height:14px}
-.chars-row{display:flex;gap:4px;flex-wrap:wrap}
-.chars-row .char-cell{width:36px;height:36px;font-size:.85rem}
-.last-row{display:flex;gap:4px;flex-wrap:wrap;height:20px}
-.last-cell{width:36px;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#64748b}
-.last-cell-active{color:#fbbf24;font-weight:bold}
-.phase{font-size:.85rem;color:#94a3b8;margin:.5rem 0}
-.phase span{color:#fbbf24}
-.segment-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:.6rem}
-.seg-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .chars-display { display: flex; gap: 4px; flex-wrap: wrap; margin: 16px 0; }
+  .char-cell { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: bold; font-size: 14px; font-family: 'Geist Mono', monospace; transition: all 0.25s; }
+  .ch-default { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .ch-cur { background: var(--accent); color: white; border: 2px solid var(--accent); transform: scale(1.15); box-shadow: 0 2px 8px rgba(181,82,58,0.3); }
+  .ch-done { background: #e8d5a0; color: #6b4a10; border: 1px solid #c9a84c; opacity: 0.8; }
+  .ch-extend { background: #fcd34d; color: #78350f; border: 2px solid #f59e0b; }
+  .result-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .result-badge { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; font-family: 'Geist Mono', monospace; }
+  .last-pos-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .last-cell { width: 36px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .last-cell.filled { color: var(--accent); font-weight: 600; }
 </style>
 </head>
 <body>
-<h1>763. 划分字母区间</h1>
-<p class="subtitle">贪心：记录每字符最后出现位置，扩展段直到首尾相遇</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">当前字符: <span id="cur-char">-</span></div>
-    <div class="info-item">段起点: <span id="seg-start">-</span></div>
-    <div class="info-item">段终点: <span id="seg-end">-</span></div>
-    <div class="info-item">段长度: <span id="seg-len">-</span></div>
-  </div>
-  <div class="phase" id="phase-desc">点击「下一步」开始</div>
-  <div class="last-col" id="last-row"></div>
-  <div class="chars-row" id="chars-row"></div>
-  <div class="segment-list" id="segments"></div>
-</div>
+  <p class="eyebrow">LeetCode 763 · Greedy</p>
+  <h1>划分字母区间</h1>
+  <p class="subtitle">记录每个字符最后出现位置，贪心地在段尾字符的最远位置"切断" — 切分点就是当前段内所有字符最后一次出现的最远位置</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：把字符串划分为尽可能多的片段，每段内的字符只出现在该段中。<br>
+      关键：<strong>遍历时维护当前段的"最远边界"（段内所有字符的最后位置），当遍历到该最远位置时切段</strong>。
+      这就是贪心：切点恰好是必须切的地方，不早切也不晚切。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>切分点 = 段内字符的最远最后位置</h3>
+        <p>如果某字符的最后一次出现在 index 5，那包含 index 3 的段必须延伸到 index 5。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>尽量晚切</h3>
+        <p>不到万不得已不切。扩展段直到遇到当前段内所有字符的最远出现位置，才切。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>两遍扫描：第一遍记录最后位置（26字母数组），第二遍遍历切段。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">partitionLabels</span>(s) {
-  <span class="kw">const</span> last = {};
-  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;s.length; i++) last[s[i]] = i;
-  <span class="kw">let</span> start=<span class="num">0</span>, end=<span class="num">0</span>, res=[];
-  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;s.length; i++) {
-    end = Math.<span class="hl">max</span>(end, last[s[i]]);
-    <span class="kw">if</span> (i === end) {
-      res.<span class="hl">push</span>(end - start + <span class="num">1</span>);
-      start = end + <span class="num">1</span>;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">s = <code>"ababcbacadefecd"</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">预处理：记录每个字符最后出现位置</span>
+      </div>
+      <div class="kv">a→8, b→5, c→9, d→13, e→14, f→12</div>
+      <div class="kv focal">start=0, end=0, 遍历时 end = max(end, last[char])</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">i=0 'a' last[a]=8 → end=max(0,8)=8</span>
+      </div>
+      <div class="kv">还没到 end(8)，继续扩展</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3-7</span>
+        <span class="step-range">i=1..7 扩展段</span>
+      </div>
+      <div class="kv">i=1 'b'→5, i=2 'a'→8, i=3 'b'→5, i=4 'c'→9, i=5 'b'→5, i=6 'a'→8, i=7 'c'→9</div>
+      <div class="kv focal">end = max(8,5,8,5,9,5,8,9) = 9</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 8</span>
+        <span class="step-range">i=8 'd' last[d]=13 → end=max(9,13)=13</span>
+      </div>
+      <div class="kv">还没到 end(13)，继续扩展</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 9-13</span>
+        <span class="step-range">i=9..13 继续扩展到 end=14</span>
+      </div>
+      <div class="kv">i=9 'a'→8, i=10 'd'→13, i=11 'e'→14, i=12 'f'→12, i=13 'e'→14</div>
+      <div class="kv focal">end = max(13,8,13,14,12,14) = 14</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">切段</span>
+        <span class="step-range">i=14 到达 end=14 → 输出段 [0,8] 长度 9</span>
+      </div>
+      <div class="kv focal">第一段 "ababcbacadefecd"[0..8] = "ababcbacadefecd"? No! 实际 [0..8] = "ababcbacad"</div>
+      <div class="kv">start=9，继续</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">第二段</span>
+        <span class="step-range">i=14 'e' last[e]=14 → end=14, 到达边界</span>
+      </div>
+      <div class="kv focal">输出 [9,14] 长度 6 → "efecd"</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：<strong>[9, 6]</strong> → 划分 "ababcbacad" 和 "efecd"
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">两遍扫描：第一遍记录最后位置，第二遍遍历切段</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">partitionLabels</span>(s <span class="typ">string</span>) []<span class="typ">int</span> {
+    <span class="cmt">// 1. 记录每个字符最后一次出现的位置</span>
+    last := [<span class="num">26</span>]<span class="typ">int</span>{}
+    <span class="kw">for</span> i, c := <span class="kw">range</span> s {
+        last[c-<span class="str">'a'</span>] = i
     }
-  }
-  <span class="kw">return</span> res;
+
+    result := []<span class="typ">int</span>{}
+    start, end := <span class="num">0</span>, <span class="num">0</span>
+
+    <span class="kw">for</span> i, c := <span class="kw">range</span> s {
+        <span class="cmt">// 扩展当前段的右边界</span>
+        <span class="kw">if</span> last[c-<span class="str">'a'</span>] > end {
+            end = last[c-<span class="str">'a'</span>]
+        }
+        <span class="cmt">// 到达当前段最远边界，切段</span>
+        <span class="kw">if</span> i == end {
+            result = <span class="hl">append</span>(result, end-start+<span class="num">1</span>)
+            start = end + <span class="num">1</span>
+        }
+    }
+    <span class="kw">return</span> result
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">end 的更新时机容易出错，需要确保 end 是段内所有字符的最后位置</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：没有实时更新 end</p>
+        <pre><span class="cmt">// 错误：end 只在切段时更新，段内字符的最后位置可能被遗漏</span>
+<span class="kw">for</span> i, c := <span class="kw">range</span> s {
+    end = last[c-<span class="str">'a'</span>] <span class="cmt">// 无条件更新，会提前切段</span>
+    <span class="kw">if</span> i == end {
+        result = append(result, end-start+1)
+    }
+}</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">没有 `if last[c] > end` 判断，end 可能被段内靠前字符的最后位置拉回，导致提前切段。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：只扩展不回缩</p>
+        <pre><span class="kw">if</span> last[c-<span class="str">'a'</span>] > end {
+    end = last[c-<span class="str">'a'</span>] <span class="cmt">// 只扩展到更远位置，不回缩</span>
+}
+<span class="kw">if</span> i == end {
+    result = <span class="hl">append</span>(result, end-start+<span class="num">1</span>)
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">`>` 而不是 `=`：end 只增不减，保证段被充分扩展后才切。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">s = "ababcbacadefecd"，观察切段过程</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前字符: <span id="ai-char">-</span></div>
+      <div class="anim-info-item">段起点: <span id="ai-start">-</span></div>
+      <div class="anim-info-item">段终点: <span id="ai-end">-</span></div>
+      <div class="anim-info-item">已切段数: <span id="ai-count">0</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="chars-display" id="ai-chars"></div>
+    <div class="last-pos-row" id="ai-lasts"></div>
+    <div class="result-list" id="ai-result"></div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>最远最后位置切段</h3>
+      <p>遍历时维护当前段的最远边界，抵达该边界时切段。切点恰好是必须切的位置。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心证明</p>
+      <h3><span class="dot"></span>尽量晚切</h3>
+      <p>不提前切分，因为段内任何字符的最后位置如果超出当前边界，就必须延伸。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>end 只扩展不回缩</h3>
+      <p>`if last[c] > end` 保证 end 只增不减，漏掉会提前切段。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/763.partition-labels.html</footer>
 
 <script>
-const s = "ababcbacadefegdehijhklij";
-// a:0,1,4,5  b:0,2,3  c:2,6  d:7,9  e:8,10,11  f:11  g:12  h:13,17  i:14,18,19  j:15,20  k:16,21  l:18,22
-// 分段: [a,b,a,b,c,b,a,c,a] → [0..8] = 9
-//        [d,e,f,e,g,d,e]   → [9..15] = 7
-//        [h,i,j,h,k,l,i,j] → [16..22] = 7
+const s = "ababcbacadefecd";
+const last = Array(26).fill(-1);
+for (let i = 0; i < s.length; i++) {
+  last[s.charCodeAt(i) - 97] = i;
+}
+const uniq = [...new Set(s)].map(c => c + ':' + last[c.charCodeAt(0)-97]).join(', ');
 
-let last = {};
-let chars = [];
-let i = 0;
-let segStart = 0;
-let segEnd = 0;
+let i = 0, start = 0, end = 0, step = -1;
 let segments = [];
-let step = -1;
 
-function init() {
-  chars = s.split('');
-  // build last map
-  last = {};
-  chars.forEach((c, idx) => last[c] = idx);
-  // render last row
-  const unique = [...new Set(chars)].sort();
-  const lastRow = document.getElementById('last-row');
-  lastRow.innerHTML = unique.map(c =>
-    `<div style="width:36px;text-align:center;font-size:.65rem;color:#64748b">${c}:${last[c]}</div>`
+function render() {
+  const charsEl = document.getElementById('ai-chars');
+  charsEl.innerHTML = '';
+  for (let j = 0; j < s.length; j++) {
+    let cls = 'ch-default';
+    if (j === i && step >= 0) cls = 'ch-cur';
+    else if (j < start && segments.length > 0) cls = 'ch-done';
+    charsEl.innerHTML += `<div class="char-cell ${cls}">${s[j]}</div>`;
+  }
+
+  const lastsEl = document.getElementById('ai-lasts');
+  lastsEl.innerHTML = '';
+  for (let j = 0; j < s.length; j++) {
+    const lj = last[s.charCodeAt(j)-97];
+    let cls = 'last-cell';
+    if (j === end) cls += ' filled';
+    lastsEl.innerHTML += `<div class="${cls}">${j}</div>`;
+  }
+
+  const resultEl = document.getElementById('ai-result');
+  resultEl.innerHTML = segments.map(seg =>
+    `<span class="result-badge">${seg.start}-${seg.end} (len=${seg.len})</span>`
   ).join('');
-  // render chars
-  const row = document.getElementById('chars-row');
-  row.innerHTML = '';
-  chars.forEach((c, idx) => {
-    row.innerHTML += `<div class="char-cell ch-default" id="c-${idx}">${c}</div>`;
-  });
-  reset();
+
+  document.getElementById('ai-char').textContent = step >= 0 ? `'${s[i]}'` : '-';
+  document.getElementById('ai-start').textContent = start;
+  document.getElementById('ai-end').textContent = end;
+  document.getElementById('ai-count').textContent = segments.length;
 }
 
-function reset() {
-  i = 0; segStart = 0; segEnd = 0; segments = []; step = -1;
-  chars.forEach((c, idx) => {
-    const el = document.getElementById(`c-${idx}`);
-    el.className = 'char-cell ch-default';
-  });
-  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始';
-  document.getElementById('cur-char').textContent = '-';
-  document.getElementById('seg-start').textContent = '-';
-  document.getElementById('seg-end').textContent = '-';
-  document.getElementById('seg-len').textContent = '-';
-  document.getElementById('segments').innerHTML = '';
+function animReset() {
+  i = 0; start = 0; end = 0; step = -1; segments = [];
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始（first pos: ' + uniq + '）';
+  render();
 }
 
-function next() {
-  if (i >= chars.length) return;
+function animNext() {
+  if (step >= s.length - 1) return;
   step++;
-  const curChar = chars[i];
-  const charLast = last[curChar];
-  // mark current
-  for (let k = 0; k < chars.length; k++) {
-    const el = document.getElementById(`c-${k}`);
-    if (el.className.includes('ch-done')) continue;
-    el.className = 'char-cell ch-default';
-  }
-  document.getElementById(`c-${i}`).className = 'char-cell ch-cur';
-  document.getElementById('cur-char').textContent = `'${curChar}' (最后在${charLast})`;
-  document.getElementById('seg-start').textContent = segStart;
-  document.getElementById('seg-end').textContent = charLast;
-  segEnd = charLast;
-  // mark range [segStart, segEnd]
-  for (let k = segStart; k <= segEnd; k++) {
-    if (k !== i) document.getElementById(`c-${k}`).className = 'char-cell ch-segment';
-  }
-  // check if we should cut
-  if (i === segEnd) {
-    // cut here
-    document.getElementById('phase-desc').innerHTML =
-      `i=${i} == segEnd=${segEnd}，<span>切分段 [${segStart},${segEnd}]，长度=${segEnd-segStart+1}</span>`;
-    segments.push(segEnd - segStart + 1);
-    // mark done
-    for (let k = segStart; k <= segEnd; k++) {
-      document.getElementById(`c-${k}`).className = 'char-cell ch-done';
-    }
-    segStart = segEnd + 1;
-    segEnd = segStart;
-    document.getElementById('segments').innerHTML = segments.map(len =>
-      `<span class="seg-badge">${len}</span>`
-    ).join('');
-    i = segStart;
-    if (i >= chars.length) {
-      document.getElementById('phase-desc').innerHTML = '完成！';
-      return;
-    }
-    document.getElementById(`c-${i}`).className = 'char-cell ch-cur';
-    document.getElementById('cur-char').textContent = `'${chars[i]}' (最后在${last[chars[i]]})`;
-    document.getElementById('seg-start').textContent = segStart;
-    document.getElementById('seg-end').textContent = last[chars[i]];
-    segEnd = last[chars[i]];
-    // highlight new segment
-    for (let k = segStart; k <= segEnd; k++) {
-      document.getElementById(`c-${k}`).className = 'char-cell ch-segment';
-    }
+  i = step;
+  const curLast = last[s.charCodeAt(i) - 97];
+  if (curLast > end) {
+    end = curLast;
+    document.getElementById('ai-desc').innerHTML = `i=${i}: '${s[i]}' 最后位置=${curLast}，更新段终点 → <span>end=${end}</span>`;
   } else {
-    document.getElementById('phase-desc').innerHTML =
-      `i=${i}，段终点扩展到 ${charLast}（遇到 '${curChar}' 最后出现在 ${charLast}）`;
-    document.getElementById('seg-end').textContent = charLast;
+    document.getElementById('ai-desc').innerHTML = `i=${i}: '${s[i]}' 最后位置=${curLast} ≤ end=${end}，继续`;
   }
-  document.getElementById('seg-len').textContent = segEnd >= segStart ? segEnd - segStart + 1 : '-';
-  i++;
+  if (i === end) {
+    const len = end - start + 1;
+    segments.push({ start, end, len });
+    document.getElementById('ai-desc').innerHTML += ` → <span>切段！</span>长度=${len}`;
+    start = end + 1;
+    end = start;
+  }
+  render();
 }
 
-function prev() {
-  if (step < 0) return;
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  // rebuild
+  segments = []; start = 0; end = 0;
+  for (let j = 0; j < step; j++) {
+    const curLast = last[s.charCodeAt(j) - 97];
+    if (curLast > end) end = curLast;
+    if (j === end) {
+      segments.push({ start, end, len: end - start + 1 });
+      start = end + 1; end = start;
+    }
+  }
   step--;
-  // Simple reset and replay would be complex, so we just step back state
-  // For simplicity, reset and replay to the previous state
-  // Actually let's just reset for now
-  reset();
-  // Note: prev is approximate for this visualization
-  document.getElementById('phase-desc').innerHTML = '已回退一步';
+  i = step;
+  const curLast = last[s.charCodeAt(i) - 97];
+  document.getElementById('ai-desc').innerHTML = `回退到 i=${i}: '${s[i]}'`;
+  render();
 }
 
-init();
+animReset();
 </script>
 </body>
 </html>

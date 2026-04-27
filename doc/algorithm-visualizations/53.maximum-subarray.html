@@ -2,216 +2,330 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>53 最大子数组和 - Kadane 算法</title>
+<title>53 最大子数组和 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}
-.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}
-.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}
-.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}
-.info-item span{color:#fbbf24;font-weight:bold}
-.array-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.8rem}
-.cell{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:1rem;font-weight:bold;transition:all .25s;position:relative}
-.cell-default{background:#1e293b;color:#94a3b8;border:2px solid #334155}
-.cell-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.12)}
-.cell-in{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
-.cell-out{background:#450a0a;color:#fca5a5;border:2px solid #ef4444;opacity:.55}
-.cell-best{background:#78350f;color:#fcd34d;border:2px solid #f59e0b;transform:scale(1.18);box-shadow:0 0 16px #f59e0b55}
-.indices{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
-.idx{width:48px;text-align:center;font-size:.65rem;color:#475569}
-.idx-active{color:#38bdf8}
-.dp-row{display:flex;gap:6px;margin-top:.6rem;flex-wrap:wrap}
-.dp-cell{width:48px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:.75rem;background:#1e293b;color:#94a3b8;border:1px solid #334155}
-.dp-cell-active{background:#0369a1;color:#fff;border-color:#38bdf8}
-.dp-cell-best{background:#78350f;color:#fcd34d;border-color:#f59e0b}
-.label{font-size:.75rem;color:#64748b;margin:.4rem 0 .2rem}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}
-.fn{color:#d2a8ff}
-.num{color:#79c0ff}
-.comment{color:#8b949e}
-.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .nums-display { display: flex; gap: 4px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+  .num-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 600; font-size: 13px; font-family: 'Geist Mono', monospace; transition: all 0.2s; }
+  .n-default { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .n-cur { background: var(--accent); color: white; border: 2px solid var(--accent); transform: scale(1.15); box-shadow: 0 2px 8px rgba(181,82,58,0.3); }
+  .n-window { background: #e8d5a0; color: #6b4a10; border: 1px solid #c9a84c; }
+  .n-best { background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; font-weight: 700; }
+  .bar-area { width: 100%; max-width: 500px; height: 60px; position: relative; margin: 12px auto; }
+  .bar-fill { position: absolute; bottom: 0; border-radius: 4px 4px 0 0; transition: all 0.3s; }
+  .result-row { display: flex; gap: 24px; margin-top: 12px; font-size: 13px; flex-wrap: wrap; }
+  .result-item { color: var(--muted); }
+  .result-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
-<h1>53. 最大子数组和</h1>
-<p class="subtitle">Kadane 算法 — 一次遍历找到最大和</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">当前元素: <span id="cur-val">-</span></div>
-    <div class="info-item">curSum: <span id="cur-sum">0</span></div>
-    <div class="info-item">maxSum: <span id="max-sum">0</span></div>
-    <div class="info-item">最大子数组: <span id="best-range">-</span></div>
-  </div>
-  <div class="label">数组</div>
-  <div class="array-row" id="array-row"></div>
-  <div class="indices" id="indices"></div>
-  <div class="label">dp[i] — 以 i 结尾的最大子数组和</div>
-  <div class="dp-row" id="dp-row"></div>
-</div>
+  <p class="eyebrow">LeetCode 53 · Greedy + DP</p>
+  <h1>最大子数组和</h1>
+  <p class="subtitle">找一个连续子数组使其和最大 — Kadane 算法：遍历时如果当前和变成负数，就从下一个位置重新开始</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：找连续子数组的最大和（至少包含一个元素）。<br>
+      关键：<strong>Kadane 算法：如果当前「连续和」是负数，它对后续求和只会拖后腿，直接从下一个数重新开始</strong>。
+      这既是贪心（丢弃负和）也是 DP（最优子结构）。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>负连续和 = 有害无益</h3>
+        <p>如果当前子数组和是负数，加上任何数只会更小，不如从新位置开始。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>丢弃负和，从头再来</h3>
+        <p>当 sum < 0 时，重置 sum = nums[i]，用新的起点继续。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>一次遍历，两个变量：当前连续和 sum，和全局最大 maxSum。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">maxSubArray</span>(nums) {
-  <span class="kw">let</span> cur = nums[<span class="num">0</span>], max = nums[<span class="num">0</span>];
-  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i < nums.length; i++) {
-    <span class="comment">// 要么扩展前一段，要么从 i 重新开始</span>
-    cur = Math.<span class="hl">max</span>(cur + nums[i], nums[i]);
-    max = Math.<span class="hl">max</span>(max, cur);
-  }
-  <span class="kw">return</span> max;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">nums = <code>[-2,1,-3,4,-1,2,1,-5,4]</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=0</span>
+        <span class="step-range">num=-2 sum=-2 maxSum=-2</span>
+      </div>
+      <div class="kv">sum = -2，maxSum = -2</div>
+      <div class="kv focal">sum < 0，但只有一个数，保留</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=1</span>
+        <span class="step-range">num=1 sum=2 maxSum=2</span>
+      </div>
+      <div class="kv">sum = max(-2+1, 1) = max(-1, 1) = <strong>1</strong> → 更新 sum=1</div>
+      <div class="kv focal">maxSum = max(-2, 1) = 1</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=2</span>
+        <span class="step-range">num=-3 sum=-2 maxSum=2</span>
+      </div>
+      <div class="kv">sum = max(1+(-3), -3) = max(-2, -3) = <strong>-2</strong></div>
+      <div class="kv focal">sum < 0，重置思路：下一轮如果再加负数会更小</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=3</span>
+        <span class="step-range">num=4 sum=4 maxSum=4</span>
+      </div>
+      <div class="kv">sum = max(-2+4, 4) = max(2, 4) = <strong>4</strong></div>
+      <div class="kv focal">maxSum = max(2, 4) = 4，发现更好的子数组 [4]</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=4</span>
+        <span class="step-range">num=-1 sum=3 maxSum=4</span>
+      </div>
+      <div class="kv">sum = max(4+(-1), -1) = max(3, -1) = <strong>3</strong></div>
+      <div class="kv focal">maxSum = max(4, 3) = 4，保持</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=5</span>
+        <span class="step-range">num=2 sum=5 maxSum=5</span>
+      </div>
+      <div class="kv focal">sum = 3+2 = 5，maxSum = max(4, 5) = <strong>5</strong></div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">i=6</span>
+        <span class="step-range">num=1 sum=6 maxSum=6</span>
+      </div>
+      <div class="kv focal">sum = 5+1 = 6，maxSum = max(5, 6) = <strong>6</strong></div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：maxSum = <strong>6</strong>，对应子数组 [4,-1,2,1]
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">Kadane 算法，O(n) 一次遍历</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">maxSubArray</span>(nums []<span class="typ">int</span>) <span class="typ">int</span> {
+    curSum := nums[<span class="num">0</span>] <span class="cmt">// 当前连续和</span>
+    maxSum := nums[<span class="num">0</span>] <span class="cmt">// 全局最大和</span>
+
+    <span class="kw">for</span> i := <span class="num">1</span>; i < len(nums); i++ {
+        <span class="cmt">// 如果当前和是负数，从当前数重新开始；否则累加</span>
+        curSum = max(curSum+nums[i], nums[i])
+        <span class="cmt">// 更新全局最大和</span>
+        maxSum = max(maxSum, curSum)
+    }
+    <span class="kw">return</span> maxSum
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">curSum 和 maxSum 的初始化，以及 max 函数的使用</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：curSum 初始化为 0</p>
+        <pre>curSum := <span class="num">0</span> <span class="cmt">// 错误：全负数时结果会是0</span>
+<span class="kw">for</span> i := <span class="num">0</span>; i < len(nums); i++ {
+    curSum = max(curSum+nums[i], nums[i])</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">nums = [-3,-1,-2]，正确答案 -1，但如果 curSum=0，第一轮 curSum=max(0-3,-3)=-3，maxSum=max(0,-3)=0，结果错误。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：curSum 初始化为第一个元素</p>
+        <pre>curSum := nums[<span class="num">0</span>]
+maxSum := nums[<span class="num">0</span>]
+<span class="cmt">// [-3,-1,-2]: curSum=-3,maxSum=-3 → -3,-1 → curSum=max(-4,-1)=-1,maxSum=-1 → -2 → maxSum=-1 ✓</span></pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">初始化为第一个元素，保证至少包含一个元素，且全负数时正确。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">nums = [-2,1,-3,4,-1,2,1,-5,4]，观察 sum 和 maxSum 的变化</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前数: <span id="ai-num">-</span></div>
+      <div class="anim-info-item">curSum: <span id="ai-sum">-</span></div>
+      <div class="anim-info-item">maxSum: <span id="ai-max">-</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="nums-display" id="ai-nums"></div>
+    <div class="result-row">
+      <div class="result-item">全局最大和: <span id="ai-result">-</span></div>
+    </div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>Kadane 算法</h3>
+      <p>遍历时维护 curSum（当前连续和），当 curSum < 0 时重置为当前数。每次更新 maxSum。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">正确性</p>
+      <h3><span class="dot"></span>负和必丢弃</h3>
+      <p>包含负和的子数组不可能是最大和的前缀，丢弃它不影响最优解的存在性。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>curSum 初始化为第一个元素</h3>
+      <p>不能初始化为 0，否则全负数数组会返回 0 而非最大负值。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/53.maximum-subarray.html</footer>
 
 <script>
-const nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4];
-let i = 0, cur = 0, max = 0, bestL = 0, bestR = 0, step = 0;
-let dp = [];
+const nums = [-2,1,-3,4,-1,2,1,-5,4];
+let i = 0, step = -1, curSum = 0, maxSum = 0;
 
-function init() {
-  const arrRow = document.getElementById('array-row');
-  const idxRow = document.getElementById('indices');
-  const dpRow = document.getElementById('dp-row');
-  arrRow.innerHTML = '';
-  idxRow.innerHTML = '';
-  dpRow.innerHTML = '';
-  for (let j = 0; j < nums.length; j++) {
-    arrRow.innerHTML += `<div class="cell cell-default" id="cell-${j}">${nums[j]}</div>`;
-    idxRow.innerHTML += `<div class="idx" id="idx-${j}">${j}</div>`;
-    dpRow.innerHTML += `<div class="dp-cell" id="dp-${j}">-</div>`;
-  }
-  reset();
+function render() {
+  const numsEl = document.getElementById('ai-nums');
+  numsEl.innerHTML = nums.map((v, idx) => {
+    let cls = 'n-default';
+    if (idx === i && step >= 0) cls = 'n-cur';
+    return `<div class="num-cell ${cls}">${v}</div>`;
+  }).join('');
+  document.getElementById('ai-num').textContent = step >= 0 ? nums[i] : '-';
+  document.getElementById('ai-sum').textContent = step >= 0 ? curSum : '-';
+  document.getElementById('ai-max').textContent = step >= 0 ? maxSum : '-';
+  document.getElementById('ai-result').textContent = step >= 0 ? maxSum : '-';
 }
 
-function reset() {
-  i = 0; cur = nums[0]; max = nums[0];
-  bestL = 0; bestR = 0; step = 0;
-  dp = new Array(nums.length).fill(null);
-  dp[0] = nums[0];
-  updateAll();
-  document.getElementById('cur-val').textContent = nums[0];
-  document.getElementById('cur-sum').textContent = cur;
-  document.getElementById('max-sum').textContent = max;
-  document.getElementById('best-range').textContent = `[0,0]`;
-  document.getElementById('cur-val').textContent = nums[0];
-  highlight();
+function animReset() {
+  i = 0; step = -1; curSum = 0; maxSum = 0;
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
 }
 
-function updateAll() {
-  for (let j = 0; j < nums.length; j++) {
-    const c = document.getElementById(`cell-${j}`);
-    c.className = 'cell cell-default';
-    const d = document.getElementById(`dp-${j}`);
-    d.className = 'dp-cell';
-    d.textContent = dp[j] !== null ? dp[j] : '-';
-    document.getElementById(`idx-${j}`).className = 'idx';
-  }
-}
-
-function highlight() {
-  if (i >= nums.length) return;
-  const c = document.getElementById(`cell-${i}`);
-  const d = document.getElementById(`dp-${i}`);
-  if (i === 0) {
-    c.className = 'cell cell-cur';
-  } else {
-    c.className = 'cell cell-cur';
-  }
-  document.getElementById(`idx-${i}`).className = 'idx idx-active';
-  // best range highlight
-  for (let b = bestL; b <= bestR; b++) {
-    const cell = document.getElementById(`cell-${b}`);
-    if (cell.className.indexOf('cell-best') === -1 && b !== i) {
-      cell.className = 'cell cell-best';
-    }
-  }
-  d.className = 'dp-cell dp-cell-best';
-  d.textContent = dp[i];
-}
-
-function next() {
+function animNext() {
+  if (step >= nums.length - 1) return;
+  step++;
+  i = step;
   if (step === 0) {
-    // Show initial state, advance to i=1
-    step = 1;
-    i = 1;
-    cur = Math.max(dp[0] + nums[i], nums[i]);
-    dp[i] = cur;
-    if (cur > max) {
-      max = cur;
-      bestR = i;
-    }
-  } else if (i < nums.length - 1) {
-    i++;
-    const add = dp[i-1] + nums[i];
-    cur = Math.max(add, nums[i]);
-    dp[i] = cur;
-    if (cur > max) {
-      max = cur;
-      bestR = i;
+    curSum = nums[0]; maxSum = nums[0];
+    document.getElementById('ai-desc').innerHTML = `i=0: num=${nums[0]}，curSum=maxSum=${nums[0]}（初始化）`;
+  } else {
+    const prev = curSum;
+    curSum = Math.max(curSum + nums[i], nums[i]);
+    maxSum = Math.max(maxSum, curSum);
+    if (curSum === nums[i]) {
+      document.getElementById('ai-desc').innerHTML = `i=${i}: num=${nums[i]}，curSum=${prev}+${nums[i]}=${prev+nums[i]} < ${nums[i]} → <span>重置 curSum=${curSum}</span>`;
+    } else {
+      document.getElementById('ai-desc').innerHTML = `i=${i}: num=${nums[i]}，curSum=${prev}+${nums[i]}=${prev+nums[i]} → <span>curSum=${curSum}</span>，maxSum=${maxSum}`;
     }
   }
-  updateAll();
-  document.getElementById('cur-val').textContent = nums[i];
-  document.getElementById('cur-sum').textContent = cur;
-  document.getElementById('max-sum').textContent = max;
-  document.getElementById('best-range').textContent = `[${bestL},${bestR}]`;
-  highlight();
-  // mark previous as "in" if part of best range
-  if (cur === max && cur > 0) {
-    for (let b = bestL; b <= bestR; b++) {
-      document.getElementById(`cell-${b}`).className = 'cell cell-best';
-      document.getElementById(`dp-${b}`).className = 'dp-cell dp-cell-best';
-    }
-  }
+  render();
 }
 
-function prev() {
-  if (step === 0 && i === 0) return;
-  if (step === 1 && i === 1) {
-    step = 0; i = 0;
-    cur = nums[0]; max = nums[0]; bestL = 0; bestR = 0;
-    dp[0] = nums[0];
-  } else if (i > 1) {
-    i--;
-    cur = dp[i];
-    if (bestR === i) {
-      // find new bestR
-      let newMax = -Infinity;
-      let newR = 0;
-      for (let k = 0; k <= i; k++) {
-        if (dp[k] > newMax) { newMax = dp[k]; newR = k; }
-      }
-      bestR = newR;
-      max = newMax;
-    }
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  curSum = nums[0]; maxSum = nums[0];
+  for (let k = 1; k < step; k++) {
+    curSum = Math.max(curSum + nums[k], nums[k]);
+    maxSum = Math.max(maxSum, curSum);
   }
-  updateAll();
-  document.getElementById('cur-val').textContent = nums[i];
-  document.getElementById('cur-sum').textContent = cur;
-  document.getElementById('max-sum').textContent = max;
-  document.getElementById('best-range').textContent = `[${bestL},${bestR}]`;
-  highlight();
+  step--;
+  i = step;
+  document.getElementById('ai-desc').innerHTML = `回退到 i=${i}`;
+  render();
 }
 
-init();
+animReset();
 </script>
 </body>
 </html>

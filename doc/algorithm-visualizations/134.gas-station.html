@@ -2,179 +2,344 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>134 加油站</title>
+<title>134 加油站 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
-.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
-.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
-.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
-.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
-.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
-.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
-.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
-.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
-.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
-.phase span{color:#fbbf24}
-.stations{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem}
-.station{width:52px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.st-bar{width:32px;background:#334155;border-radius:4px 4px 0 0;transition:all .3s;display:flex;flex-direction:column;align-items:center;padding-bottom:4px;font-size:.65rem;font-weight:bold;min-height:16px}
-.st-gas{color:#6ee7b7;justify-content:flex-end;padding-bottom:2px}
-.st-cost{color:#fca5a5;justify-content:flex-start;padding-top:2px}
-.st-net{color:#fbbf24;font-size:.6rem}
-.st-label{font-size:.65rem;color:#475569}
-.st-default{background:#1e293b}
-.st-cur{background:#0369a1}
-.st-ok{background:#065f46;border-color:#34d399}
-.st-fail{background:#450a0a;border-color:#ef4444;opacity:.55}
-.net-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.6rem}
-.net-cell{width:52px;text-align:center;font-size:.7rem;color:#64748b}
-.net-positive{color:#6ee7b7}.net-negative{color:#fca5a5}
-.status{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
-.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
-.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
-.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
-.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .insight-card .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.focal code { background: var(--accent-tint); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
+  .code-wrap .hl  { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .station-row { display: flex; gap: 4px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+  .station-chip { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .station-bar-wrap { display: flex; align-items: flex-end; gap: 2px; height: 60px; }
+  .bar-gas { width: 28px; background: #b8d4c0; border-radius: 4px 4px 0 0; position: relative; }
+  .bar-cost { width: 28px; background: #fca5a5; border-radius: 4px 4px 0 0; position: relative; }
+  .station-label { font-size: 9px; color: var(--soft); font-family: 'Geist Mono', monospace; text-align: center; }
+  .station-num { font-size: 9px; color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .cur-tank { height: 4px; background: var(--accent); border-radius: 2px; margin-top: 4px; transition: all 0.3s; width: 0%; }
+  .result-row { display: flex; gap: 24px; margin-top: 12px; font-size: 13px; flex-wrap: wrap; }
+  .result-item { color: var(--muted); }
+  .result-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
-<h1>134. 加油站</h1>
-<p class="subtitle">贪心：如果 total &lt; 0 无解；否则从 0 开始，累加负则换起点</p>
+<div class="container">
 
-<div class="anim-area">
-  <div class="info-bar">
-    <div class="info-item">当前站点: <span id="cur-station">-</span></div>
-    <div class="info-item">油箱: <span id="tank">0</span></div>
-    <div class="info-item">总油差: <span id="total-diff">-</span></div>
-    <div class="info-item">起点: <span id="start-station">-</span></div>
-  </div>
-  <div class="phase" id="phase-desc">点击「下一步」开始</div>
-  <div class="stations" id="stations"></div>
-  <div class="net-row" id="net-row"></div>
-  <div class="status" id="status"></div>
-</div>
+  <p class="eyebrow">LeetCode 134 · Greedy</p>
+  <h1>加油站</h1>
+  <p class="subtitle">从哪个加油站出发能跑完一圈 — 贪心的精髓：totalSurplus < 0 则无解；否则从 0 开始，curSurplus < 0 时跳过之前的站点，从下一个重新出发</p>
 
-<div class="controls">
-  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
-  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
-  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
-</div>
+  <!-- 1. 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：gas = 每站加油量，cost = 到下一站油耗，问能否绕一圈以及从哪个站出发。<br>
+      关键 1：<strong>如果 totalSurplus = Σ(gas[i] - cost[i]) < 0，则无解</strong>。<br>
+      关键 2：<strong>如果从 0 跑到 i 时 curSurplus < 0，说明 0..i 都不可能作为起点，跳到 i+1 重新计</strong>。
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">全局判断</p>
+        <h3><span class="dot"></span>totalSurplus ≥ 0 是必要条件</h3>
+        <p>总油量必须 ≥ 总油耗，否则跑不完一圈。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">贪心选择</p>
+        <h3><span class="dot"></span>curSurplus < 0 → 换起点</h3>
+        <p>从 0 跑到 i 都没油了，0..i 都不可能作为起点（油不够自己跑到 i）。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>一次遍历，只需两个变量：curSurplus 和 totalSurplus。</p>
+      </div>
+    </div>
+  </section>
 
-<div class="code-block">
-<pre><span class="fn">function</span> <span class="hl">canCompleteCircuit</span>(gas, cost) {
-  <span class="kw">let</span> total=<span class="num">0</span>, tank=<span class="num">0</span>, start=<span class="num">0</span>;
-  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;gas.length; i++) {
-    total += gas[i] - cost[i];
-    tank += gas[i] - cost[i];
-    <span class="kw">if</span> (tank &lt; <span class="num">0</span>) { start = i+<span class="num">1</span>; tank = <span class="num">0</span>; }
-  }
-  <span class="kw">return</span> total &lt; <span class="num">0</span> ? -<span class="num">1</span> : start;
+  <!-- 2. 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">gas = <code>[1,2,3,4,5]</code>，cost = <code>[3,4,5,1,2]</code></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">totalSurplus = (1-3)+(2-4)+(3-5)+(4-1)+(5-2) = -5+5=0</span>
+      </div>
+      <div class="kv">totalSurplus = 0，有解</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">从 0 出发</span>
+      </div>
+      <div class="kv">i=0: cur=0+(1-3)=-2 → <strong>cur < 0</strong></div>
+      <div class="kv focal">从 0 出发失败，更新 start=1，cur=0</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">从 1 出发</span>
+      </div>
+      <div class="kv">i=1: cur=0+(2-4)=-2 → cur < 0</div>
+      <div class="kv focal">从 1 出发也失败，更新 start=2，cur=0</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">从 2 出发</span>
+      </div>
+      <div class="kv">i=2: cur=0+(3-5)=-2 → cur < 0</div>
+      <div class="kv focal">更新 start=3，cur=0</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">从 3 出发</span>
+      </div>
+      <div class="kv">i=3: cur=0+(4-1)=3</div>
+      <div class="kv">i=4: cur=3+(5-2)=6 → 跑完一圈！</div>
+      <div class="kv focal">start=3 是正确答案</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：从加油站 <strong>3</strong> 出发可以绕完一圈
+    </p>
+  </section>
+
+  <!-- 3. Go 代码 -->
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">O(n) 一次遍历，无需环形数组模拟</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">canCompleteCircuit</span>(gas, cost []<span class="typ">int</span>) <span class="typ">int</span> {
+    totalSurplus := <span class="num">0</span>
+    curSurplus := <span class="num">0</span>
+    start := <span class="num">0</span>
+
+    <span class="kw">for</span> i := <span class="num">0</span>; i < len(gas); i++ {
+        diff := gas[i] - cost[i]
+        totalSurplus += diff
+        curSurplus += diff
+
+        <span class="cmt">// 从 start 跑到 i 时油箱空了，start 及其之前都不可能</span>
+        <span class="kw">if</span> curSurplus < <span class="num">0</span> {
+            start = i + <span class="num">1</span>
+            curSurplus = <span class="num">0</span>
+        }
+    }
+
+    <span class="kw">if</span> totalSurplus < <span class="num">0</span> {
+        <span class="kw">return</span> -<span class="num">1</span>
+    }
+    <span class="kw">return</span> start
 }</pre>
+  </section>
+
+  <!-- 4. 易错点 -->
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">totalSurplus < 0 的检查必须在最后返回前判断，不能漏掉</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">❌ 错误：跳过 totalSurplus 检查</p>
+        <pre><span class="cmt">// 只检查 curSurplus，不检查 totalSurplus</span>
+<span class="kw">for</span> i := <span class="num">0</span>; i < len(gas); i++ {
+    curSurplus += gas[i] - cost[i]
+    <span class="kw">if</span> curSurplus < <span class="num">0</span> {
+        start = i+<span class="num">1</span>; curSurplus = <span class="num">0</span>
+    }
+}
+<span class="kw">return</span> start <span class="cmt">// 如果 totalSurplus<0，可能返回错误索引</span></pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">gas=[2], cost=[3] 时 totalSurplus=-1，但遍历完 start=0，可能错误返回 0。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">✓ 正确：最后检查 totalSurplus</p>
+        <pre><span class="kw">if</span> totalSurplus < <span class="num">0</span> {
+    <span class="kw">return</span> -<span class="num">1</span> <span class="cmt">// 全局不够，无解</span>
+}
+<span class="kw">return</span> start</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">totalSurplus ≥ 0 是有解的必要条件，两步都不可少。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">gas=[1,2,3,4,5]，cost=[3,4,5,1,2]</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">当前站: <span id="ai-i">-</span></div>
+      <div class="anim-info-item">curSurplus: <span id="ai-cur">0</span></div>
+      <div class="anim-info-item">totalSurplus: <span id="ai-total">0</span></div>
+      <div class="anim-info-item">起点候选: <span id="ai-start">0</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="station-row" id="ai-stations"></div>
+    <div class="result-row">
+      <div class="result-item">答案: <span id="ai-result">-</span></div>
+    </div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>cur < 0 → 换起点</h3>
+      <p>从起点跑到 i 时 curSurplus < 0，说明 0..i 都不能作为起点。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">贪心证明</p>
+      <h3><span class="dot"></span>局部失败 → 全局排除</h3>
+      <p>0..i 区间总油量不够自己跑完，排除后不影响最终答案的存在性。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键细节</p>
+      <h3><span class="dot"></span>totalSurplus < 0 → 无解</h3>
+      <p>必须最后检查全局剩余，全局不够则返回 -1。</p>
+    </div>
+  </div>
+
 </div>
+<footer>doc/algorithm-visualizations/134.gas-station.html</footer>
 
 <script>
-const gas = [1, 2, 3, 4, 5];
-const cost = [3, 4, 5, 1, 2];
-// net: -2, -2, -2, +3, +3
-// total = 0 → 有解
-// i=0: tank=-2 → start=1, tank=0
-// i=1: tank=-2 → start=2, tank=0
-// i=2: tank=-2 → start=3, tank=0
-// i=3: tank=+3
-// i=4: tank=+6 → return 3
+const gas = [1,2,3,4,5];
+const cost = [3,4,5,1,2];
+let i = 0, step = -1, cur = 0, total = 0, start = 0, curStart = 0;
 
-let i = 0, tank = 0, start = 0, total = 0, step = -1;
-
-function init() {
-  const el = document.getElementById('stations');
-  const netRow = document.getElementById('net-row');
-  el.innerHTML = '';
-  netRow.innerHTML = '';
-  for (let j = 0; j < gas.length; j++) {
-    const net = gas[j] - cost[j];
-    const maxNet = Math.max(...gas.map((g,idx) => g - cost[idx]).map(Math.abs));
-    const gasH = Math.round((gas[j] / (Math.max(...gas) || 1)) * 60) + 10;
-    const costH = Math.round((cost[j] / (Math.max(...cost) || 1)) * 60) + 10;
-    el.innerHTML += `
-      <div class="station">
-        <div class="st-bar st-gas st-default" id="bar-${j}" style="height:${gasH}px">+${gas[j]}</div>
-        <div class="st-bar st-cost st-default" style="height:${costH}px">-${cost[j]}</div>
-        <div class="st-net" id="net-${j}">${net>=0?'+':''}${net}</div>
-        <div class="st-label">Station ${j}</div>
-      </div>`;
-    netRow.innerHTML += `<div class="net-cell ${net>=0?'net-positive':'net-negative'}" id="nc-${j}">${net>=0?'+':''}${net}</div>`;
-  }
-  reset();
+function render() {
+  const el = document.getElementById('ai-stations');
+  el.innerHTML = gas.map((g, idx) => {
+    const net = g - cost[idx];
+    const gasH = Math.round((g / 5) * 40);
+    const costH = Math.round((cost[idx] / 5) * 40);
+    let border = '1px solid var(--rule)';
+    let bg = 'var(--paper)';
+    if (idx === i && step >= 0) { border = '2px solid var(--accent)'; bg = 'var(--accent-tint)'; }
+    else if (idx < i) { bg = '#e8d5a0'; }
+    return `<div class="station-chip">
+      <div class="station-bar-wrap">
+        <div class="bar-gas" style="height:${gasH}px"></div>
+        <div class="bar-cost" style="height:${costH}px"></div>
+      </div>
+      <div class="station-label">+${g}/-${cost[idx]}</div>
+      <div class="station-num">${idx}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('ai-i').textContent = step >= 0 ? i : '-';
+  document.getElementById('ai-cur').textContent = cur;
+  document.getElementById('ai-total').textContent = total;
+  document.getElementById('ai-start').textContent = curStart;
+  document.getElementById('ai-result').textContent = total < 0 ? '-1（无解）' : curStart;
 }
 
-function reset() {
-  i = 0; tank = 0; start = 0; total = 0; step = -1;
-  for (let j = 0; j < gas.length; j++) {
-    const bar = document.getElementById(`bar-${j}`);
-    bar.className = 'st-bar st-gas st-default';
-    const nc = document.getElementById(`nc-${j}`);
-    const net = gas[j] - cost[j];
-    nc.className = `net-cell ${net>=0?'net-positive':'net-negative'}`;
-  }
-  document.getElementById('tank').textContent = '0';
-  document.getElementById('total-diff').textContent = gas.reduce((s, g, i) => s + g - cost[i], 0);
-  document.getElementById('start-station').textContent = '-';
-  document.getElementById('cur-station').textContent = '-';
-  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始';
-  document.getElementById('status').innerHTML = '';
+function animReset() {
+  i = 0; step = -1; cur = 0; total = 0; start = 0; curStart = 0;
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
 }
 
-function next() {
-  if (i >= gas.length) return;
+function animNext() {
+  if (step >= gas.length - 1) return;
   step++;
-  const net = gas[i] - cost[i];
-  total += net;
-  tank += net;
-  // reset all bars
-  for (let j = 0; j < gas.length; j++) {
-    const bar = document.getElementById(`bar-${j}`);
-    bar.className = 'st-bar st-gas st-default';
-  }
-  // highlight station i
-  const bar = document.getElementById(`bar-${i}`);
-  bar.className = tank >= 0 ? 'st-bar st-gas st-ok' : 'st-bar st-gas st-fail';
-  document.getElementById('cur-station').textContent = `Station ${i}`;
-  document.getElementById('tank').textContent = tank;
-  if (tank < 0) {
-    start = i + 1;
-    tank = 0;
-    document.getElementById('phase-desc').innerHTML =
-      `Station ${i}: 油箱=${tank+net}，<span style="color:#fca5a5">不够到下一站</span>，换起点为 ${start}`;
-    document.getElementById('start-station').textContent = start < gas.length ? `Station ${start}` : '无解';
+  i = step;
+  const diff = gas[i] - cost[i];
+  total += diff;
+  cur += diff;
+  if (cur < 0) {
+    curStart = i + 1;
+    cur = 0;
+    document.getElementById('ai-desc').innerHTML = `i=${i}: net=${diff}，cur=${cur-diff}+${diff}=${cur} < 0 → <span>换起点到 ${curStart}</span>`;
   } else {
-    document.getElementById('phase-desc').innerHTML =
-      `Station ${i}: +${gas[i]}-${cost[i]}=${net}，油箱=${tank}，<span style="color:#6ee7b7">足够</span>`;
+    document.getElementById('ai-desc').innerHTML = `i=${i}: net=${diff}，cur=${cur} ≥ 0，起点保持为 ${curStart}`;
   }
-  if (i === gas.length - 1) {
-    const ans = total >= 0 ? start : -1;
-    document.getElementById('status').innerHTML = total >= 0
-      ? `<span class="result-badge">答案: Station ${ans}，可绕一圈！</span>`
-      : `<span style="color:#fca5a5">无解，总油量 &lt; 总消耗</span>`;
-  }
-  i++;
+  render();
 }
 
-function prev() {
-  if (i <= 0) return;
-  i--;
-  tank -= (gas[i] - cost[i]);
-  total -= (gas[i] - cost[i]);
-  if (start === i + 1) start = 0;
-  document.getElementById('cur-station').textContent = `Station ${i}`;
-  document.getElementById('tank').textContent = tank;
-  document.getElementById('start-station').textContent = start < gas.length ? `Station ${start}` : '-';
-  document.getElementById('phase-desc').innerHTML = '已回退一步';
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  cur = 0; total = 0; curStart = 0;
+  for (let k = 0; k < step; k++) {
+    const diff = gas[k] - cost[k];
+    total += diff;
+    cur += diff;
+    if (cur < 0) { curStart = k + 1; cur = 0; }
+  }
+  step--;
+  i = step;
+  document.getElementById('ai-desc').innerHTML = `回退到 i=${i}`;
+  render();
 }
 
-init();
+animReset();
 </script>
 </body>
 </html>
