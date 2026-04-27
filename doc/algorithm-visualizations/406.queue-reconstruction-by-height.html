@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>406 根据身高重建队列</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
+.phase span{color:#fbbf24}
+.input-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem}
+.input-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.queue-area{margin-bottom:.6rem}
+.queue-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
+.queue{display:flex;gap:6px;flex-wrap:wrap;min-height:48px;align-items:center;padding:8px;background:#0d1117;border-radius:8px;border:1px solid #21262d}
+.queue-slot{width:72px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:bold;border:1px dashed #334155;color:#334155;transition:all .25s}
+.queue-slot.filled{background:#1e3a5f;color:#93c5fd;border:1px solid #3b5998;color:#fff}
+.queue-slot.cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.08)}
+.people{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.6rem}
+.person{width:64px;height:44px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;font-weight:bold;transition:all .25s;border:1px solid #334155}
+.person-default{background:#1e293b;color:#94a3b8}
+.person-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.1)}
+.person-placed{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
+.person-skip{opacity:.4;background:#1e293b;color:#475569}
+.result-area{margin-top:.5rem}
+.result-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
+.result-list{display:flex;gap:8px;flex-wrap:wrap}
+.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>406. 根据身高重建队列</h1>
+<p class="subtitle">贪心：按身高降序排列，按 k 值插入对应位置</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">阶段: <span id="phase">-</span></div>
+    <div class="info-item">当前人物: <span id="cur-person">-</span></div>
+    <div class="info-item">插入位置: <span id="insert-pos">-</span></div>
+  </div>
+  <div class="phase" id="phase-desc">点击「下一步」开始</div>
+  <div class="input-list" id="input-list"></div>
+  <div class="people" id="people"></div>
+  <div class="queue-area">
+    <div class="queue-label">队列</div>
+    <div class="queue" id="queue"></div>
+  </div>
+  <div class="result-area">
+    <div class="result-label">当前队列</div>
+    <div class="result-list" id="result-list"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">reconstructQueue</span>(people) {
+  people.<span class="hl">sort</span>((a,b) => b[<span class="num">0</span>] - a[<span class="num">0</span>] || a[<span class="num">1</span>] - b[<span class="num">1</span>]);
+  <span class="kw">const</span> res = [];
+  <span class="kw">for</span> (<span class="kw">const</span> p <span class="kw">of</span> people) {
+    res.<span class="hl">splice</span>(p[<span class="num">1</span>], <span class="num">0</span>, p);
+  }
+  <span class="kw">return</span> res;
+}</pre>
+</div>
+
+<script>
+const people = [[7,0],[4,4],[7,1],[5,0],[6,1],[5,2]];
+// Sort by height desc: [[7,0],[7,1],[6,1],[5,0],[5,2],[4,4]]
+// Insert [7,0] at pos 0 → [[7,0]]
+// Insert [7,1] at pos 1 → [[7,0],[7,1]]
+// Insert [6,1] at pos 1 → [[7,0],[6,1],[7,1]]
+// Insert [5,0] at pos 0 → [[5,0],[7,0],[6,1],[7,1]]
+// Insert [5,2] at pos 2 → [[5,0],[7,0],[5,2],[6,1],[7,1]]
+// Insert [4,4] at pos 4 → [[5,0],[7,0],[5,2],[4,4],[6,1],[7,1]]
+
+let sorted = [];
+let queue = [];
+let placed = new Set();
+let i = 0;
+let step = -1;
+
+function init() {
+  sorted = [...people].sort((a,b) => b[0]-a[0] || a[1]-b[1]);
+  const input = document.getElementById('input-list');
+  input.innerHTML = people.map(p =>
+    `<span class="input-badge">[${p[0]},${p[1]}]</span>`
+  ).join('');
+  const peopleEl = document.getElementById('people');
+  peopleEl.innerHTML = sorted.map((p, idx) =>
+    `<div class="person person-default" id="p-${idx}">[${p[0]},${p[1]}]</div>`
+  ).join('');
+  const queueEl = document.getElementById('queue');
+  queueEl.innerHTML = '';
+  for (let j = 0; j < sorted.length; j++) {
+    queueEl.innerHTML += `<div class="queue-slot" id="slot-${j}">-</div>`;
+  }
+  reset();
+}
+
+function reset() {
+  queue = [];
+  placed = new Set();
+  i = 0; step = -1;
+  sorted.forEach((_, idx) => {
+    const el = document.getElementById(`p-${idx}`);
+    el.className = 'person person-default';
+    const slot = document.getElementById(`slot-${idx}`);
+    slot.className = 'queue-slot';
+    slot.textContent = '-';
+  });
+  document.getElementById('phase').textContent = '-';
+  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」按身高降序后开始插入';
+  document.getElementById('cur-person').textContent = '-';
+  document.getElementById('insert-pos').textContent = '-';
+  document.getElementById('result-list').innerHTML = '';
+}
+
+function next() {
+  if (i >= sorted.length) return;
+  step++;
+  const person = sorted[i];
+  const k = person[1];
+  // highlight current
+  sorted.forEach((_, idx) => {
+    const el = document.getElementById(`p-${idx}`);
+    if (placed.has(idx)) {
+      el.className = 'person person-placed';
+    } else if (idx === i) {
+      el.className = 'person person-cur';
+    } else {
+      el.className = 'person person-default';
+    }
+  });
+  if (step === 0) {
+    document.getElementById('phase').textContent = '排序';
+    document.getElementById('phase-desc').innerHTML = '按身高 <span>降序</span>，相同身高按 k <span>升序</span>';
+    document.getElementById('cur-person').textContent = '-';
+    document.getElementById('insert-pos').textContent = '-';
+    // show sorted order
+    document.getElementById('result-list').innerHTML = sorted.map(p =>
+      `<span class="result-badge">[${p[0]},${p[1]}]</span>`
+    ).join('');
+  } else {
+    document.getElementById('phase').textContent = '插入';
+    document.getElementById('phase-desc').innerHTML =
+      `插入 [${person[0]},${person[1]}] 到队列位置 <span>${k}</span>`;
+    document.getElementById('cur-person').textContent = `[${person[0]},${person[1]}]`;
+    document.getElementById('insert-pos').textContent = `pos ${k}`;
+    // splice into queue
+    queue.splice(k, 0, person);
+    placed.add(i);
+    // update queue slots
+    for (let j = 0; j < sorted.length; j++) {
+      const slot = document.getElementById(`slot-${j}`);
+      if (j < queue.length) {
+        slot.className = 'queue-slot filled';
+        slot.textContent = `[${queue[j][0]},${queue[j][1]}]`;
+      } else {
+        slot.className = 'queue-slot';
+        slot.textContent = '-';
+      }
+    }
+    // highlight slot k
+    const slotK = document.getElementById(`slot-${k}`);
+    slotK.className = 'queue-slot cur';
+    document.getElementById('result-list').innerHTML = queue.map(p =>
+      `<span class="result-badge">[${p[0]},${p[1]}]</span>`
+    ).join('');
+  }
+  i++;
+}
+
+function prev() {
+  if (step <= 0) { reset(); return; }
+  step--;
+  i--;
+  placed.delete(i);
+  const person = sorted[i];
+  const k = person[1];
+  queue.splice(k, 1);
+  // restore slots
+  for (let j = 0; j < sorted.length; j++) {
+    const slot = document.getElementById(`slot-${j}`);
+    if (j < queue.length) {
+      slot.className = 'queue-slot filled';
+      slot.textContent = `[${queue[j][0]},${queue[j][1]}]`;
+    } else {
+      slot.className = 'queue-slot';
+      slot.textContent = '-';
+    }
+  }
+  document.getElementById('phase').textContent = '插入';
+  document.getElementById('cur-person').textContent = `[${person[0]},${person[1]}]`;
+  document.getElementById('insert-pos').textContent = `pos ${k}`;
+  document.getElementById('result-list').innerHTML = queue.map(p =>
+    `<span class="result-badge">[${p[0]},${p[1]}]</span>`
+  ).join('');
+  sorted.forEach((_, idx) => {
+    const el = document.getElementById(`p-${idx}`);
+    if (placed.has(idx)) el.className = 'person person-placed';
+    else if (idx === i) el.className = 'person person-cur';
+    else el.className = 'person person-default';
+  });
+}
+
+init();
+</script>
+</body>
+</html>
