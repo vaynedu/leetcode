@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>找到所有字母异位词 · 图解 · LeetCode 438</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  /* s string row */
+  .s-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .s-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 500; color: var(--muted); position: relative; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); }
+  .s-cell.in-window { color: var(--ink); background: var(--accent-tint); border-color: var(--accent); }
+  .s-cell.match { color: white; background: var(--accent); border-color: var(--accent); }
+  .s-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .s-cell.in-window span.idx { color: var(--accent); }
+
+  /* bracket */
+  .bracket-row { display: flex; gap: 4px; align-items: flex-start; justify-content: center; margin: 20px 0 8px; flex-wrap: wrap; }
+  .bracket { display: inline-block; font-size: 28px; color: var(--accent); font-family: 'Geist Mono', monospace; line-height: 1; margin: 0 2px; }
+  .b-cell { width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--soft); }
+  .b-cell.active { color: var(--accent); font-weight: 600; }
+
+  /* pointer */
+  .ptr-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 8px 0 16px; flex-wrap: wrap; }
+  .ptr-slot { width: 40px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+  .ptr-slot span.arr { font-size: 14px; color: var(--accent); line-height: 1; }
+  .ptr-slot span.label { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+  .ptr-slot.empty span.arr, .ptr-slot.empty span.label { color: var(--soft); }
+
+  /* freq counter display */
+  .freq-display { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0; }
+  .freq-bar { width: 36px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .freq-cell { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; border-radius: 4px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .freq-cell.zero { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+  .freq-cell.hit { background: #dcfce7; border-color: #86efac; color: #16a34a; }
+  .freq-cell.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+
+  /* p pattern row */
+  .p-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 8px; }
+  .p-cell { width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 500; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; position: relative; }
+  .p-cell span.count { position: absolute; top: -8px; right: -8px; width: 18px; height: 18px; background: var(--accent); color: white; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+  .p-cell.zero span.count { background: var(--muted); }
+  .p-label { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--soft); text-align: center; margin-top: 4px; }
+
+  /* step */
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.found { color: #16a34a; font-weight: 600; }
+
+  /* diff counter */
+  .diff-row { display: flex; gap: 6px; align-items: center; justify-content: center; margin: 12px 0; }
+  .diff-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .diff-key { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .diff-val { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .diff-val.zero { color: #16a34a; border-color: #86efac; background: #dcfce7; }
+
+  /* summary */
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.3); } 50% { box-shadow: 0 0 0 6px rgba(181,82,58,0); } }
+  .match { animation: pulse 2s ease-in-out infinite; }
+  .found-badge { display: inline-block; background: #16a34a; color: white; font-family: 'Geist Mono', monospace; font-size: 9px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 438 · Sliding Window</p>
+  <h1>找到所有字母异位词</h1>
+  <p class="subtitle">固定窗口滑动，字母计数数组对比</p>
+
+  <!-- Section 1: 核心思路 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定字符串 <code>s</code> 和 <code>p</code>，找出 <code>s</code> 中所有 <code>p</code> 的异位词起始下标。<br>
+      异位词 = 字母相同但排列不同的词，如 <code>"abc"</code> 和 <code>"bca"</code>。<br>
+      关键：<strong>固定窗口大小，滑动时用计数数组判断两窗口是否字母组成相同</strong>。
+    </p>
+
+    <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;margin:24px 0;">
+      <!-- p pattern -->
+      <div style="text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">模式串 p = "ab"</p>
+        <div class="p-row">
+          <div class="p-cell">a<span class="count">1</span></div>
+          <div class="p-cell">b<span class="count">1</span></div>
+        </div>
+        <div class="p-label">need 计数数组</div>
+      </div>
+
+      <!-- arrow -->
+      <div style="display:flex;align-items:center;font-size:24px;color:var(--accent);">→</div>
+
+      <!-- diff -->
+      <div style="text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">差异 diff = 0 ?</p>
+        <div class="diff-row">
+          <div class="diff-item"><span class="diff-key">a</span><div class="diff-val zero">0</div></div>
+          <div class="diff-item"><span class="diff-key">b</span><div class="diff-val zero">0</div></div>
+        </div>
+        <p style="font-size:11px;color:#16a34a;margin:4px 0 0;font-weight:600;">✓ 完全匹配</p>
+      </div>
+    </div>
+
+    <p class="section-sub">
+      <strong>怎么判断两个字符串字母组成相同？</strong><br>
+      用一个 26 长度数组记录窗口内每个字母的出现次数，和模式串 <code>p</code> 的计数对比。<br>
+      如果 <code>diff == 0</code>（所有字母计数差为 0），则当前位置是异位词。
+    </p>
+  </section>
+
+  <!-- Section 2: 完整 Trace -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">s = <code>"cbaebabacd"</code>，p = <code>"abc"</code></p>
+
+    <!-- need array -->
+    <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:24px;flex-wrap:wrap;">
+      <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);">need:</span>
+      <div style="display:flex;gap:2px;">
+        <div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;background:var(--accent-tint);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-weight:600;">a:1</div>
+        <div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;background:var(--accent-tint);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-weight:600;">b:1</div>
+        <div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;background:var(--accent-tint);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-weight:600;">c:1</div>
+      </div>
+      <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin-left:8px;">diff=3表示3个字母待匹配</span>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">R=0 window="c" diff=3</span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell in-window">c<span class="idx">0</span></div>
+        <div class="s-cell">b<span class="idx">1</span></div>
+        <div class="s-cell">a<span class="idx">2</span></div>
+        <div class="s-cell">e<span class="idx">3</span></div>
+        <div class="s-cell">b<span class="idx">4</span></div>
+        <div class="s-cell">a<span class="idx">5</span></div>
+        <div class="s-cell">b<span class="idx">6</span></div>
+        <div class="s-cell">a<span class="idx">7</span></div>
+        <div class="s-cell">c<span class="idx">8</span></div>
+        <div class="s-cell">d<span class="idx">9</span></div>
+      </div>
+      <div class="bracket-row">
+        <span class="bracket">┌</span>
+        <div class="b-cell active">c</div>
+        <div class="b-cell">b</div>
+        <div class="b-cell">a</div>
+        <div class="b-cell">e</div>
+        <div class="b-cell">b</div>
+        <div class="b-cell">a</div>
+        <div class="b-cell">b</div>
+        <div class="b-cell">a</div>
+        <div class="b-cell">c</div>
+        <div class="b-cell">d</div>
+        <span class="bracket">┐</span>
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--soft);margin-left:8px;">窗口长度 3</span>
+      </div>
+      <div class="decision">
+        <div class="kv">加入 'c': diff[c]++ → diff=4 → diff!=0，未找到</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">R=1 window="cb" diff=3</span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell in-window">c<span class="idx">0</span></div>
+        <div class="s-cell in-window">b<span class="idx">1</span></div>
+        <div class="s-cell">a<span class="idx">2</span></div>
+        <div class="s-cell">e<span class="idx">3</span></div>
+        <div class="s-cell">b<span class="idx">4</span></div>
+        <div class="s-cell">a<span class="idx">5</span></div>
+        <div class="s-cell">b<span class="idx">6</span></div>
+        <div class="s-cell">a<span class="idx">7</span></div>
+        <div class="s-cell">c<span class="idx">8</span></div>
+        <div class="s-cell">d<span class="idx">9</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">加入 'b': diff[b]++ → diff=4 → diff!=0，未找到</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">R=2 window="cba" diff=0 <span class="found-badge">找到!</span></span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell in-window match">c<span class="idx">0</span></div>
+        <div class="s-cell in-window match">b<span class="idx">1</span></div>
+        <div class="s-cell in-window match">a<span class="idx">2</span></div>
+        <div class="s-cell">e<span class="idx">3</span></div>
+        <div class="s-cell">b<span class="idx">4</span></div>
+        <div class="s-cell">a<span class="idx">5</span></div>
+        <div class="s-cell">b<span class="idx">6</span></div>
+        <div class="s-cell">a<span class="idx">7</span></div>
+        <div class="s-cell">c<span class="idx">8</span></div>
+        <div class="s-cell">d<span class="idx">9</span></div>
+      </div>
+      <div class="bracket-row">
+        <span class="bracket">┌</span>
+        <div class="b-cell active">c</div>
+        <div class="b-cell active">b</div>
+        <div class="b-cell active">a</div>
+        <div class="b-cell">e</div>
+        <div class="b-cell">b</div>
+        <div class="b-cell">a</div>
+        <div class="b-cell">b</div>
+        <div class="b-cell">a</div>
+        <div class="b-cell">c</div>
+        <div class="b-cell">d</div>
+        <span class="bracket">┐</span>
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin-left:8px;">结果: [0]</span>
+      </div>
+      <div class="decision">
+        <div class="kv">加入 'a': diff[a]++ → diff=3，但移出 'c': diff[c]-- → diff=0</div>
+        <div class="kv found">diff==0！输出起始位置 0</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">R=3→6 滑动窗口</span>
+      </div>
+      <div class="decision">
+        <div class="kv">窗口持续滑动，diff 始终不为 0</div>
+        <div class="kv">R=4: 加入 b，移出 b → diff 不变</div>
+        <div class="kv">R=5: 加入 a，移出 a → diff 不变</div>
+        <div class="kv">R=6: 加入 b，移出 a → diff!=0</div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">R=7 window="bac" diff=0 <span class="found-badge">找到!</span></span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell">c<span class="idx">0</span></div>
+        <div class="s-cell">b<span class="idx">1</span></div>
+        <div class="s-cell">a<span class="idx">2</span></div>
+        <div class="s-cell">e<span class="idx">3</span></div>
+        <div class="s-cell in-window">b<span class="idx">4</span></div>
+        <div class="s-cell in-window">a<span class="idx">5</span></div>
+        <div class="s-cell in-window">b<span class="idx">6</span></div>
+        <div class="s-cell in-window">a<span class="idx">7</span></div>
+        <div class="s-cell">c<span class="idx">8</span></div>
+        <div class="s-cell">d<span class="idx">9</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">R=7: 加入 'a'(diff[a]++), 移出 'e'(不相关) → diff=3, 但随后移出 'b': diff[b]--</div>
+        <div class="kv found">最终 diff==0！输出起始位置 6</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：[0, 6]
+    </p>
+  </section>
+
+  <!-- Section 3: 代码模板 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <p class="section-sub">固定窗口大小 len(p)，用 diff=0 判断是否匹配</p>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func findAnagrams(s, p string) []int {
+    need := [26]int{}
+    for _, c := range p {
+        need[c-'a']++
+    }
+
+    res := []int{}
+    diff := 0  // 还有几个字母未匹配
+
+    for i := range s {
+        // 入窗口
+        idx := s[i] - 'a'
+        if need[idx] > 0 {
+            diff++ // need 中有的字母才计入 diff
+        }
+        need[idx]-- // 计数相减
+
+        // 出窗口
+        if i >= len(p) {
+            outIdx := s[i-len(p)] - 'a'
+            if need[outIdx] >= 0 {
+                diff-- // 移出的字母原本是匹配的
+            }
+            need[outIdx]++
+        }
+
+        if diff == 0 {
+            res = append(res, i-len(p)+1)
+        }
+    }
+    return res
+}</pre>
+  </section>
+
+  <!-- Section 4: diff 理解 -->
+  <section>
+    <h2>diff 的直观理解</h2>
+    <p class="section-sub">diff 表示"窗口内字母"比"模式串字母"多出现了几次（need>0的部分）</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">s="cba" p="abc" need=[1,1,1]</p>
+        <div style="display:flex;gap:8px;justify-content:center;margin:8px 0;">
+          <div style="text-align:center;">
+            <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:14px;background:var(--accent-tint);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-weight:600;">c</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;">need[c]=0</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:14px;background:var(--accent-tint);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-weight:600;">b</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;">need[b]=0</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:14px;background:var(--accent-tint);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-weight:600;">a</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;">need[a]=0</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:#16a34a;font-weight:600;margin:0;">diff=0 → 完全匹配!</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">s="cbx" p="abc" need=[1,1,1]</p>
+        <div style="display:flex;gap:8px;justify-content:center;margin:8px 0;">
+          <div style="text-align:center;">
+            <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:14px;background:var(--accent-tint);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-weight:600;">c</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;">need[c]=0</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:14px;background:var(--accent-tint);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-weight:600;">b</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;">need[b]=0</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:14px;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;color:#dc2626;font-weight:600;">x</div>
+            <div style="font-size:10px;color:#dc2626;margin-top:4px;">need[x]=1 → diff>0</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:#dc2626;font-weight:600;margin:0;">diff≠0 → 不是异位词</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">类型</p>
+      <h3><span class="dot"></span>固定窗口</h3>
+      <p>窗口大小始终等于 len(p)，滑动而非伸缩</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>计数数组</h3>
+      <p>need 数组记录每个字母的出现次数差，入减出加</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">判断</p>
+      <h3><span class="dot"></span>diff == 0</h3>
+      <p>diff=0 表示窗口内字母组成与 p 完全相同</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/438.find-all-anagrams.html</footer>
+</body>
+</html>
