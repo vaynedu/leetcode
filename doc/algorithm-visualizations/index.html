@@ -190,6 +190,8 @@
   <button class="filter-btn" data-filter="dp">动态规划<span class="filter-count" id="count-dp">0</span></button>
   <button class="filter-btn" data-filter="heap">堆<span class="filter-count" id="count-heap">0</span></button>
   <button class="filter-btn" data-filter="stack">栈<span class="filter-count" id="count-stack">0</span></button>
+  <button class="filter-btn" data-filter="design">设计<span class="filter-count" id="count-design">0</span></button>
+  <button class="filter-btn" data-filter="trie">前缀树<span class="filter-count" id="count-trie">0</span></button>
   <button class="filter-btn" data-filter="other">其他<span class="filter-count" id="count-other">0</span></button>
 
   <div class="mastery-filter">
@@ -373,7 +375,7 @@ function updateStats() {
   document.getElementById('stat-sliding').textContent = byCat['sliding-window'] || 0;
   document.getElementById('stat-dp').textContent = byCat['dp'] || 0;
   document.getElementById('stat-search').textContent = byCat['binary-search'] || 0;
-  document.getElementById('stat-other').textContent = (byCat['other'] || 0) + (byCat['heap'] || 0) + (byCat['stack'] || 0);
+  document.getElementById('stat-other').textContent = byCat['other'] || 0;
 
   document.getElementById('count-all').textContent = total;
   document.getElementById('count-binary-tree').textContent = byCat['binary-tree'] || 0;
@@ -383,6 +385,8 @@ function updateStats() {
   document.getElementById('count-dp').textContent = byCat['dp'] || 0;
   document.getElementById('count-heap').textContent = byCat['heap'] || 0;
   document.getElementById('count-stack').textContent = byCat['stack'] || 0;
+  document.getElementById('count-design').textContent = byCat['design'] || 0;
+  document.getElementById('count-trie').textContent = byCat['trie'] || 0;
   document.getElementById('count-other').textContent = byCat['other'] || 0;
 }
 
