@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>设计命中率计数器 · 图解 · LeetCode 362</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .timeline { position: relative; padding: 24px 0; }
+  .time-axis { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--rule); }
+  .tick-row { display: flex; align-items: center; margin: 8px 0; gap: 8px; }
+  .tick-label { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); min-width: 80px; text-align: right; }
+  .tick-bar { display: flex; gap: 2px; align-items: center; }
+  .tick { width: 20px; height: 20px; border-radius: 3px; background: var(--paper); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--muted); }
+  .tick.hit { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .tick-old { background: #fee2e2; border-color: #fca5a5; color: #fca5a5; opacity: 0.5; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.done { color: #16a34a; font-weight: 600; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .two-ways { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .way-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; }
+  .way-card h4 { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; text-transform: uppercase; }
+  .way-card.good h4 { color: #16a34a; }
+  .way-card.simple h4 { color: var(--accent); }
+  .way-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 362 · Design</p>
+  <h1>设计命中率计数器</h1>
+  <p class="subtitle">统计过去 5 分钟内的点击次数，每 hit(t) 记一次，每 getHitCount(t) 返回 t-300 到 t 之间的命中数</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：设计一个计数器，<code>hit(t)</code> 在时间 t 记录一次点击，<code>getHitCount(t)</code> 返回 <strong>[t-300, t] 秒内</strong>的点击次数。<br>
+      难点：数据量可能很大（每秒百万次），但时间窗口只有 300 秒。
+    </p>
+
+    <div class="two-ways">
+      <div class="way-card good">
+        <h4>方案 A（推荐）：环形数组</h4>
+        <p>固定大小 300 数组，时间对 300 取模定位。<br>hit: arr[t%300]++，count: 遍历 300 个槽<br><strong>O(300) = O(1)，且无内存泄漏</strong></p>
+      </div>
+      <div class="way-card simple">
+        <h4>方案 B：Queue + 过期清理</h4>
+        <p>每次 hit 入队，getHitCount 时弹出所有 &lt; t-300 的元素<br><strong>O(n) 最坏，但均摊尚可</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 环形数组 -->
+  <section>
+    <h2>环形数组原理</h2>
+    <p class="section-sub">
+      300 秒的窗口，只需要 300 个槽。<code>index = t % 300</code> 决定写入位置。<br>
+      <strong>关键：记录每个槽最后一次写入的时间戳，过期则忽略。</strong>
+    </p>
+
+    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:20px;margin-top:16px;">
+      <p style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);margin:0;line-height:2.2;">
+        数组结构: <span style="color:var(--accent);">counts[300]</span> + <span style="color:var(--accent);">timestamps[300]</span><br><br>
+        hit(100): index=100%300=100 → counts[100]++, timestamps[100]=100<br>
+        hit(400): index=400%300=100 → counts[100]++, <span style="color:#ca8a04;">timestamps[100]更新为400</span><br>
+        hit(700): index=700%300=100 → counts[100]++, timestamps[100]=700<br>
+        getHitCount(700): 检查 timestamps[100]=700, 在窗口内 → 1次命中<br>
+        <span style="color:#78716c;">（实际应叠加所有 300 个槽，下一页手推详述）</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- Section 3: 手推 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">时间线：hit(1), hit(2), hit(3), hit(301), hit(302), getHitCount(303)</p>
+
+    <!-- Timeline -->
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-family:'Geist Mono',monospace;font-size:11px;margin:16px 0;">
+      <tr>
+        <th style="text-align:left;padding:6px 8px;color:var(--muted);border-bottom:1px solid var(--rule);">时间戳</th>
+        <th style="text-align:center;padding:6px 8px;color:var(--muted);border-bottom:1px solid var(--rule);">1</th>
+        <th style="text-align:center;padding:6px 8px;color:var(--muted);border-bottom:1px solid var(--rule);">2</th>
+        <th style="text-align:center;padding:6px 8px;color:var(--muted);border-bottom:1px solid var(--rule);">3</th>
+        <th style="text-align:center;padding:6px 8px;color:var(--muted);border-bottom:1px solid var(--rule);">...301</th>
+        <th style="text-align:center;padding:6px 8px;color:var(--muted);border-bottom:1px solid var(--rule);">...302</th>
+        <th style="text-align:center;padding:6px 8px;color:var(--muted);border-bottom:1px solid var(--rule);">index(303%300)=3</th>
+      </tr>
+      <tr>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--rule);color:var(--muted);">slot index</td>
+        <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--rule);">1</td>
+        <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--rule);">2</td>
+        <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--rule);">3</td>
+        <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--rule);">1</td>
+        <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--rule);">2</td>
+        <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--rule);">3</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 8px;color:var(--muted);">counts</td>
+        <td style="text-align:center;padding:6px 8px;color:#16a34a;font-weight:600;">1</td>
+        <td style="text-align:center;padding:6px 8px;color:#16a34a;font-weight:600;">1</td>
+        <td style="text-align:center;padding:6px 8px;color:#dc2626;font-weight:600;">覆盖!0</td>
+        <td style="text-align:center;padding:6px 8px;color:#16a34a;font-weight:600;">1</td>
+        <td style="text-align:center;padding:6px 8px;color:#16a34a;font-weight:600;">1</td>
+        <td style="text-align:center;padding:6px 8px;color:#16a34a;font-weight:600;">1</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 8px;color:var(--muted);">ts</td>
+        <td style="text-align:center;padding:6px 8px;color:var(--muted);">1</td>
+        <td style="text-align:center;padding:6px 8px;color:var(--muted);">2</td>
+        <td style="text-align:center;padding:6px 8px;color:#ca8a04;font-weight:600;">303</td>
+        <td style="text-align:center;padding:6px 8px;color:var(--muted);">301</td>
+        <td style="text-align:center;padding:6px 8px;color:var(--muted);">302</td>
+        <td style="text-align:center;padding:6px 8px;color:var(--muted);">303</td>
+      </tr>
+    </table>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="kv">hit(1), hit(2), hit(3) → slots[1]=1, [2]=1, [3]=1，timestamps 分别为 1,2,3</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="kv">hit(301) → index=1，slot[1]++，ts[1]=301</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="kv">hit(302) → index=2，slot[2]++，ts[2]=302</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="kv done">getHitCount(303) → 遍历 slots，保留 ts >= 3 的</span>
+      </div>
+      <div class="decision">
+        <div class="kv">slot[0]: ts=0 &lt; 3 → 跳过</div>
+        <div class="kv">slot[1]: ts=301 ≥ 3 → 保留，count+=1</div>
+        <div class="kv">slot[2]: ts=302 ≥ 3 → 保留，count+=1</div>
+        <div class="kv">slot[3]: ts=303 ≥ 3 → 保留，count+=1</div>
+        <div class="kv done">getHitCount(303) = 3</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: 代码 -->
+  <section>
+    <h2>Go 代码模板（环形数组）</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+const WINDOW = 300
+
+type HitCounter struct {
+    counts     [WINDOW]int   // 每秒命中计数
+    timestamps [WINDOW]int   // 每槽最后更新时间戳
+}
+
+func Constructor() HitCounter {
+    return HitCounter{}
+}
+
+// hit: O(1)
+func (h *HitCounter) Hit(timestamp int) {
+    idx := timestamp % WINDOW
+    // 如果时间戳变了（新的一秒），重置计数
+    if h.timestamps[idx] != timestamp {
+        h.counts[idx] = 1
+        h.timestamps[idx] = timestamp
+    } else {
+        h.counts[idx]++
+    }
+}
+
+// getHitCount: O(WINDOW) = O(300) = O(1)
+func (h *HitCounter) GetHitCount(timestamp int) int {
+    count := 0
+    for i := 0; i < WINDOW; i++ {
+        // 只统计窗口内的（timestamp - 300 < ts <= timestamp）
+        if h.timestamps[i] > timestamp-WINDOW && h.timestamps[i] <= timestamp {
+            count += h.counts[i]
+        }
+    }
+    return count
+}</pre>
+  </section>
+
+  <!-- Section 5: 面试亮点 -->
+  <section>
+    <h2>面试亮点分析</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">亮点 1：环形数组复用</p>
+        <p style="font-size:12px;color:#166534;margin:0;line-height:1.6;">固定 300 槽，时间对 300 取模。<br>vs Queue 方案：无内存持续增长，<br>因为数组大小恒定。</p>
+      </div>
+      <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">亮点 2：时间戳去重</p>
+        <p style="font-size:12px;color:#166534;margin:0;line-height:1.6;">同一秒内多次 hit，只需增加计数，<br>不创建新槽。时间戳比对决定<br>是否 reset counts[idx]。</p>
+      </div>
+      <div style="background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#ca8a04;margin:0 0 8px;font-weight:600;">扩展 1：分布式版本</p>
+        <p style="font-size:12px;color:#a16207;margin:0;line-height:1.6;">多机器：每个机器独立计数，<br>定时上报聚合。<br>用 Redis INCRBY 按时间桶聚合。</p>
+      </div>
+      <div style="background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#ca8a04;margin:0 0 8px;font-weight:600;">扩展 2：可变时间窗口</p>
+        <p style="font-size:12px;color:#a16207;margin:0;line-height:1.6;">支持任意窗口大小 N：<br>数组大小改为 N，按 t%N 定位。<br>getHitCount 改为检查 ts > t-N。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>环形数组 + 时间戳</h3>
+      <p>固定 300 槽，时间取模定位，过期检测决定是否计入</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">时间</p>
+      <h3><span class="dot"></span>hit O(1)，getHitCount O(300)</h3>
+      <p>O(300) = O(1) 常数，环形数组无 GC 压力</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">面试</p>
+      <h3><span class="dot"></span>可变时间窗口扩展</h3>
+      <p>改变 WINDOW 常量即可支持任意窗口大小</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/362.design-hit-counter.html</footer>
+</body>
+</html>
