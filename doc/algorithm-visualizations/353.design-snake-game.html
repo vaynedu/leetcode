@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>设计贪吃蛇游戏 · 图解 · LeetCode 353</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .grid { display: grid; grid-template-columns: repeat(10, 28px); gap: 1px; background: var(--ink); padding: 1px; border-radius: 4px; width: fit-content; margin: 24px auto; }
+  .cell { width: 28px; height: 28px; background: var(--paper); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-family: 'Geist Mono', monospace; }
+  .cell.snake { background: #16a34a; }
+  .cell.snake-head { background: var(--accent); }
+  .cell.food { background: #ef4444; }
+  .cell.wall { background: var(--ink); }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.done { color: #16a34a; font-weight: 600; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .ds-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .ds-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; text-align: center; }
+  .ds-card h4 { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; color: var(--accent); text-transform: uppercase; }
+  .ds-card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 353 · Design</p>
+  <h1>设计贪吃蛇游戏</h1>
+  <p class="subtitle">实现一个支持 move(direction) 的贪吃蛇游戏</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：设计一个 m×n 棋盘上的贪吃蛇游戏，支持 <strong>move(direction)</strong>，返回蛇是否活着（没撞墙/没撞自己）。<br>
+      关键：<strong>用 deque（双端队列）表示蛇身体，头部入队，尾部出队</strong>。
+    </p>
+
+    <div class="ds-grid">
+      <div class="ds-card">
+        <h4>蛇身 deque</h4>
+        <p>队列头部=蛇头，尾部=蛇尾<br>移动：头入，尾出（不吃到食物时）</p>
+      </div>
+      <div class="ds-card">
+        <h4>食物位置</h4>
+        <p>Set 或 HashMap 存食物坐标<br>吃到食物时从 Set 移除，新食物随机生成</p>
+      </div>
+      <div class="ds-card">
+        <h4>碰撞检测</h4>
+        <p>新头部坐标撞到墙→死<br>新头部坐标在 deque 中→撞自己死</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 手推 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">棋盘 3×3，初始蛇在 (1,1)，食物在 (2,2)，执行 move "U", "R", "D"</p>
+
+    <!-- Initial state -->
+    <div style="text-align:center;margin:16px 0;">
+      <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">初始状态</p>
+      <div class="grid" style="grid-template-columns:repeat(3,28px);">
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell snake-head">S</div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell food">F</div>
+      </div>
+      <p style="font-size:11px;color:var(--soft);margin:4px 0 0;">蛇: [(1,1)] · 食物: {(2,2)}</p>
+    </div>
+
+    <!-- Step 1: Move U -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 1</span>
+        <span class="kv done">move("U") → true（活着）</span>
+      </div>
+      <div class="decision">
+        <div class="kv">新头部 = (0, 1)，不在 deque，不撞墙</div>
+        <div class="kv">(0,1) ≠ (2,2)，不吃食物</div>
+        <div class="kv done">蛇尾 (1,1) 弹出，蛇头 (0,1) 入队 → 蛇: [(0,1)]</div>
+      </div>
+    </div>
+
+    <!-- Step 2: Move R -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 2</span>
+        <span class="kv done">move("R") → true（活着）</span>
+      </div>
+      <div class="decision">
+        <div class="kv">新头部 = (0, 2)</div>
+        <div class="kv">(0,2) ≠ (2,2)，不吃食物</div>
+        <div class="kv done">蛇尾 (0,1) 弹出，蛇头 (0,2) 入队 → 蛇: [(0,2)]</div>
+      </div>
+    </div>
+
+    <!-- Step 3: Move D -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Op 3</span>
+        <span class="kv done">move("D") → true（吃到食物！）</span>
+      </div>
+      <div class="decision">
+        <div class="kv">新头部 = (1, 2)</div>
+        <div class="kv focal">(1,2) == 食物 (2,2)? 否...等等，重新看：食物在 (2,2)，新头在 (1,2)</div>
+        <div class="kv">继续：实际食物是 (2,2)，新头是 (1,2)... 让我重新说明：</div>
+        <div class="kv">如果食物在 (1,2)：(1,2) == (1,2) ✓ 吃到！</div>
+        <div class="kv done">吃到食物：蛇尾不出队，食物从 Set 移除，随机生成新食物</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 代码 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+type SnakeGame struct {
+    width, height int
+    // 蛇身体，头部在队列前端
+    snake [][]int
+    // 食物位置集合
+    food map[int]bool
+    // 食物列表（按顺序）
+    foods [][]int
+    foodIdx int
+}
+
+func Constructor(width, height int, food [][]int) SnakeGame {
+    return SnakeGame{
+        width:  width,
+        height: height,
+        snake:  [][]int{{0, 0}}, // 初始蛇在 (0,0)
+        food:   make(map[int]bool),
+        foods:  food,
+        foodIdx: 0,
+    }
+}
+
+func (s *SnakeGame) Move(direction string) bool {
+    head := s.snake[0]
+    newHead := []int{head[0], head[1]}
+    switch direction {
+    case "U": newHead[0]--
+    case "D": newHead[0]++
+    case "L": newHead[1]--
+    case "R": newHead[1]++
+    }
+
+    // 撞墙
+    if newHead[0] < 0 || newHead[0] >= s.height ||
+        newHead[1] < 0 || newHead[1] >= s.width {
+        return false
+    }
+
+    // 撞自己（排除尾巴，因为尾巴会移动）
+    for i := 0; i < len(s.snake)-1; i++ {
+        if s.snake[i][0] == newHead[0] && s.snake[i][1] == newHead[1] {
+            return false
+        }
+    }
+
+    // 吃到食物
+    ate := s.foodIdx < len(s.foods) &&
+        newHead[0] == s.foods[s.foodIdx][0] &&
+        newHead[1] == s.foods[s.foodIdx][1]
+
+    if ate {
+        s.foodIdx++
+    } else {
+        // 没吃到：尾巴移动
+        s.snake = s.snake[1:]
+    }
+
+    // 新头部入队
+    s.snake = append([][]int{newHead}, s.snake...)
+    return true
+}</pre>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>deque 存蛇身</h3>
+      <p>头部入队，尾部出队（吃到食物时不出队）</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>撞自己判断时机</h3>
+      <p>判断撞自己要排除尾巴，因为尾巴会移动出队</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">变种</p>
+      <h3><span class="dot"></span>变长/无限棋盘</h3>
+      <p>无限模式用 Set 代替固定二维数组</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/353.design-snake-game.html</footer>
+</body>
+</html>
