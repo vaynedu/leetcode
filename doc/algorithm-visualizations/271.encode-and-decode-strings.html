@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>字符串编码与解码 · 图解 · LeetCode 271</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .encode-visual { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; }
+  .enc-row { display: flex; gap: 8px; align-items: center; }
+  .enc-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; color: var(--accent); min-width: 60px; }
+  .enc-box { background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 12px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); }
+  .enc-box .seg { display: inline-block; border: 1px solid var(--rule); border-radius: 3px; padding: 1px 4px; margin: 1px; }
+  .enc-box .seg.len { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .enc-box .seg.colon { color: var(--soft); }
+  .enc-box .seg.str { color: var(--ink); font-weight: 600; }
+
+  .arrow-box { display: flex; align-items: center; gap: 8px; padding: 8px 0; color: var(--soft); font-size: 14px; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.done { color: #16a34a; font-weight: 600; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .pitfall { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; padding: 16px; margin: 12px 0; }
+  .pitfall h4 { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; color: #dc2626; margin: 0 0 8px; text-transform: uppercase; }
+  .pitfall p { font-size: 12px; color: #991b1b; margin: 0; line-height: 1.6; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 271 · Design</p>
+  <h1>字符串编码与解码</h1>
+  <p class="subtitle">将字符串列表编码成单个字符串，并能够解码回原列表</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：设计 encode/decode 接口，<code>["hello", "world"]</code> → 编码 → 解码回原列表。<br>
+      难点：字符串本身可能包含 <code>#</code>、数字等特殊字符，简单的拼接+分隔符方案会出错。<br>
+      关键：<strong>用 "长度#内容" 格式，长度和内容用 "#" 分隔</strong>。
+    </p>
+
+    <div class="encode-visual">
+      <div>
+        <p style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);margin:0 0 8px;">编码过程：</p>
+        <div class="enc-row">
+          <span class="enc-label">原始</span>
+          <span class="enc-box">["hello", "world"]</span>
+        </div>
+        <div class="arrow-box">↓ encode</div>
+        <div class="enc-row">
+          <span class="enc-label">编码</span>
+          <span class="enc-box">
+            <span class="seg len">5</span><span class="seg colon">#</span><span class="seg str">hello</span><span class="seg len">5</span><span class="seg colon">#</span><span class="seg str">world</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;padding:16px;margin-top:16px;">
+      <p style="font-family:'Geist Mono',monospace;font-size:12px;color:#a16207;margin:0;line-height:1.8;">
+        <strong>为什么不用分隔符？</strong><br>
+        如果字符串包含分隔符（如 "a#b"），简单拼接就无法唯一解析。<br>
+        <strong>用 "长度#内容"：</strong>每个 segment 前缀了数字长度，解码时先读数字，再读对应长度字符，天然避开了内容中的特殊字符。
+      </p>
+    </div>
+  </section>
+
+  <!-- Section 2: 手推 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">编码: ["lint", "code", "love", "you"]，解码: "4#lint4#code4#love3#you"</p>
+
+    <!-- Encode -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Encode</span>
+        <span class="kv done">遍历每个字符串，拼成 "len#str"</span>
+      </div>
+      <div class="decision">
+        <div class="kv">"lint" → len=4 → "4#lint"</div>
+        <div class="kv">"code" → len=4 → "4#code"</div>
+        <div class="kv">"love" → len=4 → "4#love"</div>
+        <div class="kv">"you" → len=3 → "3#you"</div>
+        <div class="kv done">拼接 → "4#lint4#code4#love3#you"</div>
+      </div>
+    </div>
+
+    <!-- Decode -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Decode</span>
+        <span class="kv done">逐字符解析 "4#lint4#code4#love3#you"</span>
+      </div>
+      <div class="decision">
+        <div class="kv">指针 p=0，读数字: 4，遇到 '#'</div>
+        <div class="kv done">取 str[0:4]="lint"，p 移到下一段开头</div>
+        <div class="kv">继续读数字: 4 → str[4:8]="code"</div>
+        <div class="kv">继续读数字: 4 → str[8:12]="love"</div>
+        <div class="kv">继续读数字: 3 → str[12:15]="you"</div>
+        <div class="kv done">解码完成: ["lint", "code", "love", "you"]</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: 陷阱 -->
+  <section>
+    <h2>必须避免的陷阱</h2>
+
+    <div class="pitfall">
+      <h4>陷阱 1：纯分隔符方案</h4>
+      <p>用 "|" 分隔："hello|world" → "a|b" 编码成 "a|b" 无法区分。<br>
+      即使选罕见分隔符，面试官会说 "字符串里就有 | 怎么办？"</p>
+    </div>
+
+    <div class="pitfall">
+      <h4>陷阱 2：数字转字符</h4>
+      <p>把长度转成单个字符（char(4)='E'）。问题：字符串长度可能 > 255（一个字节）。<br>
+      超出范围就崩溃。</p>
+    </div>
+
+    <div class="pitfall">
+      <h4>陷阱 3：JSON 序列化</h4>
+      <p>虽然 JSON 能处理特殊字符，但过度工程化。<br>
+      面试官想看到的是 "长度#内容" 的朴素编码思想。</p>
+    </div>
+  </section>
+
+  <!-- Section 4: 代码 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+type Codec struct{}
+
+func (c *Codec) Encode(strs []string) string {
+    var sb strings.Builder
+    for _, s := range strs {
+        sb.WriteString(strconv.Itoa(len(s)))
+        sb.WriteByte('#')
+        sb.WriteString(s)
+    }
+    return sb.String()
+}
+
+func (c *Codec) Decode(data string) []string {
+    var result []string
+    p := 0
+    for p < len(data) {
+        // 读数字（长度）
+        start := p
+        for data[p] != '#' {
+            p++
+        }
+        // 此时 data[p] == '#'
+        length, _ := strconv.Atoi(data[start:p])
+        p++ // 跳过 '#'
+
+        // 读对应长度的内容
+        result = append(result, data[p:p+length])
+        p += length
+    }
+    return result
+}</pre>
+  </section>
+
+  <!-- Section 5: 扩展 -->
+  <section>
+    <h2>扩展与面试追问</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">扩展：嵌套结构</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">encode(deepList) 时递归处理：<br>基础对象 → 直接 len#content<br>数组/对象 → 递归编码后整体作为字符串处理</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">扩展：长字符串分块</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">如果单个字符串 > 1MB，分块传输：<br>"chunk_5#hello" + "chunk_8#worldstuff"<br>解码时合并 chunk</p>
+      </div>
+      <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">面试加分点</p>
+        <p style="font-size:12px;color:#166534;margin:0;line-height:1.6;">说出 "长度#内容" 方案，并解释为什么比 JSON/分隔符更好（简单、无依赖、长度透明）。这是大厂系统设计的基础编码思想。</p>
+      </div>
+      <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">实际应用</p>
+        <p style="font-size:12px;color:#166534;margin:0;line-height:1.6;">TCP 粘包/拆包：用同样思路——<br>每条消息前加长度字段。<br>Redis 协议 RESP 也是这个思想。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>长度#内容 格式</h3>
+      <p>每个 segment = 数字 + "#" + 原始内容，避免特殊字符冲突</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">解码</p>
+      <h3><span class="dot"></span>找 # 读长度，再读内容</h3>
+      <p>指针遍历：遇到 # 停下来读长度，然后跳过对应长度字符</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">精华</p>
+      <h3><span class="dot"></span>TCP/Redis 协议同款</h3>
+      <p>这是所有二进制协议的基础：长度前缀 + 变长内容</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/271.encode-and-decode-strings.html</footer>
+</body>
+</html>
