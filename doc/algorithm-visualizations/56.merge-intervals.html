@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>56 合并区间</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.input-area{margin-bottom:1rem}
+.input-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
+.input-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.4rem}
+.input-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.phase{font-size:.85rem;color:#94a3b8;margin:.4rem 0}
+.phase span{color:#fbbf24}
+.timeline{position:relative;height:100px;margin:.5rem 0 1.5rem;padding-left:40px}
+.tick-col{position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;font-size:.6rem;color:#475569}
+.ticks{position:absolute;left:40px;right:0;top:0;bottom:20px}
+.tick-mark{position:absolute;top:0;bottom:0;width:1px;background:#334155}
+.axis-line{position:absolute;left:0;right:0;bottom:20px;height:1px;background:#334155}
+.bars-area{position:absolute;left:40px;right:0;top:0;bottom:20px;display:flex;flex-direction:column;gap:4px}
+.interval-bar{height:18px;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:.7rem;font-weight:bold;transition:all .3s;position:relative}
+.bar-default{background:#1e3a5f;color:#93c5fd;border:1px solid #3b5998}
+.bar-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;z-index:2}
+.bar-merged{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
+.bar-skip{background:#1e293b;color:#475569;border:1px dashed #475569;opacity:.5}
+.result-area{margin-top:1rem}
+.result-label{font-size:.8rem;color:#64748b;margin-bottom:.4rem}
+.result-list{display:flex;gap:8px;flex-wrap:wrap}
+.result-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>56. 合并区间</h1>
+<p class="subtitle">贪心：按起点排序，合并重叠区间</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">阶段: <span id="phase">-</span></div>
+    <div class="info-item">当前区间: <span id="cur-interval">-</span></div>
+    <div class="info-item">结果数量: <span id="result-count">0</span></div>
+  </div>
+  <div class="phase" id="phase-desc">点击「下一步」开始</div>
+  <div class="input-area">
+    <div class="input-label">输入区间</div>
+    <div class="input-list" id="input-list"></div>
+  </div>
+  <div class="timeline">
+    <div class="tick-col" id="tick-col"></div>
+    <div class="ticks" id="ticks"></div>
+    <div class="axis-line"></div>
+    <div class="bars-area" id="bars-area"></div>
+  </div>
+  <div class="result-area">
+    <div class="result-label">合并结果</div>
+    <div class="result-list" id="result-list"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">merge</span>(intervals) {
+  intervals.<span class="hl">sort</span>((a,b) => a[<span class="num">0</span>] - b[<span class="num">0</span>]);
+  <span class="kw">let</span> merged = [intervals[<span class="num">0</span>]];
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i < intervals.length; i++) {
+    <span class="kw">let</span> cur = intervals[i];
+    <span class="kw">if</span> (cur[<span class="num">0</span>] <= merged[merged.length-<span class="num">1</span>][<span class="num">1</span>]) {
+      merged[merged.length-<span class="num">1</span>][<span class="num">1</span>] = Math.<span class="hl">max</span>(merged[merged.length-<span class="num">1</span>][<span class="num">1</span>], cur[<span class="num">1</span>]);
+    } <span class="kw">else</span> merged.<span class="hl">push</span>(cur);
+  }
+  <span class="kw">return</span> merged;
+}</pre>
+</div>
+
+<script>
+const intervals = [[1,3],[2,6],[8,10],[15,18]];
+// Sorted:  [1,3], [2,6], [8,10], [15,18]
+// merged starts [[1,3]]
+// [2,6] overlaps [1,3] → [1,6]
+// [8,10] not overlap [1,6] → push [8,10]
+// [15,18] not overlap [8,10] → push [15,18]
+// Result: [[1,6],[8,10],[15,18]]
+
+let sorted = [];
+let merged = [];
+let i = 0;
+let step = -1;
+
+const MIN = 0, MAX = 20;
+
+function buildTimeline() {
+  const tickCol = document.getElementById('tick-col');
+  const ticks = document.getElementById('ticks');
+  tickCol.innerHTML = '';
+  ticks.innerHTML = '';
+  for (let v = MIN; v <= MAX; v += 5) {
+    const pct = ((v - MIN) / (MAX - MIN)) * 100;
+    tickCol.innerHTML += `<div>${v}</div>`;
+    ticks.innerHTML += `<div class="tick-mark" style="left:${pct}%"></div>`;
+  }
+}
+
+function pct(v) { return ((v - MIN) / (MAX - MIN)) * 100; }
+
+function renderBars() {
+  const area = document.getElementById('bars-area');
+  area.innerHTML = '';
+  sorted.forEach((intv, idx) => {
+    const left = pct(intv[0]);
+    const right = pct(intv[1]);
+    const width = right - left;
+    let cls = 'bar-default';
+    if (merged.find(m => m[0] === intv[0] && m[1] === intv[1])) {
+      cls = 'bar-merged';
+    }
+    if (idx === i && step >= 1) {
+      cls = 'bar-cur';
+    }
+    area.innerHTML += `
+      <div class="interval-bar ${cls}" style="left:${left}%;width:${Math.max(width,3)}%">
+        [${intv[0]},${intv[1]}]
+      </div>`;
+  });
+}
+
+function renderInput() {
+  const list = document.getElementById('input-list');
+  list.innerHTML = intervals.map(iv =>
+    `<span class="input-badge">[${iv[0]},${iv[1]}]</span>`
+  ).join('');
+}
+
+function reset() {
+  sorted = [...intervals].sort((a,b) => a[0]-b[0]);
+  merged = [];
+  i = 0; step = -1;
+  document.getElementById('phase').textContent = '-';
+  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始排序';
+  document.getElementById('cur-interval').textContent = '-';
+  document.getElementById('result-count').textContent = '0';
+  document.getElementById('result-list').innerHTML = '';
+  buildTimeline();
+  renderInput();
+  renderBars();
+}
+
+function next() {
+  if (step >= sorted.length) return;
+  step++;
+  if (step === 0) {
+    phase = 'sort';
+    document.getElementById('phase').textContent = '排序';
+    document.getElementById('phase-desc').innerHTML = '按起点 <span>从小到大</span> 排序';
+    document.getElementById('cur-interval').textContent = '-';
+    merged = [[...sorted[0]]];
+    document.getElementById('result-list').innerHTML =
+      `<span class="result-badge">[${merged[0][0]},${merged[0][1]}]</span>`;
+    document.getElementById('result-count').textContent = '1';
+    renderBars();
+  } else {
+    i = step - 1;
+    const cur = sorted[i];
+    document.getElementById('cur-interval').textContent = `[${cur[0]},${cur[1]}]`;
+    if (cur[0] <= merged[merged.length-1][1]) {
+      document.getElementById('phase').textContent = '合并';
+      document.getElementById('phase-desc').innerHTML =
+        `[${cur[0]},${cur[1]}] 与 [${merged[merged.length-1][0]},${merged[merged.length-1][1]}] <span>重叠</span>，扩展右边界`;
+      merged[merged.length-1][1] = Math.max(merged[merged.length-1][1], cur[1]);
+    } else {
+      document.getElementById('phase').textContent = '新增';
+      document.getElementById('phase-desc').innerHTML =
+        `[${cur[0]},${cur[1]}] 与 [${merged[merged.length-1][0]},${merged[merged.length-1][1]}] <span>不重叠</span>，加入结果`;
+      merged.push([...cur]);
+    }
+    document.getElementById('result-list').innerHTML = merged.map(iv =>
+      `<span class="result-badge">[${iv[0]},${iv[1]}]</span>`
+    ).join('');
+    document.getElementById('result-count').textContent = merged.length;
+    renderBars();
+  }
+}
+
+function prev() {
+  if (step <= 0) { reset(); return; }
+  step--;
+  if (step === 0) {
+    merged = [];
+    document.getElementById('phase').textContent = '排序';
+    document.getElementById('phase-desc').innerHTML = '按起点 <span>从小到大</span> 排序';
+    document.getElementById('cur-interval').textContent = '-';
+    document.getElementById('result-count').textContent = '0';
+    document.getElementById('result-list').innerHTML = '';
+    renderBars();
+  } else {
+    merged.pop();
+    document.getElementById('phase').textContent = '处理中';
+    document.getElementById('cur-interval').textContent = sorted[step-1] ? `[${sorted[step-1][0]},${sorted[step-1][1]}]` : '-';
+    document.getElementById('result-list').innerHTML = merged.map(iv =>
+      `<span class="result-badge">[${iv[0]},${iv[1]}]</span>`
+    ).join('');
+    document.getElementById('result-count').textContent = merged.length;
+    i = step - 1;
+    renderBars();
+  }
+}
+
+reset();
+</script>
+</body>
+</html>
