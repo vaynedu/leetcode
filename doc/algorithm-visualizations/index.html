@@ -15,6 +15,9 @@
     --accent: #b5523a;
     --accent-tint: rgba(181,82,58,0.08);
     --accent-strong: rgba(181,82,58,0.18);
+    --green: #16a34a;
+    --yellow: #ca8a04;
+    --red: #dc2626;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
@@ -30,8 +33,8 @@
   .header-meta { display: flex; gap: 16px; margin-top: 20px; font-family: 'Geist Mono', monospace; font-size: 11px; opacity: 0.5; }
 
   /* ---- stats bar ---- */
-  .stats-bar { display: flex; gap: 0; border-bottom: 1px solid var(--rule); background: var(--paper-2); }
-  .stat { padding: 12px 24px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px; }
+  .stats-bar { display: flex; gap: 0; border-bottom: 1px solid var(--rule); background: var(--paper-2); overflow-x: auto; }
+  .stat { padding: 12px 20px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px; white-space: nowrap; }
   .stat:last-child { border-right: none; }
   .stat-n { font-family: 'Geist Mono', monospace; font-size: 1.5rem; font-weight: 600; color: var(--accent); line-height: 1; }
   .stat-l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
@@ -43,6 +46,7 @@
   .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
   .filter-count { display: inline-block; background: rgba(255,255,255,0.3); border-radius: 10px; padding: 0 6px; font-size: 10px; margin-left: 4px; }
+  .filter-btn.active .filter-count { background: rgba(255,255,255,0.25); }
 
   /* ---- grid ---- */
   .container { max-width: 1200px; margin: 0 auto; padding: 24px 48px 64px; }
@@ -53,22 +57,43 @@
   .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; text-decoration: none; color: inherit; display: block; }
   .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(28,25,23,0.1); border-color: var(--accent); }
   .card-preview {
-    height: 80px;
+    height: 72px;
     background: var(--paper);
     border-bottom: 1px solid var(--rule);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: 'Geist Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
+    gap: 4px;
   }
-  .card-body { padding: 14px 16px; }
+  .card-cat-badge {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--soft);
+    letter-spacing: 0.08em;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-body { padding: 12px 14px; }
   .card-number { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--accent); letter-spacing: 0.1em; margin: 0 0 4px; }
-  .card-title { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 6px; line-height: 1.3; }
+  .card-title { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; line-height: 1.3; }
+  .card-bottom { display: flex; align-items: center; justify-content: space-between; }
   .card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
   .tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); font-family: 'Geist Mono', monospace; }
+
+  /* difficulty badge */
+  .diff { font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+  .diff-easy { background: #dcfce7; color: var(--green); }
+  .diff-medium { background: #fef9c3; color: var(--yellow); }
+  .diff-hard { background: #fee2e2; color: var(--red); }
+
+  /* frequency dots */
+  .freq { display: flex; gap: 2px; align-items: center; }
+  .freq-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rule); }
+  .freq-dot.active { background: var(--accent); }
 
   /* ---- search ---- */
   .search-wrap { padding: 16px 48px 0; }
@@ -114,7 +139,7 @@
   <button class="filter-btn" data-filter="sliding-window">滑动窗口<span class="filter-count" id="count-sliding-window">0</span></button>
   <button class="filter-btn" data-filter="binary-search">二分查找<span class="filter-count" id="count-binary-search">0</span></button>
   <button class="filter-btn" data-filter="dp">动态规划<span class="filter-count" id="count-dp">0</span></button>
-  <button class="filter-btn" data-filter="heap">堆/优先队列<span class="filter-count" id="count-heap">0</span></button>
+  <button class="filter-btn" data-filter="heap">堆<span class="filter-count" id="count-heap">0</span></button>
   <button class="filter-btn" data-filter="stack">栈<span class="filter-count" id="count-stack">0</span></button>
   <button class="filter-btn" data-filter="other">其他<span class="filter-count" id="count-other">0</span></button>
 </div>
@@ -123,33 +148,32 @@
   <div class="grid" id="grid"></div>
 </div>
 
-<!-- modal -->
-
 <footer>
   doc/algorithm-visualizations/index.html · 算法可视化看板
 </footer>
 
 <script>
+// Difficulty: easy / medium / hard
+// Frequency: 1-3 flames (3 = most frequent in interviews)
 const cards = [
-  // { id, num, title, file, tags: [] }
-  { id: 1,  num: '11',  title: '装水容器',        file: '11.container-with-most-water.html',      tags: ['two-pointer'],                   cat: 'two-pointer' },
-  { id: 2,  num: '112', title: '路径总和',        file: '112.path-sum.html',                      tags: ['binary-tree', 'dfs'],          cat: 'binary-tree' },
-  { id: 3,  num: '113', title: '路径总和 II',      file: '113.path-sum-ii.html',                   tags: ['binary-tree', 'dfs'],          cat: 'binary-tree' },
-  { id: 4,  num: '146', title: 'LRU 缓存',        file: '146.lru-cache.html',                     tags: ['hash-map', 'linked-list'],     cat: 'other' },
-  { id: 5,  num: '215', title: '数组第 K 大',      file: '215.kth-largest-element.html',           tags: ['heap', 'quick-select'],       cat: 'heap' },
-  { id: 6,  num: '23',  title: '合并 K 个链表',    file: '23.merge-k-sorted-lists.html',          tags: ['heap', 'merge'],              cat: 'heap' },
-  { id: 7,  num: '236', title: '最近公共祖先',      file: '236.lowest-common-ancestor.html',        tags: ['binary-tree', 'lca'],        cat: 'binary-tree' },
-  { id: 8,  num: '239', title: '滑动窗口最大值',    file: '239.sliding-window-maximum.html',        tags: ['sliding-window', 'deque'],   cat: 'sliding-window' },
-  { id: 9,  num: '257', title: '二叉树所有路径',    file: '257.binary-tree-paths.html',             tags: ['binary-tree', 'dfs'],         cat: 'binary-tree' },
-  { id: 10, num: '32',  title: '最长有效括号',      file: '32.longest-valid-parentheses.html',      tags: ['stack', 'dp'],               cat: 'stack' },
-  { id: 11, num: '33',  title: '旋转数组搜索',      file: '33.rotated-array-search.html',           tags: ['binary-search'],             cat: 'binary-search' },
-  { id: 12, num: '34',  title: '二分查找边界',      file: '34.binary-search-boundary.html',          tags: ['binary-search'],             cat: 'binary-search' },
-  { id: 13, num: '42',  title: '接雨水',           file: '42.trapping-rain-water.html',             tags: ['two-pointer', 'stack', 'dp'], cat: 'dp' },
-  { id: 14, num: '617', title: '合并二叉树',        file: '617.merge-two-binary-trees.html',         tags: ['binary-tree', 'merge'],      cat: 'binary-tree' },
-  { id: 15, num: '76',  title: '最小覆盖子串',      file: '76.minimum-window-substring.html',        tags: ['sliding-window', 'hash'],   cat: 'sliding-window' },
+  // { id, num, title, file, tags, cat, diff, freq }
+  { id: 1,  num: '11',   title: '装水容器',            file: '11.container-with-most-water.html',        tags: ['two-pointer'],            cat: 'two-pointer',    diff: 'medium', freq: 3 },
+  { id: 2,  num: '112',  title: '路径总和',            file: '112.path-sum.html',                        tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'easy',   freq: 2 },
+  { id: 3,  num: '113',  title: '路径总和 II',          file: '113.path-sum-ii.html',                     tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'medium', freq: 2 },
+  { id: 4,  num: '146',  title: 'LRU 缓存',            file: '146.lru-cache.html',                        tags: ['hash-map', 'linked-list'],cat: 'other',          diff: 'hard',   freq: 3 },
+  { id: 5,  num: '215',  title: '数组第 K 大',          file: '215.kth-largest-element.html',              tags: ['heap', 'quick-select'],   cat: 'heap',           diff: 'medium', freq: 3 },
+  { id: 6,  num: '23',   title: '合并 K 个链表',        file: '23.merge-k-sorted-lists.html',             tags: ['heap', 'merge'],          cat: 'heap',           diff: 'hard',   freq: 3 },
+  { id: 7,  num: '236',  title: '最近公共祖先',          file: '236.lowest-common-ancestor.html',          tags: ['binary-tree', 'lca'],     cat: 'binary-tree',    diff: 'medium', freq: 3 },
+  { id: 8,  num: '239',  title: '滑动窗口最大值',        file: '239.sliding-window-maximum.html',          tags: ['sliding-window', 'deque'],cat: 'sliding-window', diff: 'medium', freq: 3 },
+  { id: 9,  num: '257',  title: '二叉树所有路径',        file: '257.binary-tree-paths.html',               tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'easy',   freq: 2 },
+  { id: 10, num: '32',   title: '最长有效括号',          file: '32.longest-valid-parentheses.html',         tags: ['stack', 'dp'],            cat: 'stack',          diff: 'hard',   freq: 3 },
+  { id: 11, num: '33',   title: '旋转数组搜索',          file: '33.rotated-array-search.html',             tags: ['binary-search'],          cat: 'binary-search',  diff: 'medium', freq: 3 },
+  { id: 12, num: '34',   title: '二分查找边界',          file: '34.binary-search-boundary.html',           tags: ['binary-search'],          cat: 'binary-search',  diff: 'hard',   freq: 3 },
+  { id: 13, num: '42',   title: '接雨水',               file: '42.trapping-rain-water.html',             tags: ['two-pointer', 'stack', 'dp'], cat: 'dp',        diff: 'hard',   freq: 3 },
+  { id: 14, num: '617',  title: '合并二叉树',            file: '617.merge-two-binary-trees.html',          tags: ['binary-tree', 'merge'],   cat: 'binary-tree',    diff: 'easy',   freq: 2 },
+  { id: 15, num: '76',   title: '最小覆盖子串',          file: '76.minimum-window-substring.html',         tags: ['sliding-window', 'hash'], cat: 'sliding-window', diff: 'hard',   freq: 3 },
 ];
 
-// category labels
 const catLabel = {
   'binary-tree': '二叉树',
   'two-pointer': '双指针',
@@ -161,6 +185,15 @@ const catLabel = {
   'other': '其他',
 };
 
+const diffLabel = { easy: '简单', medium: '中等', hard: '困难' };
+
+// frequency dots
+function freqDots(n) {
+  return Array.from({length: 3}, (_, i) =>
+    `<span class="freq-dot${i < n ? ' active' : ''}"></span>`
+  ).join('');
+}
+
 // render grid
 let currentFilter = 'all';
 let searchTerm = '';
@@ -169,7 +202,10 @@ function render() {
   const grid = document.getElementById('grid');
   const filtered = cards.filter(c => {
     const matchCat = currentFilter === 'all' || c.cat === currentFilter;
-    const matchSearch = !searchTerm || c.title.includes(searchTerm) || c.num.includes(searchTerm);
+    const matchSearch = !searchTerm ||
+      c.title.includes(searchTerm) ||
+      c.num.includes(searchTerm) ||
+      c.tags.some(t => t.includes(searchTerm));
     return matchCat && matchSearch;
   });
 
@@ -180,12 +216,20 @@ function render() {
 
   grid.innerHTML = filtered.map(c => `
     <a class="card" href="${c.file}" target="_blank" rel="noopener">
-      <div class="card-preview">${c.num} · ${catLabel[c.cat] || c.cat}</div>
+      <div class="card-preview">
+        <span class="card-cat-badge">${c.num} · ${catLabel[c.cat] || c.cat}</span>
+        <div class="card-meta">
+          <span class="freq" title="频率">${freqDots(c.freq)}</span>
+          <span class="diff diff-${c.diff}">${diffLabel[c.diff]}</span>
+        </div>
+      </div>
       <div class="card-body">
         <p class="card-number">${c.num}</p>
         <h3 class="card-title">${c.title}</h3>
-        <div class="card-tags">
-          ${c.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+        <div class="card-bottom">
+          <div class="card-tags">
+            ${c.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+          </div>
         </div>
       </div>
     </a>
