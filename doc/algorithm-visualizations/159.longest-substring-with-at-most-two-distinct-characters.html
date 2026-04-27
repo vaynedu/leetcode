@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>至多两个不同字符的最长子串 · 图解 · LeetCode 159</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .char-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .char-cell { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 700; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--muted); position: relative; }
+  .char-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .char-cell.win { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .char-cell.out { opacity: 0.3; }
+  .char-cell.max { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+
+  .ptr-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 8px 0 16px; flex-wrap: wrap; }
+  .ptr-slot { width: 44px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ptr-slot span.arr { font-size: 14px; color: var(--accent); line-height: 1; }
+  .ptr-slot span.label { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.found { color: #16a34a; font-weight: 600; }
+
+  .key-insight { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; margin: 16px 0; }
+  .key-insight p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+
+  pre { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.7; margin: 0; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); } 50% { box-shadow: 0 0 0 8px rgba(181,82,58,0); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 159 · Sliding Window</p>
+  <h1>至多包含两个不同字符的最长子串</h1>
+  <p class="subtitle">滑动窗口变种：维护窗口内最多两种字符</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定一个字符串，找出<strong>至多包含两种不同字符</strong>的最长子串长度。<br>
+      这是 #3（无重复字符）的变种，#3 用 hash set 判断"无重复"，本题用 hash map 统计<strong>每种字符的出现次数</strong>。
+    </p>
+
+    <div class="key-insight">
+      <p><strong>核心思路：</strong></p>
+      <p style="margin-top:8px;">维护一个 sliding window [left, right)，用 hash map 记录窗口内每个字符的出现次数。</p>
+      <p style="margin-top:8px;">当出现第 3 种不同字符时，收缩左边界直到窗口内只有 2 种字符。</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">#3 无重复字符</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">hash set 记录已见字符<br>遇到重复 → 收缩左边界直到移除</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">#159 最多2种字符</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">hash map 记录每种字符的 count<br>种类>2 → 收缩左边界直到移除一种</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: 手推全过程 -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">s = <code>"eceba"</code>，窗口内最多 2 种字符</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">R=0, 窗口 "e"</span>
+      </div>
+      <div class="char-row">
+        <div class="char-cell win">e<span class="idx">0</span></div>
+        <div class="char-cell">c<span class="idx">1</span></div>
+        <div class="char-cell">e<span class="idx">2</span></div>
+        <div class="char-cell">b<span class="idx">3</span></div>
+        <div class="char-cell">a<span class="idx">4</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">hash: {e:1}，maxLen=1</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">R=1, 窗口 "ec"</span>
+      </div>
+      <div class="char-row">
+        <div class="char-cell win">e<span class="idx">0</span></div>
+        <div class="char-cell win">c<span class="idx">1</span></div>
+        <div class="char-cell out">e<span class="idx">2</span></div>
+        <div class="char-cell out">b<span class="idx">3</span></div>
+        <div class="char-cell out">a<span class="idx">4</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">hash: {e:1, c:1}，2种字符，maxLen=2</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">R=2, 窗口 "ece" → 3种!</span>
+      </div>
+      <div class="char-row">
+        <div class="char-cell win">e<span class="idx">0</span></div>
+        <div class="char-cell win">c<span class="idx">1</span></div>
+        <div class="char-cell win">e<span class="idx">2</span></div>
+        <div class="char-cell out">b<span class="idx">3</span></div>
+        <div class="char-cell out">a<span class="idx">4</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">hash: {e:2, c:1}，只有 e 和 c，2种，正常</div>
+        <div class="kv">e 出现2次但仍算1种 → maxLen=3</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">R=3, 窗口 "eceb" → 3种!</span>
+      </div>
+      <div class="char-row">
+        <div class="char-cell win">e<span class="idx">0</span></div>
+        <div class="char-cell win">c<span class="idx">1</span></div>
+        <div class="char-cell win">e<span class="idx">2</span></div>
+        <div class="char-cell win">b<span class="idx">3</span></div>
+        <div class="char-cell out">a<span class="idx">4</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">hash: {e:2, c:1, b:1}，3种字符!</div>
+        <div class="kv focal">收缩 left：移除 'c' (count 1→0)，left=1</div>
+        <div class="kv">hash: {e:2, b:1}，2种 → maxLen = 4-1 = 3</div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">R=4, 窗口 "ecba" → 收缩</span>
+      </div>
+      <div class="char-row">
+        <div class="char-cell win">e<span class="idx">0</span></div>
+        <div class="char-cell win out">c<span class="idx">1</span></div>
+        <div class="char-cell win">e<span class="idx">2</span></div>
+        <div class="char-cell win">b<span class="idx">3</span></div>
+        <div class="char-cell win">a<span class="idx">4</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">hash: {e:2, b:1}，加 'a' → {e:2, b:1, a:1}，3种!</div>
+        <div class="kv focal">收缩 left：移除 e (count 2→1)，left=1</div>
+        <div class="kv">hash: {e:1, b:1, a:1}，还是3种!</div>
+        <div class="kv focal">继续收缩 left：移除 e (count 1→0)，left=2</div>
+        <div class="kv">hash: {b:1, a:1}，2种 → maxLen = 4-2 = 2</div>
+      </div>
+    </div>
+
+    <p style="text-align:center;font-size:14px;color:#16a34a;font-weight:600;margin:16px 0 0;">
+      最终答案：maxLen = 3（子串 "ece" 或 "eab"）
+    </p>
+  </section>
+
+  <!-- Section 3: 代码模板 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func lengthOfLongestSubstringTwoDistinct(s string) int {
+    hash := make(map[byte]int)
+    left := 0
+    maxLen := 0
+
+    for right := 0; right < len(s); right++ {
+        // 扩大窗口：加入 right 位置的字符
+        hash[s[right]]++
+
+        // 收缩窗口：保证窗口内最多2种字符
+        for len(hash) > 2 {
+            hash[s[left]]--
+            if hash[s[left]] == 0 {
+                delete(hash, s[left])
+            }
+            left++
+        }
+
+        // 更新最大长度
+        maxLen = max(maxLen, right-left+1)
+    }
+    return maxLen
+}</pre>
+  </section>
+
+  <!-- Section 4: 与 #3 对比 -->
+  <section>
+    <h2>与 #3 的关键区别</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#dc2626;margin:0 0 8px;font-weight:600;">#3 无重复字符</p>
+        <p style="font-size:12px;color:#991b1b;margin:0;line-height:1.6;">hash set 记录已见字符<br>遇到重复就收缩<br>只需要记录"是否出现过"</p>
+      </div>
+      <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">#159 最多2种字符</p>
+        <p style="font-size:12px;color:#166534;margin:0;line-height:1.6;">hash map 记录 count<br>种类超过2就收缩<br>需要记录"每个字符出现几次"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>hash map 计数</h3>
+      <p>记录窗口内每种字符的出现次数</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">关键</p>
+      <h3><span class="dot"></span>len(hash) > 2</h3>
+      <p>种类超过2时收缩左边界</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">变种</p>
+      <h3><span class="dot"></span>扩展到 k 种字符</h3>
+      <p>把 2 改成 k，就是 #340</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/159.longest-substring-with-at-most-two-distinct-characters.html</footer>
+</body>
+</html>
