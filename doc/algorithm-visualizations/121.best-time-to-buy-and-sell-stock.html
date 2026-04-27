@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>121 买卖股票最佳时机</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.prices{display:flex;gap:10px;margin-bottom:.5rem;flex-wrap:wrap}
+.price-bar{width:54px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-fill{width:36px;border-radius:4px 4px 0 0;transition:all .3s;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-size:.7rem;font-weight:bold;min-height:20px}
+.bar-label{font-size:.65rem;color:#64748b;height:16px}
+.bar-default{background:#334155;color:#94a3b8}
+.bar-cur{background:#0369a1;color:#fff}
+.bar-buy{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
+.bar-sell{background:#7f1d1d;color:#fca5a5;border:2px solid #ef4444}
+.bar-profit{background:#78350f;color:#fcd34d}
+.price-num{font-size:.65rem;color:#475569;margin-top:2px}
+.status-bar{display:flex;gap:1rem;margin-top:.8rem;font-size:.85rem;flex-wrap:wrap}
+.status-item{color:#94a3b8}.status-item span{color:#fbbf24;font-weight:bold}
+.profit-area{width:100%;height:40px;position:relative;margin:.8rem 0 .4rem}
+.profit-bar{position:absolute;bottom:0;width:54px;border-radius:0 0 4px 4px;transition:all .3s}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>121. 买卖股票最佳时机</h1>
+<p class="subtitle">贪心：在最低价买入，在最高价卖出</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">当前价格: <span id="cur-price">-</span></div>
+    <div class="info-item">最低价: <span id="min-price">-</span></div>
+    <div class="info-item">最大利润: <span id="max-profit">0</span></div>
+    <div class="info-item">最佳买卖: <span id="best-range">-</span></div>
+  </div>
+  <div class="label" style="font-size:.75rem;color:#64748b;margin-bottom:.4rem">价格柱状图（越高越贵）</div>
+  <div class="prices" id="prices"></div>
+  <div class="profit-area" id="profit-area"></div>
+  <div class="status-bar">
+    <div class="status-item">买入日: <span id="buy-day">-</span></div>
+    <div class="status-item">卖出日: <span id="sell-day">-</span></div>
+    <div class="status-item">当前利润: <span id="cur-profit">-</span></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">maxProfit</span>(prices) {
+  <span class="kw">let</span> minP = prices[<span class="num">0</span>], maxP = <span class="num">0</span>;
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < prices.length; i++) {
+    minP = Math.<span class="hl">min</span>(minP, prices[i]);
+    maxP = Math.<span class="hl">max</span>(maxP, prices[i] - minP);
+  }
+  <span class="kw">return</span> maxP;
+}</pre>
+</div>
+
+<script>
+const prices = [7, 1, 5, 3, 6, 4];
+let i = 0, minP = 0, maxP = 0, buyDay = 0, sellDay = 0, step = -1;
+
+function maxBar() { return Math.max(...prices); }
+
+function init() {
+  const container = document.getElementById('prices');
+  const profitArea = document.getElementById('profit-area');
+  container.innerHTML = '';
+  profitArea.innerHTML = '';
+  const max = maxBar();
+  for (let d = 0; d < prices.length; d++) {
+    const h = Math.round((prices[d] / max) * 160) + 20;
+    container.innerHTML += `
+      <div class="price-bar" id="bar-${d}">
+        <div class="bar-fill bar-default" id="fill-${d}" style="height:${h}px">${prices[d]}</div>
+        <div class="bar-label">Day ${d}</div>
+        <div class="price-num">$${prices[d]}</div>
+      </div>`;
+    profitArea.innerHTML += `<div class="profit-bar" id="pbar-${d}" style="left:${d*64}px;height:0;background:#78350f"></div>`;
+  }
+  reset();
+}
+
+function reset() {
+  i = 0; minP = prices[0]; maxP = 0; buyDay = 0; sellDay = 0; step = -1;
+  for (let d = 0; d < prices.length; d++) {
+    const f = document.getElementById(`fill-${d}`);
+    const max = maxBar();
+    f.style.height = Math.round((prices[d] / max) * 160) + 20 + 'px';
+    f.className = 'bar-fill bar-default';
+    f.textContent = prices[d];
+    const pb = document.getElementById(`pbar-${d}`);
+    pb.style.height = '0';
+    document.getElementById(`bar-${d}`).querySelector('.bar-label').textContent = `Day ${d}`;
+  }
+  // highlight min
+  const mf = document.getElementById(`fill-0`);
+  mf.className = 'bar-fill bar-buy';
+  updateInfo();
+}
+
+function updateInfo() {
+  document.getElementById('cur-price').textContent = '$' + prices[i];
+  document.getElementById('min-price').textContent = '$' + minP;
+  document.getElementById('max-profit').textContent = maxP;
+  document.getElementById('best-range').textContent = buyDay === sellDay ? '-' : `Buy D${buyDay} → Sell D${sellDay}`;
+  document.getElementById('buy-day').textContent = buyDay === sellDay ? '-' : `Day ${buyDay}`;
+  document.getElementById('sell-day').textContent = buyDay === sellDay ? '-' : `Day ${sellDay}`;
+  document.getElementById('cur-profit').textContent = (i > buyDay && prices[i] - prices[buyDay] > 0) ? prices[i] - prices[buyDay] : '-';
+}
+
+function next() {
+  if (i >= prices.length - 1) return;
+  i++;
+  const prevMin = minP;
+  if (prices[i] < minP) {
+    minP = prices[i];
+    buyDay = i;
+  }
+  const profit = prices[i] - prevMin;
+  if (profit > maxP) {
+    maxP = profit;
+    sellDay = i;
+  }
+  // update all fills
+  for (let d = 0; d <= i; d++) {
+    const f = document.getElementById(`fill-${d}`);
+    f.className = 'bar-fill bar-default';
+    document.getElementById(`bar-${d}`).querySelector('.bar-label').textContent = `Day ${d}`;
+  }
+  // buy bar
+  document.getElementById(`fill-${buyDay}`).className = 'bar-fill bar-buy';
+  document.getElementById(`bar-${buyDay}`).querySelector('.bar-label').textContent = 'Buy';
+  // profit bars up to i
+  const max = maxBar();
+  for (let d = buyDay + 1; d <= i; d++) {
+    const profit = prices[d] - prices[buyDay];
+    const h = Math.round(Math.max(0, profit) / max * 160);
+    const pb = document.getElementById(`pbar-${d}`);
+    pb.style.height = h + 'px';
+    pb.style.background = profit === maxP ? '#f59e0b' : '#78350f';
+  }
+  // sell bar
+  document.getElementById(`fill-${sellDay}`).className = 'bar-fill bar-sell';
+  document.getElementById(`bar-${sellDay}`).querySelector('.bar-label').textContent = 'Sell';
+  updateInfo();
+}
+
+function prev() {
+  if (i <= 0) return;
+  // reset profit bars
+  for (let d = 0; d <= i; d++) {
+    const pb = document.getElementById(`pbar-${d}`);
+    pb.style.height = '0';
+    document.getElementById(`fill-${d}`).className = 'bar-fill bar-default';
+    document.getElementById(`bar-${d}`).querySelector('.bar-label').textContent = `Day ${d}`;
+  }
+  i--;
+  // recompute minP and maxP
+  minP = prices[0]; maxP = 0; buyDay = 0; sellDay = 0;
+  for (let d = 0; d <= i; d++) {
+    if (prices[d] < minP) { minP = prices[d]; buyDay = d; }
+    const p = prices[d] - minP;
+    if (p > maxP) { maxP = p; sellDay = d; }
+  }
+  // redraw profit bars up to i
+  const max = maxBar();
+  for (let d = buyDay + 1; d <= i; d++) {
+    const profit = prices[d] - prices[buyDay];
+    const h = Math.round(Math.max(0, profit) / max * 160);
+    const pb = document.getElementById(`pbar-${d}`);
+    pb.style.height = h + 'px';
+    pb.style.background = profit === maxP ? '#f59e0b' : '#78350f';
+  }
+  if (buyDay !== sellDay) {
+    document.getElementById(`fill-${buyDay}`).className = 'bar-fill bar-buy';
+    document.getElementById(`bar-${buyDay}`).querySelector('.bar-label').textContent = 'Buy';
+    document.getElementById(`fill-${sellDay}`).className = 'bar-fill bar-sell';
+    document.getElementById(`bar-${sellDay}`).querySelector('.bar-label').textContent = 'Sell';
+  }
+  updateInfo();
+}
+
+init();
+</script>
+</body>
+</html>
