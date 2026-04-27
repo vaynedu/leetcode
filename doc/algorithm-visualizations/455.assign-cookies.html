@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>455 分发饼干</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.rows{display:flex;flex-direction:column;gap:.8rem;margin-bottom:.8rem}
+.row{display:flex;align-items:center;gap:.6rem}
+.row-label{font-size:.75rem;color:#64748b;width:80px;flex-shrink:0}
+.bars{display:flex;gap:6px;flex-wrap:wrap}
+.s-bar{height:32px;min-width:28px;padding:0 8px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:bold;transition:all .25s}
+.s-default{background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.s-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8}
+.s-used{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
+.s-skip{background:#1e293b;color:#475569;border:1px dashed #475569;text-decoration:line-through}
+.g-bar{height:48px;min-width:28px;padding:0 8px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:bold;transition:all .25s}
+.g-default{background:#334155;color:#94a3b8;border:1px solid #475569}
+.g-cur{background:#78350f;color:#fcd34d;border:2px solid #f59e0b;transform:scale(1.1)}
+.g-satisfied{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
+.g-dissatisfied{background:#450a0a;color:#fca5a5;border:1px solid #ef4444;opacity:.55}
+.pointer{font-size:.7rem;color:#fbbf24;margin-left:4px}
+.match-list{margin-top:.6rem;min-height:24px;display:flex;gap:.4rem;flex-wrap:wrap}
+.match-badge{font-size:.75rem;padding:.2rem .6rem;border-radius:20px;background:#065f46;color:#6ee7b7}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>455. 分发饼干</h1>
+<p class="subtitle">贪心：用最小饼干满足每个孩子，优先满足胃口小的</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">当前饼干: <span id="cur-s">-</span></div>
+    <div class="info-item">当前孩子: <span id="cur-g">-</span></div>
+    <div class="info-item">已满足: <span id="satisfied">0</span> / <span id="total">${3}</span></div>
+  </div>
+  <div class="rows">
+    <div class="row">
+      <div class="row-label">胃口 g[]</div>
+      <div class="bars" id="g-bars"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">饼干 s[]</div>
+      <div class="bars" id="s-bars"></div>
+    </div>
+  </div>
+  <div class="match-list" id="matches"></div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">findContentChildren</span>(g, s) {
+  g.<span class="hl">sort</span>((a,b) => a - b);
+  s.<span class="hl">sort</span>((a,b) => a - b);
+  <span class="kw">let</span> i = <span class="num">0</span>, j = <span class="num">0</span>, count = <span class="num">0</span>;
+  <span class="kw">while</span> (i < g.length && j < s.length) {
+    <span class="kw">if</span> (s[j] >= g[i]) {
+      count++; i++; j++;
+    } <span class="kw">else</span> {
+      j++;
+    }
+  }
+  <span class="kw">return</span> count;
+}</pre>
+</div>
+
+<script>
+const g = [1, 2, 3];  // 孩子胃口
+const s = [1, 2];     // 饼干尺寸
+let i = 0, j = 0, count = 0, step = -1;
+let matches = []; // {gIdx, sIdx}
+
+function init() {
+  const gBars = document.getElementById('g-bars');
+  const sBars = document.getElementById('s-bars');
+  gBars.innerHTML = '';
+  sBars.innerHTML = '';
+  g.forEach((val, idx) => {
+    gBars.innerHTML += `<div class="g-bar g-default" id="g-${idx}">${val}</div>`;
+  });
+  s.forEach((val, idx) => {
+    sBars.innerHTML += `<div class="s-bar s-default" id="s-${idx}">${val}</div>`;
+  });
+  document.getElementById('total').textContent = g.length;
+  reset();
+}
+
+function reset() {
+  i = 0; j = 0; count = 0; step = -1; matches = [];
+  g.forEach((_, idx) => {
+    const el = document.getElementById(`g-${idx}`);
+    el.className = 'g-bar g-default';
+  });
+  s.forEach((_, idx) => {
+    const el = document.getElementById(`s-${idx}`);
+    el.className = 's-bar s-default';
+  });
+  document.getElementById('satisfied').textContent = '0';
+  document.getElementById('cur-s').textContent = j < s.length ? s[j] : '-';
+  document.getElementById('cur-g').textContent = i < g.length ? g[i] : '-';
+  document.getElementById('matches').innerHTML = '';
+  updateStep();
+}
+
+function updateStep() {
+  // clear all active
+  g.forEach((_, idx) => {
+    const el = document.getElementById(`g-${idx}`);
+    if (!matches.find(m => m.gIdx === idx)) {
+      el.className = 'g-bar g-default';
+    }
+  });
+  s.forEach((_, idx) => {
+    const el = document.getElementById(`s-${idx}`);
+    if (!matches.find(m => m.sIdx === idx)) {
+      el.className = 's-bar s-default';
+    }
+  });
+  if (step >= 0 && i < g.length && j < s.length) {
+    const gi = i < g.length ? i : -1;
+    const sj = j < s.length ? j : -1;
+    if (gi >= 0) {
+      const el = document.getElementById(`g-${gi}`);
+      el.className = 'g-bar g-cur';
+    }
+    if (sj >= 0) {
+      const el = document.getElementById(`s-${sj}`);
+      if (matches.find(m => m.sIdx === sj)) {
+        el.className = 's-bar s-used';
+      } else {
+        el.className = 's-bar s-cur';
+      }
+    }
+  }
+  // show satisfied
+  matches.forEach(m => {
+    const el = document.getElementById(`g-${m.gIdx}`);
+    el.className = 'g-bar g-satisfied';
+    const sel = document.getElementById(`s-${m.sIdx}`);
+    sel.className = 's-bar s-used';
+  });
+}
+
+function next() {
+  if (i >= g.length || j >= s.length) return;
+  step++;
+  const curG = g[i], curS = s[j];
+  if (curS >= curG) {
+    // 满足
+    matches.push({ gIdx: i, sIdx: j });
+    count++;
+    i++; j++;
+  } else {
+    // 饼干太小，跳过
+    j++;
+  }
+  updateStep();
+  document.getElementById('satisfied').textContent = count;
+  document.getElementById('cur-s').textContent = j < s.length ? s[j] : '-';
+  document.getElementById('cur-g').textContent = i < g.length ? g[i] : '-';
+  document.getElementById('matches').innerHTML = matches.map(m =>
+    `<span class="match-badge">g[${m.gIdx}]=${g[m.gIdx]} ← s[${m.sIdx}]=${s[m.sIdx]}</span>`
+  ).join('');
+}
+
+function prev() {
+  if (matches.length === 0 && step < 0) return;
+  if (matches.length > 0) {
+    const last = matches.pop();
+    count--;
+    // determine new i and j
+    i = matches.length > 0 ? matches[matches.length - 1].gIdx + 1 : 0;
+    j = matches.length > 0 ? matches[matches.length - 1].sIdx + 1 : (last.sIdx + 1 > s.length ? s.length : last.sIdx + 1);
+  } else {
+    step--;
+    return;
+  }
+  updateStep();
+  document.getElementById('satisfied').textContent = count;
+  document.getElementById('cur-s').textContent = j < s.length ? s[j] : '-';
+  document.getElementById('cur-g').textContent = i < g.length ? g[i] : '-';
+  document.getElementById('matches').innerHTML = matches.map(m =>
+    `<span class="match-badge">g[${m.gIdx}]=${g[m.gIdx]} ← s[${m.sIdx}]=${s[m.sIdx]}</span>`
+  ).join('');
+}
+
+init();
+</script>
+</body>
+</html>
