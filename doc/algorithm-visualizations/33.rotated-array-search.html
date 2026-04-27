@@ -310,6 +310,12 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
   }
+
+  .think-card { background: var(--accent-tint); border-left: 3px solid var(--accent); border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
+  .think-title { font-family: 'Geist Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+  .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
+  .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
+
 </style>
 </head>
 <body>
@@ -321,7 +327,14 @@
     </header>
 
     <!-- Section 1 -->
-    <section>
+    
+<div class="think-card">
+  <div class="think-title">💡 核心思路</div>
+  <div class="think-insight">先判断哪一半有序，再决定搜索范围：二分 O(log n)</div>
+  <div class="think-mnemonic">口诀：哪半有序，就在哪半找</div>
+</div>
+
+<section>
       <h2>① 什么是旋转数组</h2>
       <p class="section-sub">升序数组在某一点"旋转"之后，变成 <strong>两段升序 + 一个断崖</strong>。整个数组只有 <strong>一个</strong> 断崖。</p>
       <div class="rotation-flow">

@@ -16,21 +16,34 @@
     --accent-tint: rgba(181,82,58,0.08);
     --accent-strong: rgba(181,82,58,0.18);
     --green: #16a34a;
+    --green-bg: #dcfce7;
     --yellow: #ca8a04;
+    --yellow-bg: #fef9c3;
     --red: #dc2626;
+    --red-bg: #fee2e2;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
   body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; min-height: 100vh; }
 
   /* ---- header ---- */
-  header { background: var(--ink); color: var(--paper); padding: 48px 48px 40px; position: relative; overflow: hidden; }
+  header { background: var(--ink); color: var(--paper); padding: 32px 48px; position: relative; overflow: hidden; }
   header::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 22px 22px; }
   header > * { position: relative; }
-  .header-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.5; margin: 0 0 12px; }
-  header h1 { font-family: 'Instrument Serif', serif; font-size: 3rem; font-weight: 400; margin: 0 0 8px; line-height: 1.1; }
-  header p { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.1rem; opacity: 0.65; margin: 0; }
-  .header-meta { display: flex; gap: 16px; margin-top: 20px; font-family: 'Geist Mono', monospace; font-size: 11px; opacity: 0.5; }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .header-left {}
+  .header-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.5; margin: 0 0 8px; }
+  header h1 { font-family: 'Instrument Serif', serif; font-size: 2.5rem; font-weight: 400; margin: 0 0 4px; line-height: 1.1; }
+  header p { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1rem; opacity: 0.65; margin: 0; }
+
+  /* ---- timer ---- */
+  .timer-box { text-align: right; }
+  .timer-label { font-family: 'Geist Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.5; margin-bottom: 4px; }
+  .timer-display { font-family: 'Geist Mono', monospace; font-size: 2rem; font-weight: 600; color: #fbbf24; letter-spacing: 0.05em; }
+  .timer-controls { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; }
+  .timer-btn { font-family: 'Geist Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.15s; }
+  .timer-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+  .timer-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
 
   /* ---- stats bar ---- */
   .stats-bar { display: flex; gap: 0; border-bottom: 1px solid var(--rule); background: var(--paper-2); overflow-x: auto; }
@@ -38,9 +51,12 @@
   .stat:last-child { border-right: none; }
   .stat-n { font-family: 'Geist Mono', monospace; font-size: 1.5rem; font-weight: 600; color: var(--accent); line-height: 1; }
   .stat-l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .stat-green .stat-n { color: var(--green); }
+  .stat-yellow .stat-n { color: var(--yellow); }
+  .stat-red .stat-n { color: var(--red); }
 
   /* ---- filter tabs ---- */
-  .filter-bar { padding: 20px 48px 0; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .filter-bar { padding: 16px 48px 0; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
   .filter-label { font-size: 11px; color: var(--muted); margin-right: 8px; font-family: 'Geist Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; }
   .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--rule); background: var(--paper); font-size: 12px; cursor: pointer; transition: all 0.15s; color: var(--muted); font-family: 'Geist', sans-serif; }
   .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -48,14 +64,22 @@
   .filter-count { display: inline-block; background: rgba(255,255,255,0.3); border-radius: 10px; padding: 0 6px; font-size: 10px; margin-left: 4px; }
   .filter-btn.active .filter-count { background: rgba(255,255,255,0.25); }
 
+  /* ---- mastery filter ---- */
+  .mastery-filter { display: flex; gap: 4px; margin-left: 16px; }
+  .mastery-btn { font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--rule); background: var(--paper); color: var(--muted); cursor: pointer; transition: all 0.15s; font-family: 'Geist Mono', monospace; }
+  .mastery-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mastery-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
   /* ---- grid ---- */
-  .container { max-width: 1200px; margin: 0 auto; padding: 24px 48px 64px; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px 48px 64px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
   .empty-state { grid-column: 1/-1; text-align: center; padding: 64px; color: var(--muted); font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.2rem; }
 
   /* ---- cards ---- */
   .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; text-decoration: none; color: inherit; display: block; }
   .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(28,25,23,0.1); border-color: var(--accent); }
+  .card.mastered { border-color: var(--green); background: var(--green-bg); }
+  .card.mastered .card-check { color: var(--green); }
   .card-preview {
     height: 72px;
     background: var(--paper);
@@ -65,6 +89,7 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+    position: relative;
   }
   .card-cat-badge {
     font-family: 'Geist Mono', monospace;
@@ -78,17 +103,31 @@
     gap: 8px;
   }
   .card-body { padding: 12px 14px; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; }
   .card-number { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--accent); letter-spacing: 0.1em; margin: 0 0 4px; }
   .card-title { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; line-height: 1.3; }
   .card-bottom { display: flex; align-items: center; justify-content: space-between; }
   .card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
   .tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); font-family: 'Geist Mono', monospace; }
 
+  /* check button */
+  .card-check {
+    font-size: 18px;
+    color: var(--soft);
+    cursor: pointer;
+    transition: color 0.15s;
+    line-height: 1;
+    padding: 2px;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .card-check:hover { color: var(--green); }
+
   /* difficulty badge */
   .diff { font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
-  .diff-easy { background: #dcfce7; color: var(--green); }
-  .diff-medium { background: #fef9c3; color: var(--yellow); }
-  .diff-hard { background: #fee2e2; color: var(--red); }
+  .diff-easy { background: var(--green-bg); color: var(--green); }
+  .diff-medium { background: var(--yellow-bg); color: var(--yellow); }
+  .diff-hard { background: var(--red-bg); color: var(--red); }
 
   /* frequency dots */
   .freq { display: flex; gap: 2px; align-items: center; }
@@ -96,7 +135,7 @@
   .freq-dot.active { background: var(--accent); }
 
   /* ---- search ---- */
-  .search-wrap { padding: 16px 48px 0; }
+  .search-wrap { padding: 12px 48px 0; }
   .search-input { width: 100%; max-width: 320px; padding: 8px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); font-size: 13px; font-family: 'Geist', sans-serif; color: var(--ink); outline: none; transition: border-color 0.15s; }
   .search-input:focus { border-color: var(--accent); }
   .search-input::placeholder { color: var(--soft); }
@@ -108,18 +147,28 @@
 <body>
 
 <header>
-  <p class="header-eyebrow">Algorithm Visualization Dashboard</p>
-  <h1>算法可视化看板</h1>
-  <p>纸笔风格图解，面试算法速查</p>
-  <div class="header-meta">
-    <span id="total-count"></span>
-    <span>·</span>
-    <span>doc/algorithm-visualizations/</span>
+  <div class="header-row">
+    <div class="header-left">
+      <p class="header-eyebrow">Algorithm Visualization Dashboard</p>
+      <h1>算法可视化看板</h1>
+      <p>纸笔风格图解，面试算法速查</p>
+    </div>
+    <div class="timer-box">
+      <div class="timer-label">刷题计时</div>
+      <div class="timer-display" id="timer">00:00</div>
+      <div class="timer-controls">
+        <button class="timer-btn" id="timer-start">▶ 开始</button>
+        <button class="timer-btn" id="timer-reset">↺ 重置</button>
+      </div>
+    </div>
   </div>
 </header>
 
 <div class="stats-bar">
   <div class="stat"><span class="stat-n" id="stat-total">0</span><span class="stat-l">Total</span></div>
+  <div class="stat stat-green"><span class="stat-n" id="stat-mastered">0</span><span class="stat-l">已掌握 ✓</span></div>
+  <div class="stat stat-yellow"><span class="stat-n" id="stat-practice">0</span><span class="stat-l">需练习</span></div>
+  <div class="stat stat-red"><span class="stat-n" id="stat-new">0</span><span class="stat-l">未开始</span></div>
   <div class="stat"><span class="stat-n" id="stat-binary">0</span><span class="stat-l">Binary Tree</span></div>
   <div class="stat"><span class="stat-n" id="stat-sliding">0</span><span class="stat-l">Sliding Window</span></div>
   <div class="stat"><span class="stat-n" id="stat-dp">0</span><span class="stat-l">DP</span></div>
@@ -142,6 +191,13 @@
   <button class="filter-btn" data-filter="heap">堆<span class="filter-count" id="count-heap">0</span></button>
   <button class="filter-btn" data-filter="stack">栈<span class="filter-count" id="count-stack">0</span></button>
   <button class="filter-btn" data-filter="other">其他<span class="filter-count" id="count-other">0</span></button>
+
+  <div class="mastery-filter">
+    <span class="filter-label">状态</span>
+    <button class="mastery-btn active" data-mastery="all">全部</button>
+    <button class="mastery-btn" data-mastery="mastered">已掌握</button>
+    <button class="mastery-btn" data-mastery="new">未开始</button>
+  </div>
 </div>
 
 <div class="container">
@@ -154,24 +210,23 @@
 
 <script>
 // Difficulty: easy / medium / hard
-// Frequency: 1-3 flames (3 = most frequent in interviews)
+// Frequency: 1-3 (3 = most frequent in interviews)
 const cards = [
-  // { id, num, title, file, tags, cat, diff, freq }
-  { id: 1,  num: '11',   title: '装水容器',            file: '11.container-with-most-water.html',        tags: ['two-pointer'],            cat: 'two-pointer',    diff: 'medium', freq: 3 },
-  { id: 2,  num: '112',  title: '路径总和',            file: '112.path-sum.html',                        tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'easy',   freq: 2 },
-  { id: 3,  num: '113',  title: '路径总和 II',          file: '113.path-sum-ii.html',                     tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'medium', freq: 2 },
-  { id: 4,  num: '146',  title: 'LRU 缓存',            file: '146.lru-cache.html',                        tags: ['hash-map', 'linked-list'],cat: 'other',          diff: 'hard',   freq: 3 },
-  { id: 5,  num: '215',  title: '数组第 K 大',          file: '215.kth-largest-element.html',              tags: ['heap', 'quick-select'],   cat: 'heap',           diff: 'medium', freq: 3 },
-  { id: 6,  num: '23',   title: '合并 K 个链表',        file: '23.merge-k-sorted-lists.html',             tags: ['heap', 'merge'],          cat: 'heap',           diff: 'hard',   freq: 3 },
-  { id: 7,  num: '236',  title: '最近公共祖先',          file: '236.lowest-common-ancestor.html',          tags: ['binary-tree', 'lca'],     cat: 'binary-tree',    diff: 'medium', freq: 3 },
-  { id: 8,  num: '239',  title: '滑动窗口最大值',        file: '239.sliding-window-maximum.html',          tags: ['sliding-window', 'deque'],cat: 'sliding-window', diff: 'medium', freq: 3 },
-  { id: 9,  num: '257',  title: '二叉树所有路径',        file: '257.binary-tree-paths.html',               tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'easy',   freq: 2 },
-  { id: 10, num: '32',   title: '最长有效括号',          file: '32.longest-valid-parentheses.html',         tags: ['stack', 'dp'],            cat: 'stack',          diff: 'hard',   freq: 3 },
-  { id: 11, num: '33',   title: '旋转数组搜索',          file: '33.rotated-array-search.html',             tags: ['binary-search'],          cat: 'binary-search',  diff: 'medium', freq: 3 },
-  { id: 12, num: '34',   title: '二分查找边界',          file: '34.binary-search-boundary.html',           tags: ['binary-search'],          cat: 'binary-search',  diff: 'hard',   freq: 3 },
-  { id: 13, num: '42',   title: '接雨水',               file: '42.trapping-rain-water.html',             tags: ['two-pointer', 'stack', 'dp'], cat: 'dp',        diff: 'hard',   freq: 3 },
-  { id: 14, num: '617',  title: '合并二叉树',            file: '617.merge-two-binary-trees.html',          tags: ['binary-tree', 'merge'],   cat: 'binary-tree',    diff: 'easy',   freq: 2 },
-  { id: 15, num: '76',   title: '最小覆盖子串',          file: '76.minimum-window-substring.html',         tags: ['sliding-window', 'hash'], cat: 'sliding-window', diff: 'hard',   freq: 3 },
+  { id: 1,  num: '11',   title: '装水容器',             file: '11.container-with-most-water.html',        tags: ['two-pointer'],              cat: 'two-pointer',    diff: 'medium', freq: 3 },
+  { id: 2,  num: '112',  title: '路径总和',             file: '112.path-sum.html',                        tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'easy',   freq: 2 },
+  { id: 3,  num: '113',  title: '路径总和 II',           file: '113.path-sum-ii.html',                     tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'medium', freq: 2 },
+  { id: 4,  num: '146',  title: 'LRU 缓存',             file: '146.lru-cache.html',                        tags: ['hash-map', 'linked-list'],cat: 'other',          diff: 'hard',   freq: 3 },
+  { id: 5,  num: '215',  title: '数组第 K 大',           file: '215.kth-largest-element.html',              tags: ['heap', 'quick-select'],   cat: 'heap',           diff: 'medium', freq: 3 },
+  { id: 6,  num: '23',   title: '合并 K 个链表',         file: '23.merge-k-sorted-lists.html',             tags: ['heap', 'merge'],           cat: 'heap',           diff: 'hard',   freq: 3 },
+  { id: 7,  num: '236',  title: '最近公共祖先',           file: '236.lowest-common-ancestor.html',           tags: ['binary-tree', 'lca'],     cat: 'binary-tree',    diff: 'medium', freq: 3 },
+  { id: 8,  num: '239',  title: '滑动窗口最大值',         file: '239.sliding-window-maximum.html',           tags: ['sliding-window', 'deque'],cat: 'sliding-window', diff: 'medium', freq: 3 },
+  { id: 9,  num: '257',  title: '二叉树所有路径',         file: '257.binary-tree-paths.html',                tags: ['binary-tree', 'dfs'],     cat: 'binary-tree',    diff: 'easy',   freq: 2 },
+  { id: 10, num: '32',   title: '最长有效括号',           file: '32.longest-valid-parentheses.html',          tags: ['stack', 'dp'],            cat: 'stack',          diff: 'hard',   freq: 3 },
+  { id: 11, num: '33',   title: '旋转数组搜索',           file: '33.rotated-array-search.html',              tags: ['binary-search'],          cat: 'binary-search',  diff: 'medium', freq: 3 },
+  { id: 12, num: '34',   title: '二分查找边界',           file: '34.binary-search-boundary.html',             tags: ['binary-search'],          cat: 'binary-search',  diff: 'hard',   freq: 3 },
+  { id: 13, num: '42',   title: '接雨水',                file: '42.trapping-rain-water.html',               tags: ['two-pointer', 'stack', 'dp'], cat: 'dp',       diff: 'hard',   freq: 3 },
+  { id: 14, num: '617',  title: '合并二叉树',             file: '617.merge-two-binary-trees.html',           tags: ['binary-tree', 'merge'],   cat: 'binary-tree',    diff: 'easy',   freq: 2 },
+  { id: 15, num: '76',   title: '最小覆盖子串',           file: '76.minimum-window-substring.html',          tags: ['sliding-window', 'hash'], cat: 'sliding-window', diff: 'hard',   freq: 3 },
 ];
 
 const catLabel = {
@@ -184,18 +239,38 @@ const catLabel = {
   'stack': '栈',
   'other': '其他',
 };
-
 const diffLabel = { easy: '简单', medium: '中等', hard: '困难' };
 
-// frequency dots
+// ---- mastery (localStorage) ----
+const mastered = new Set(JSON.parse(localStorage.getItem('mastered') || '[]'));
+
+function saveMastered() {
+  localStorage.setItem('mastered', JSON.stringify([...mastered]));
+}
+
+function toggleMaster(e, id) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (mastered.has(id)) {
+    mastered.delete(id);
+  } else {
+    mastered.add(id);
+  }
+  saveMastered();
+  render();
+  updateStats();
+}
+
+// ---- frequency dots ----
 function freqDots(n) {
   return Array.from({length: 3}, (_, i) =>
     `<span class="freq-dot${i < n ? ' active' : ''}"></span>`
   ).join('');
 }
 
-// render grid
+// ---- render grid ----
 let currentFilter = 'all';
+let currentMastery = 'all';
 let searchTerm = '';
 
 function render() {
@@ -206,7 +281,12 @@ function render() {
       c.title.includes(searchTerm) ||
       c.num.includes(searchTerm) ||
       c.tags.some(t => t.includes(searchTerm));
-    return matchCat && matchSearch;
+    const isMastered = mastered.has(c.id);
+    const matchMastery =
+      currentMastery === 'all' ||
+      (currentMastery === 'mastered' && isMastered) ||
+      (currentMastery === 'new' && !isMastered);
+    return matchCat && matchSearch && matchMastery;
   });
 
   if (filtered.length === 0) {
@@ -214,8 +294,10 @@ function render() {
     return;
   }
 
-  grid.innerHTML = filtered.map(c => `
-    <a class="card" href="${c.file}" target="_blank" rel="noopener">
+  grid.innerHTML = filtered.map(c => {
+    const isMastered = mastered.has(c.id);
+    return `
+    <a class="card${isMastered ? ' mastered' : ''}" href="${c.file}" target="_blank" rel="noopener">
       <div class="card-preview">
         <span class="card-cat-badge">${c.num} · ${catLabel[c.cat] || c.cat}</span>
         <div class="card-meta">
@@ -224,7 +306,10 @@ function render() {
         </div>
       </div>
       <div class="card-body">
-        <p class="card-number">${c.num}</p>
+        <div class="card-top">
+          <p class="card-number">${c.num}</p>
+          <span class="card-check" onclick="toggleMaster(event, ${c.id})" title="${isMastered ? '取消掌握' : '标记为已掌握'}">${isMastered ? '☑' : '☐'}</span>
+        </div>
         <h3 class="card-title">${c.title}</h3>
         <div class="card-bottom">
           <div class="card-tags">
@@ -232,24 +317,29 @@ function render() {
           </div>
         </div>
       </div>
-    </a>
-  `).join('');
+    </a>`;
+  }).join('');
 }
 
-// stats
+// ---- stats ----
 function updateStats() {
   const total = cards.length;
+  const masteredCount = mastered.size;
+  const newCount = total - masteredCount;
+
   const byCat = {};
   cards.forEach(c => { byCat[c.cat] = (byCat[c.cat] || 0) + 1; });
 
   document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-mastered').textContent = masteredCount;
+  document.getElementById('stat-practice').textContent = masteredCount;
+  document.getElementById('stat-new').textContent = newCount;
   document.getElementById('stat-binary').textContent = byCat['binary-tree'] || 0;
   document.getElementById('stat-sliding').textContent = byCat['sliding-window'] || 0;
   document.getElementById('stat-dp').textContent = byCat['dp'] || 0;
   document.getElementById('stat-search').textContent = byCat['binary-search'] || 0;
   document.getElementById('stat-other').textContent = (byCat['other'] || 0) + (byCat['heap'] || 0) + (byCat['stack'] || 0);
 
-  // filter counts
   document.getElementById('count-all').textContent = total;
   document.getElementById('count-binary-tree').textContent = byCat['binary-tree'] || 0;
   document.getElementById('count-two-pointer').textContent = byCat['two-pointer'] || 0;
@@ -261,7 +351,7 @@ function updateStats() {
   document.getElementById('count-other').textContent = byCat['other'] || 0;
 }
 
-// filter buttons
+// ---- filter buttons ----
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -271,11 +361,68 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// search
+// ---- mastery filter ----
+document.querySelectorAll('.mastery-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mastery-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMastery = btn.dataset.mastery;
+    render();
+  });
+});
+
+// ---- search ----
 document.getElementById('search').addEventListener('input', e => {
   searchTerm = e.target.value;
   render();
 });
+
+// ---- timer ----
+let timerSeconds = 0;
+let timerInterval = null;
+let timerRunning = false;
+
+const timerDisplay = document.getElementById('timer');
+const timerStartBtn = document.getElementById('timer-start');
+
+function formatTimer(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = (s % 60).toString().padStart(2, '0');
+  return m + ':' + sec;
+}
+
+function updateTimerDisplay() {
+  timerDisplay.textContent = formatTimer(timerSeconds);
+}
+
+function startTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerStartBtn.textContent = '▶ 开始';
+    timerStartBtn.classList.remove('active');
+  } else {
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      updateTimerDisplay();
+    }, 1000);
+    timerStartBtn.textContent = '⏸ 暂停';
+    timerStartBtn.classList.add('active');
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 0;
+  updateTimerDisplay();
+  timerStartBtn.textContent = '▶ 开始';
+  timerStartBtn.classList.remove('active');
+}
+
+document.getElementById('timer-start').addEventListener('click', startTimer);
+document.getElementById('timer-reset').addEventListener('click', resetTimer);
 
 updateStats();
 render();

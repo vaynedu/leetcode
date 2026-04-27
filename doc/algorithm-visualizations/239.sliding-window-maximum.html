@@ -207,6 +207,12 @@
   .summary { animation-delay: 0.55s; }
   footer { animation-delay: 0.7s; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .think-card { background: var(--accent-tint); border-left: 3px solid var(--accent); border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
+  .think-title { font-family: 'Geist Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+  .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
+  .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
+
 </style>
 </head>
 <body>
@@ -218,7 +224,14 @@
   </header>
 
   <!-- Section 1: deque 是什么 -->
-  <section>
+  
+<div class="think-card">
+  <div class="think-title">💡 核心思路</div>
+  <div class="think-insight">单调递减 deque，窗口右移时挤掉小于新元素的索引，队首永远最大</div>
+  <div class="think-mnemonic">口诀：递减队列，队首是当前窗口最大值</div>
+</div>
+
+<section>
     <h2>① 单调 deque 是什么</h2>
     <p class="section-sub">Deque 里存的是**下标**，并且下标对应的值保持**单调递减**。<br>队首 deque[0] 始终是当前窗口最大值的下标。</p>
 

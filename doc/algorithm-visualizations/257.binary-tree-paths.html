@@ -41,6 +41,12 @@
   .code-block .kw { color: #f97316; }
   .code-block .fn { color: #60a5fa; }
   .code-block .cm { color: #78716c; }
+
+  .think-card { background: var(--accent-tint); border-left: 3px solid var(--accent); border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
+  .think-title { font-family: 'Geist Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+  .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
+  .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
+
 </style>
 </head>
 <body>
@@ -48,6 +54,13 @@
 <div class="eyebrow">LeetCode 257</div>
 <h1>二叉树的所有路径</h1>
 <p class="subtitle">Root-to-leaf paths, "1→2→5" format</p>
+
+
+<div class="think-card">
+  <div class="think-title">💡 核心思路</div>
+  <div class="think-insight">前序遍历，路径字符串拼接，到叶子节点收集</div>
+  <div class="think-mnemonic">口诀：前序收集，字符串累积</div>
+</div>
 
 <section>
 <h2>问题定义</h2>

@@ -306,6 +306,12 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
   }
+
+  .think-card { background: var(--accent-tint); border-left: 3px solid var(--accent); border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
+  .think-title { font-family: 'Geist Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+  .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
+  .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
+
 </style>
 </head>
 <body>
@@ -317,7 +323,14 @@
   </header>
 
   <!-- Section 1: 问题描述 -->
-  <section>
+  
+<div class="think-card">
+  <div class="think-title">💡 核心思路</div>
+  <div class="think-insight">双指针从两端向中间收敛，容积由短边决定</div>
+  <div class="think-mnemonic">口诀：短边内移 → 才有可能变大</div>
+</div>
+
+<section>
     <h2>① 问题描述</h2>
     <p class="section-sub">每根柱子的高度 = <code>height[i]</code>，两柱子之间的水容量 = <strong>宽度 × 短板高度</strong>。找最大容量。</p>
 

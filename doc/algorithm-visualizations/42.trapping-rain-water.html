@@ -163,6 +163,12 @@
   .summary { animation-delay: 0.55s; }
   footer { animation-delay: 0.7s; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .think-card { background: var(--accent-tint); border-left: 3px solid var(--accent); border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
+  .think-title { font-family: 'Geist Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+  .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
+  .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
+
 </style>
 </head>
 <body>
@@ -174,7 +180,14 @@
   </header>
 
   <!-- Section 1: 问题描述 -->
-  <section>
+  
+<div class="think-card">
+  <div class="think-title">💡 核心思路</div>
+  <div class="think-insight">每一列上方能装的水 = min(左边最高, 右边最高) - 当前高度</div>
+  <div class="think-mnemonic">口诀：木桶原理，每列独立算</div>
+</div>
+
+<section>
     <h2>① 问题描述</h2>
     <p class="section-sub">每个柱子高度 = <code>height[i]</code>，柱子之间能存多少水？水高 = <strong>左右两边最高柱子的较小值 − 当前柱高</strong>。</p>
 
