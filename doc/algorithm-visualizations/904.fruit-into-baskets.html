@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>水果成篮 · 图解 · LeetCode 904</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  /* trees row */
+  .trees-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .tree-cell { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 700; border-radius: 8px; position: relative; }
+  .tree-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .tree-cell.type-0 { background: #dbeafe; border: 2px solid #3b82f6; color: #1d4ed8; }
+  .tree-cell.type-1 { background: #dcfce7; border: 2px solid #16a34a; color: #15803d; }
+  .tree-cell.type-2 { background: #fef9c3; border: 2px solid #ca8a04; color: #a16207; }
+  .tree-cell.type-3 { background: #fce7f3; border: 2px solid #db2777; color: #9d174d; }
+  .tree-cell.in-window { box-shadow: 0 0 0 3px var(--accent); transform: scale(1.08); }
+  .tree-cell.out-window { opacity: 0.4; }
+
+  .bracket-row { display: flex; gap: 4px; align-items: flex-start; justify-content: center; margin: 24px 0 8px; flex-wrap: wrap; }
+  .bracket { display: inline-block; font-size: 28px; color: var(--accent); font-family: 'Geist Mono', monospace; line-height: 1; margin: 0 2px; }
+  .b-cell { width: 44px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--soft); }
+  .b-cell.active { color: var(--accent); font-weight: 600; }
+
+  .ptr-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 8px 0 16px; flex-wrap: wrap; }
+  .ptr-slot { width: 44px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ptr-slot span.arr { font-size: 14px; color: var(--accent); line-height: 1; }
+  .ptr-slot span.label { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.best { color: #16a34a; font-weight: 600; }
+
+  /* basket display */
+  .basket-display { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+  .basket { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .basket-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 20px; font-weight: 700; border: 2px solid; }
+  .basket-icon.t0 { background: #dbeafe; border-color: #3b82f6; color: #1d4ed8; }
+  .basket-icon.t1 { background: #dcfce7; border-color: #16a34a; color: #15803d; }
+  .basket-icon.empty { background: var(--paper); border-color: var(--rule); color: var(--soft); font-size: 14px; }
+  .basket-label { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--muted); }
+  .basket-count { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 4px; }
+
+  /* types legend */
+  .legend { display: flex; gap: 12px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .legend-dot.t0 { background: #3b82f6; }
+  .legend-dot.t1 { background: #16a34a; }
+  .legend-dot.t2 { background: #ca8a04; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.3); } 50% { box-shadow: 0 0 0 6px rgba(181,82,58,0); } }
+  .in-window { animation: pulse 2s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 904 · Sliding Window</p>
+  <h1>水果成篮</h1>
+  <p class="subtitle">变长窗口，最多两种水果类型，求最大窗口长度</p>
+
+  <!-- Section 1: 核心思路 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定一排树，每棵树上有一种水果（用数字表示），只能摘两篮，求最大连续子数组长度。<br>
+      关键：<strong>变长窗口，右指针扩展，遇到第三种水果时左指针收缩</strong>。
+    </p>
+
+    <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;align-items:center;margin:24px 0;">
+      <div style="text-align:center;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 8px;">第 0 棵树</p>
+        <div style="width:52px;height:52px;border-radius:8px;background:#dbeafe;border:2px solid #3b82f6;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:22px;font-weight:700;color:#1d4ed8;">0</div>
+        <p style="font-size:11px;color:var(--muted);margin:6px 0 0;">蓝莓=0</p>
+      </div>
+      <div style="font-size:24px;color:var(--accent);">→</div>
+      <div class="basket">
+        <div class="basket-icon t0">0</div>
+        <span class="basket-label">Basket A</span>
+      </div>
+      <div class="basket">
+        <div class="basket-icon t1" style="background:#f3f4f6;border-color:#d1d5db;color:#6b7280;">?</div>
+        <span class="basket-label">Basket B</span>
+      </div>
+      <div style="text-align:center;margin-left:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);margin:0 0 4px;">最多两种</p>
+        <p style="font-size:12px;color:var(--accent);font-weight:600;margin:0;">第三种出现时<br>左指针收缩</p>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot t0"></div>类型 0</div>
+      <div class="legend-item"><div class="legend-dot t1"></div>类型 1</div>
+      <div class="legend-item"><div class="legend-dot t2"></div>类型 2</div>
+    </div>
+  </section>
+
+  <!-- Section 2: 完整 Trace -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">trees = <code>[1,2,3,2,2]</code>，求最大连续子数组（最多两种水果）</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">L=0 R=0 window=[1] 类型={1} len=1</span>
+      </div>
+      <div class="trees-row">
+        <div class="tree-cell type-1 in-window">1<span class="idx">0</span></div>
+        <div class="tree-cell type-2">2<span class="idx">1</span></div>
+        <div class="tree-cell type-3">3<span class="idx">2</span></div>
+        <div class="tree-cell type-2">2<span class="idx">3</span></div>
+        <div class="tree-cell type-2">2<span class="idx">4</span></div>
+      </div>
+      <div class="basket-display">
+        <div class="basket"><div class="basket-icon t1">1</div><span class="basket-label">类型 1</span><span class="basket-count">x1</span></div>
+        <div class="basket"><div class="basket-icon empty">?</div><span class="basket-label">空</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">只有类型 1，右指针继续扩展</div>
+        <div class="kv best">maxLen = 1</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">L=0 R=1 window=[1,2] 类型={1,2} len=2</span>
+      </div>
+      <div class="trees-row">
+        <div class="tree-cell type-1 in-window">1<span class="idx">0</span></div>
+        <div class="tree-cell type-2 in-window">2<span class="idx">1</span></div>
+        <div class="tree-cell type-3">3<span class="idx">2</span></div>
+        <div class="tree-cell type-2">2<span class="idx">3</span></div>
+        <div class="tree-cell type-2">2<span class="idx">4</span></div>
+      </div>
+      <div class="basket-display">
+        <div class="basket"><div class="basket-icon t1">1</div><span class="basket-label">类型 1</span><span class="basket-count">x1</span></div>
+        <div class="basket"><div class="basket-icon t2">2</div><span class="basket-label">类型 2</span><span class="basket-count">x1</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">加入类型 2，现在有 {1, 2} 两种，右指针继续扩展</div>
+        <div class="kv best">maxLen = 2</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">L=0→2 R=2 window=[2] 类型={2} len=1</span>
+      </div>
+      <div class="trees-row">
+        <div class="tree-cell type-1 out-window">1<span class="idx">0</span></div>
+        <div class="tree-cell type-2">2<span class="idx">1</span></div>
+        <div class="tree-cell type-3 in-window">3<span class="idx">2</span></div>
+        <div class="tree-cell type-2">2<span class="idx">3</span></div>
+        <div class="tree-cell type-2">2<span class="idx">4</span></div>
+      </div>
+      <div class="basket-display">
+        <div class="basket"><div class="basket-icon t2">2</div><span class="basket-label">类型 2</span><span class="basket-count">x1</span></div>
+        <div class="basket"><div class="basket-icon empty">?</div><span class="basket-label">空</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">R=2 遇到类型 3 → 窗口内有 {1,2,3} 三种！</div>
+        <div class="kv focal">L 右移到第一个 2 之后 → L=2，窗口收缩为 [2]</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">L=2 R=3 window=[2,2] 类型={2} len=2</span>
+      </div>
+      <div class="trees-row">
+        <div class="tree-cell type-1">1<span class="idx">0</span></div>
+        <div class="tree-cell type-2">2<span class="idx">1</span></div>
+        <div class="tree-cell type-3">3<span class="idx">2</span></div>
+        <div class="tree-cell type-2 in-window">2<span class="idx">3</span></div>
+        <div class="tree-cell type-2 in-window">2<span class="idx">4</span></div>
+      </div>
+      <div class="basket-display">
+        <div class="basket"><div class="basket-icon t2">2</div><span class="basket-label">类型 2</span><span class="basket-count">x2</span></div>
+        <div class="basket"><div class="basket-icon empty">?</div><span class="basket-label">空</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">R=3 加入类型 2（已在窗口内），窗口变为 [2,2]</div>
+        <div class="kv best">maxLen 保持 2</div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">L=2 R=4 window=[2,2] 类型={2} len=2</span>
+      </div>
+      <div class="decision">
+        <div class="kv">R=4 加入类型 2，窗口继续是 [2,2]</div>
+        <div class="kv best">maxLen = 2（最终答案）</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:var(--accent);font-weight:600;text-align:center;margin:24px 0 0;">
+      最终结果：maxLen = 4，窗口 [2,3,2,2] 或 [1,2,3,2]
+    </p>
+  </section>
+
+  <!-- Section 3: 代码模板 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <p class="section-sub">用 map 记录每种水果的数量，>2 种时收缩左指针</p>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func totalFruit(trees []int) int {
+    count := make(map[int]int)
+    L := 0
+    maxLen := 0
+
+    for R := 0; R < len(trees); R++ {
+        count[trees[R]]++  // 入窗口
+
+        // 超过两种，收缩左指针
+        for len(count) > 2 {
+            count[trees[L]]--
+            if count[trees[L]] == 0 {
+                delete(count, trees[L])
+            }
+            L++
+        }
+
+        maxLen = max(maxLen, R-L+1)
+    }
+    return maxLen
+}</pre>
+  </section>
+
+  <!-- Section 4: 关键点 -->
+  <section>
+    <h2>变形与关键</h2>
+    <p class="section-sub">本题本质是"最多 K 种"的变长窗口特例（K=2）</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">本题（K=2）</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">最多两种水果<br>用 map 记录每种数量<br>超过 2 种时收缩 L</p>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--accent);margin:0 0 8px;font-weight:600;">扩展（K=3）</p>
+        <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6;">最多三种水果<br>同样逻辑<br>只需改 len(count) > 3</p>
+      </div>
+    </div>
+    <p class="section-sub" style="margin-top:16px;">
+      <strong>内层 while 收缩的正确性：</strong><br>
+      每次只移出 L 一个元素，直到 count 里恰好 ≤2 种。收缩过程中 count 会依次删掉第一种直到只剩两种。
+    </p>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">类型</p>
+      <h3><span class="dot"></span>变长窗口</h3>
+      <p>R 扩展，超过 2 种时内层 while 收缩 L</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">数据结构</p>
+      <h3><span class="dot"></span>map 计数</h3>
+      <p>key=水果类型，value=出现次数，len(map) 即种类数</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>len(count) ≤ 2</h3>
+      <p>窗口内种类数始终 ≤2，每次更新 maxLen</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/904.fruit-into-baskets.html</footer>
+</body>
+</html>
