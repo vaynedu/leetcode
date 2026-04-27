@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>122 买卖股票最佳时机 II</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.diff-row{display:flex;gap:10px;margin-bottom:.4rem;flex-wrap:wrap}
+.diff-cell{width:54px;display:flex;flex-direction:column;align-items:center}
+.diff-arrow{font-size:.7rem;color:#64748b;height:18px}
+.diff-val{font-size:.7rem;font-weight:bold;padding:.15rem .3rem;border-radius:4px}
+.diff-up{background:#065f46;color:#6ee7b7}.diff-down{background:#7f1d1d;color:#fca5a5}.diff-zero{background:#1e293b;color:#475569}
+.prices{display:flex;gap:10px;margin-bottom:.5rem;flex-wrap:wrap}
+.price-bar{width:54px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-fill{width:36px;border-radius:4px 4px 0 0;transition:all .3s;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-size:.7rem;font-weight:bold;min-height:20px}
+.bar-label{font-size:.65rem;color:#64748b;height:16px}
+.bar-default{background:#334155;color:#94a3b8}
+.bar-cur{background:#0369a1;color:#fff}
+.bar-buy{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
+.bar-sell{background:#7f1d1d;color:#fca5a5;border:2px solid #ef4444}
+.bar-hold{background:#1e3a5f;color:#93c5fd}
+.price-num{font-size:.65rem;color:#475569;margin-top:2px}
+.trades{margin-top:.8rem;min-height:24px;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+.trade-badge{font-size:.75rem;padding:.2rem .6rem;border-radius:20px;font-weight:bold}
+.trade-buy{background:#065f46;color:#6ee7b7}
+.trade-sell{background:#7f1d1d;color:#fca5a5}
+.trade-none{color:#475569;font-size:.8rem}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>122. 买卖股票最佳时机 II</h1>
+<p class="subtitle">贪心：所有上涨段都买卖，收益最大化</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">累计利润: <span id="total-profit">0</span></div>
+    <div class="info-item">当前操作: <span id="cur-action">-</span></div>
+    <div class="info-item">买入日期: <span id="cur-buy">-</span></div>
+    <div class="info-item">当前日期: <span id="cur-day">-</span></div>
+  </div>
+  <div class="label" style="font-size:.75rem;color:#64748b;margin-bottom:.4rem">相邻日价格差（↑累加利润，↓跳过）</div>
+  <div class="diff-row" id="diff-row"></div>
+  <div class="label" style="font-size:.75rem;color:#64748b;margin:.6rem 0 .4rem">价格柱状图</div>
+  <div class="prices" id="prices"></div>
+  <div class="trades" id="trades"><span class="trade-none">操作记录...</span></div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">maxProfitII</span>(prices) {
+  <span class="kw">let</span> profit = <span class="num">0</span>;
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i < prices.length; i++) {
+    <span class="comment">// 累加所有上涨段</span>
+    profit += Math.<span class="hl">max</span>(<span class="num">0</span>, prices[i] - prices[i-<span class="num">1</span>]);
+  }
+  <span class="kw">return</span> profit;
+}</pre>
+</div>
+
+<script>
+const prices = [7, 1, 5, 3, 6, 4];
+// 差分:       -6  +4  -2  +3  -2
+// 贪心: 上涨段 D1→D2 (+4), D3→D4 (+3) = 总利润 7
+let i = 0; // 当前处理到 diff[i] 即 prices[i] vs prices[i+1]
+let profit = 0;
+let trades = [];
+let step = -1;
+
+function init() {
+  const container = document.getElementById('prices');
+  const diffRow = document.getElementById('diff-row');
+  container.innerHTML = '';
+  diffRow.innerHTML = '';
+  const max = Math.max(...prices);
+  for (let d = 0; d < prices.length; d++) {
+    const h = Math.round((prices[d] / max) * 120) + 20;
+    container.innerHTML += `
+      <div class="price-bar">
+        <div class="bar-fill bar-default" id="fill-${d}" style="height:${h}px">${prices[d]}</div>
+        <div class="bar-label" id="label-${d}">Day ${d}</div>
+        <div class="price-num">$${prices[d]}</div>
+      </div>`;
+  }
+  for (let d = 0; d < prices.length - 1; d++) {
+    const diff = prices[d + 1] - prices[d];
+    const cls = diff > 0 ? 'diff-up' : diff < 0 ? 'diff-down' : 'diff-zero';
+    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '—';
+    diffRow.innerHTML += `
+      <div class="diff-cell">
+        <div class="diff-val ${cls}" id="diff-${d}">${arrow} ${diff > 0 ? '+' : ''}${diff}</div>
+        <div class="diff-arrow">D${d}→D${d+1}</div>
+      </div>`;
+  }
+  reset();
+}
+
+function reset() {
+  i = 0; profit = 0; trades = []; step = -1;
+  for (let d = 0; d < prices.length; d++) {
+    const f = document.getElementById(`fill-${d}`);
+    f.className = 'bar-fill bar-default';
+    document.getElementById(`label-${d}`).textContent = `Day ${d}`;
+  }
+  document.getElementById('total-profit').textContent = '0';
+  document.getElementById('cur-action').textContent = '-';
+  document.getElementById('cur-buy').textContent = '-';
+  document.getElementById('cur-day').textContent = 'Day 0';
+  document.getElementById('trades').innerHTML = '<span class="trade-none">操作记录...</span>';
+}
+
+function next() {
+  if (i >= prices.length - 1) return;
+  step = i;
+  const diff = prices[i + 1] - prices[i];
+  if (diff > 0) {
+    profit += diff;
+    trades.push({ buy: i, sell: i + 1, profit: diff });
+    document.getElementById(`fill-${i}`).className = 'bar-fill bar-buy';
+    document.getElementById(`label-${i}`).textContent = 'Buy';
+    document.getElementById(`fill-${i + 1}`).className = 'bar-fill bar-sell';
+    document.getElementById(`label-${i + 1}`).textContent = 'Sell';
+    document.getElementById('cur-action').textContent = `买入 D${i} $${prices[i]} → 卖出 D${i+1} $${prices[i+1]}，利润 +${diff}`;
+    document.getElementById('cur-buy').textContent = `Day ${i} ($${prices[i]})`;
+  } else {
+    document.getElementById(`fill-${i}`).className = 'bar-fill bar-default';
+    document.getElementById(`fill-${i + 1}`).className = 'bar-fill bar-cur';
+    document.getElementById(`label-${i + 1}`).textContent = 'cur';
+    document.getElementById('cur-action').textContent = `下跌 ${diff}，跳过`;
+    document.getElementById('cur-buy').textContent = '-';
+  }
+  document.getElementById('cur-day').textContent = `Day ${i + 1}`;
+  document.getElementById('total-profit').textContent = profit;
+  updateTrades();
+  i++;
+}
+
+function prev() {
+  if (i <= 0) return;
+  i--;
+  // undo step i
+  if (trades.length > 0 && trades[trades.length - 1].sell === i) {
+    const t = trades.pop();
+    profit -= t.profit;
+    document.getElementById(`fill-${t.buy}`).className = 'bar-fill bar-default';
+    document.getElementById(`label-${t.buy}`).textContent = `Day ${t.buy}`;
+    document.getElementById(`fill-${t.sell}`).className = 'bar-fill bar-default';
+    document.getElementById(`label-${t.sell}`).textContent = `Day ${t.sell}`;
+    document.getElementById('cur-action').textContent = '撤销上一笔交易';
+  } else {
+    document.getElementById(`fill-${i + 1}`).className = 'bar-fill bar-default';
+    document.getElementById(`label-${i + 1}`).textContent = `Day ${i + 1}`;
+    document.getElementById('cur-action').textContent = '已回退';
+  }
+  document.getElementById('cur-day').textContent = i === 0 ? 'Day 0' : `Day ${i}`;
+  document.getElementById('total-profit').textContent = profit;
+  document.getElementById('cur-buy').textContent = '-';
+  updateTrades();
+}
+
+function updateTrades() {
+  const el = document.getElementById('trades');
+  if (trades.length === 0) {
+    el.innerHTML = '<span class="trade-none">操作记录...</span>';
+    return;
+  }
+  el.innerHTML = trades.map((t, idx) =>
+    `<span class="trade-badge trade-buy">#${idx+1} Buy D${t.buy}</span>` +
+    `<span class="trade-badge trade-sell">#${idx+1} Sell D${t.sell} +$${t.profit}</span>`
+  ).join(' ');
+}
+
+init();
+</script>
+</body>
+</html>
