@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>字符串的排列 · 图解 · LeetCode 567</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --paper-2: #f2ede4;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --soft: #78716c;
+    --rule: rgba(28,25,23,0.12);
+    --accent: #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+    --accent-strong: rgba(181,82,58,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+
+  .s-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .s-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 500; color: var(--muted); position: relative; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); }
+  .s-cell.in-window { color: var(--ink); background: var(--accent-tint); border-color: var(--accent); }
+  .s-cell.match { color: white; background: var(--accent); border-color: var(--accent); }
+  .s-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .s-cell.in-window span.idx { color: var(--accent); }
+
+  .bracket-row { display: flex; gap: 4px; align-items: flex-start; justify-content: center; margin: 20px 0 8px; flex-wrap: wrap; }
+  .bracket { display: inline-block; font-size: 28px; color: var(--accent); font-family: 'Geist Mono', monospace; line-height: 1; margin: 0 2px; }
+  .b-cell { width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--soft); }
+  .b-cell.active { color: var(--accent); font-weight: 600; }
+
+  .ptr-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 8px 0 16px; flex-wrap: wrap; }
+  .ptr-slot { width: 40px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ptr-slot span.arr { font-size: 14px; color: var(--accent); line-height: 1; }
+  .ptr-slot span.label { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+  .ptr-slot.empty span.arr, .ptr-slot.empty span.label { color: var(--soft); }
+
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .decision { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin-top: 12px; }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .kv.found { color: #16a34a; font-weight: 600; }
+
+  .diff-display { display: flex; gap: 8px; align-items: center; justify-content: center; margin: 12px 0; }
+  .diff-badge { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 12px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .diff-badge.zero { background: #dcfce7; border-color: #86efac; color: #16a34a; }
+
+  .vs-display { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .vs-box { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; text-align: center; }
+  .vs-box.active { border-color: var(--accent); background: var(--accent-tint); }
+  .vs-box-title { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--muted); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.1em; }
+  .vs-box.active .vs-box-title { color: var(--accent); }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .summary .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.3); } 50% { box-shadow: 0 0 0 6px rgba(181,82,58,0); } }
+  .match { animation: pulse 2s ease-in-out infinite; }
+  .found-badge { display: inline-block; background: #16a34a; color: white; font-family: 'Geist Mono', monospace; font-size: 9px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <p class="eyebrow">LeetCode 567 · Sliding Window</p>
+  <h1>字符串的排列</h1>
+  <p class="subtitle">固定窗口滑动，判断窗口内字符能否重排为模式串</p>
+
+  <!-- Section 1: 核心洞察 -->
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：判断 <code>s2</code> 是否包含 <code>s1</code> 的某个排列（即重排后的字符串）。<br>
+      区别于 438（找所有异位词位置），本题只问<strong>是否存在</strong>。<br>
+      关键：<strong>固定窗口大小，diff==0 时即匹配</strong>。
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;flex-wrap:wrap;">
+      <div class="vs-box">
+        <p class="vs-box-title">s1 = "ab"</p>
+        <p style="font-size:14px;font-family:'Geist Mono',monospace;color:var(--ink);margin:0;">a:1, b:1</p>
+        <p style="font-size:12px;color:var(--muted);margin:8px 0 0;">模式串，窗口大小 = 2</p>
+      </div>
+      <div class="vs-box">
+        <p class="vs-box-title">s2 = "eidbaooo"</p>
+        <p style="font-size:12px;color:var(--muted);margin:8px 0 0;">找是否存在 s1 的排列</p>
+        <div class="diff-display" style="margin-top:12px;">
+          <span class="diff-badge zero">diff=0 ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-sub">
+      <strong>与 438 的区别？</strong><br>
+      438：返回所有异位词的下标列表（可能多个）<br>
+      567：返回是否存在（boolean，找到一个即可返回 true）
+    </p>
+  </section>
+
+  <!-- Section 2: 完整 Trace -->
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">s1 = <code>"ab"</code>，s2 = <code>"eidbaooo"</code></p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">R=0 window="e" len=1 diff≠0</span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell in-window">e<span class="idx">0</span></div>
+        <div class="s-cell">i<span class="idx">1</span></div>
+        <div class="s-cell">d<span class="idx">2</span></div>
+        <div class="s-cell">b<span class="idx">3</span></div>
+        <div class="s-cell">a<span class="idx">4</span></div>
+        <div class="s-cell">o<span class="idx">5</span></div>
+        <div class="s-cell">o<span class="idx">6</span></div>
+        <div class="s-cell">o<span class="idx">7</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">窗口大小 1 &lt; len(s1)=2，还需扩展</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 2</span>
+        <span class="step-range">R=1 window="ei" len=2</span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell in-window">e<span class="idx">0</span></div>
+        <div class="s-cell in-window">i<span class="idx">1</span></div>
+        <div class="s-cell">d<span class="idx">2</span></div>
+        <div class="s-cell">b<span class="idx">3</span></div>
+        <div class="s-cell">a<span class="idx">4</span></div>
+        <div class="s-cell">o<span class="idx">5</span></div>
+        <div class="s-cell">o<span class="idx">6</span></div>
+        <div class="s-cell">o<span class="idx">7</span></div>
+      </div>
+      <div class="bracket-row">
+        <span class="bracket">┌</span>
+        <div class="b-cell active">e</div>
+        <div class="b-cell active">i</div>
+        <div class="b-cell">d</div>
+        <div class="b-cell">b</div>
+        <div class="b-cell">a</div>
+        <div class="b-cell">o</div>
+        <div class="b-cell">o</div>
+        <div class="b-cell">o</div>
+        <span class="bracket">┐</span>
+      </div>
+      <div class="decision">
+        <div class="kv">加入 'i'，移出无（窗口未满 len=2）</div>
+        <div class="kv">diff≠0，'e' 和 'i' 不匹配 "ab"</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 3</span>
+        <span class="step-range">R=2 window="id" diff≠0</span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell">e<span class="idx">0</span></div>
+        <div class="s-cell in-window">i<span class="idx">1</span></div>
+        <div class="s-cell in-window">d<span class="idx">2</span></div>
+        <div class="s-cell">b<span class="idx">3</span></div>
+        <div class="s-cell">a<span class="idx">4</span></div>
+        <div class="s-cell">o<span class="idx">5</span></div>
+        <div class="s-cell">o<span class="idx">6</span></div>
+        <div class="s-cell">o<span class="idx">7</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">加入 'd'，移出 'e' → diff≠0</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 4</span>
+        <span class="step-range">R=3 window="db" diff≠0</span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell">e<span class="idx">0</span></div>
+        <div class="s-cell">i<span class="idx">1</span></div>
+        <div class="s-cell in-window">d<span class="idx">2</span></div>
+        <div class="s-cell in-window">b<span class="idx">3</span></div>
+        <div class="s-cell">a<span class="idx">4</span></div>
+        <div class="s-cell">o<span class="idx">5</span></div>
+        <div class="s-cell">o<span class="idx">6</span></div>
+        <div class="s-cell">o<span class="idx">7</span></div>
+      </div>
+      <div class="decision">
+        <div class="kv">加入 'b'，移出 'i' → diff≠0</div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 5</span>
+        <span class="step-range">R=4 window="ba" diff=0 <span class="found-badge">找到!</span></span>
+      </div>
+      <div class="s-row">
+        <div class="s-cell">e<span class="idx">0</span></div>
+        <div class="s-cell">i<span class="idx">1</span></div>
+        <div class="s-cell">d<span class="idx">2</span></div>
+        <div class="s-cell in-window match">b<span class="idx">3</span></div>
+        <div class="s-cell in-window match">a<span class="idx">4</span></div>
+        <div class="s-cell">o<span class="idx">5</span></div>
+        <div class="s-cell">o<span class="idx">6</span></div>
+        <div class="s-cell">o<span class="idx">7</span></div>
+      </div>
+      <div class="bracket-row">
+        <span class="bracket"></span>
+        <span class="bracket">┌</span>
+        <div class="b-cell active">b</div>
+        <div class="b-cell active">a</div>
+        <span class="bracket">┐</span>
+        <span class="bracket"></span>
+        <span class="bracket"></span>
+        <span class="bracket"></span>
+        <span class="bracket"></span>
+        <span class="bracket"></span>
+        <span class="bracket">┐</span>
+      </div>
+      <div class="decision">
+        <div class="kv">加入 'a'，移出 'd' → diff 归零</div>
+        <div class="kv found">diff==0！窗口 "ba" 是 "ab" 的排列 → return true</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:#16a34a;font-weight:600;text-align:center;margin:24px 0 0;">
+      结果：true，"ba" 是 "ab" 的排列
+    </p>
+  </section>
+
+  <!-- Section 3: 代码模板 -->
+  <section>
+    <h2>Go 代码模板</h2>
+    <p class="section-sub">找到后立即返回 true，效率更高</p>
+    <pre style="background:var(--ink);color:#e8e4dc;border-radius:8px;padding:24px;overflow-x:auto;font-size:13px;line-height:1.7;margin:0;">
+func checkInclusion(s1, s2 string) bool {
+    need := [26]int{}
+    for _, c := range s1 {
+        need[c-'a']++
+    }
+
+    diff := 0  // 还有几个字母未匹配
+
+    for i := range s2 {
+        // 入窗口
+        idx := s2[i] - 'a'
+        if need[idx] > 0 {
+            diff++
+        }
+        need[idx]--
+
+        // 出窗口
+        if i >= len(s1) {
+            outIdx := s2[i-len(s1)] - 'a'
+            if need[outIdx] >= 0 {
+                diff--
+            }
+            need[outIdx]++
+        }
+
+        if diff == 0 {
+            return true  // 找到即返回，不用继续
+        }
+    }
+    return false
+}</pre>
+  </section>
+
+  <!-- Section 4: 567 vs 438 对比 -->
+  <section>
+    <h2>567 vs 438 对比</h2>
+    <p class="section-sub">两题核心逻辑完全相同，区别在于返回值</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#dc2626;margin:0 0 8px;font-weight:600;">❌ LeetCode 567</p>
+        <p style="font-size:13px;color:#991b1b;margin:0;line-height:1.6;">return <strong>boolean</strong><br>是否存在一个排列<br><br>找到即返回 true</p>
+      </div>
+      <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:16px;">
+        <p style="font-family:'Geist Mono',monospace;font-size:11px;color:#16a34a;margin:0 0 8px;font-weight:600;">✓ LeetCode 438</p>
+        <p style="font-size:13px;color:#166534;margin:0;line-height:1.6;">return <strong>[]int</strong><br>所有异位词的下标<br><br>遍历完所有位置</p>
+      </div>
+    </div>
+    <p class="section-sub" style="margin-top:16px;">
+      代码区别：567 在 <code>diff==0</code> 时 <code>return true</code>，438 则 <code>append(res, i-len(p)+1)</code> 收集所有结果。
+    </p>
+  </section>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>固定窗口</h3>
+      <p>窗口大小始终等于 len(s1)，滑动判断</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">判断</p>
+      <h3><span class="dot"></span>diff == 0</h3>
+      <p>diff=0 表示窗口内字符可以重排为 s1</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">区别</p>
+      <h3><span class="dot"></span>boolean vs 列表</h3>
+      <p>567 只要存在，438 要全部找到</p>
+    </div>
+  </div>
+
+</div>
+<footer>doc/algorithm-visualizations/567.permutation-in-string.html</footer>
+</body>
+</html>
