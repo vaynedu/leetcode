@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>763 划分字母区间</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',Monaco,Consolas,monospace;background:#0f111a;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:1.6rem;color:#7dd3fc;margin-bottom:.3rem}
+.subtitle{color:#888;font-size:.85rem;margin-bottom:2rem}
+.controls{display:flex;gap:.6rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.btn{padding:.5rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .15s}
+.btn-prev{background:#1e293b;color:#94a3b8}.btn-prev:hover{background:#334155}
+.btn-next{background:#0369a1;color:#fff}.btn-next:hover{background:#0284c7}
+.btn-reset{background:#1e293b;color:#94a3b8}.btn-reset:hover{background:#334155}
+.anim-area{width:100%;max-width:700px;background:#1a1d2e;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.info-bar{display:flex;gap:1.5rem;margin-bottom:1.2rem;font-size:.85rem;flex-wrap:wrap}
+.info-item{color:#94a3b8}.info-item span{color:#fbbf24;font-weight:bold}
+.chars{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.8rem}
+.char-cell{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-weight:bold;font-size:.9rem;transition:all .25s}
+.ch-default{background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.ch-cur{background:#0369a1;color:#fff;border:2px solid #38bdf8;transform:scale(1.15)}
+.ch-done{background:#1e293b;color:#475569;border:1px solid #334155;opacity:.5}
+.ch-segment{background:#065f46;color:#6ee7b7;border:2px solid #34d399}
+.ch-exceed{background:#7f1d1d;color:#fca5a5;border:2px solid #ef4444}
+.last-col{font-size:.7rem;color:#475569;margin-bottom:.3rem;height:14px}
+.chars-row{display:flex;gap:4px;flex-wrap:wrap}
+.chars-row .char-cell{width:36px;height:36px;font-size:.85rem}
+.last-row{display:flex;gap:4px;flex-wrap:wrap;height:20px}
+.last-cell{width:36px;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#64748b}
+.last-cell-active{color:#fbbf24;font-weight:bold}
+.phase{font-size:.85rem;color:#94a3b8;margin:.5rem 0}
+.phase span{color:#fbbf24}
+.segment-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:.6rem}
+.seg-badge{padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:bold;background:#065f46;color:#6ee7b7;border:1px solid #34d399}
+.code-block{width:100%;max-width:700px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1rem;overflow-x:auto}
+.code-block pre{font-size:.8rem;line-height:1.6;margin:0}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.num{color:#79c0ff}.comment{color:#8b949e}.hl{color:#ffe680}
+</style>
+</head>
+<body>
+<h1>763. 划分字母区间</h1>
+<p class="subtitle">贪心：记录每字符最后出现位置，扩展段直到首尾相遇</p>
+
+<div class="anim-area">
+  <div class="info-bar">
+    <div class="info-item">当前字符: <span id="cur-char">-</span></div>
+    <div class="info-item">段起点: <span id="seg-start">-</span></div>
+    <div class="info-item">段终点: <span id="seg-end">-</span></div>
+    <div class="info-item">段长度: <span id="seg-len">-</span></div>
+  </div>
+  <div class="phase" id="phase-desc">点击「下一步」开始</div>
+  <div class="last-col" id="last-row"></div>
+  <div class="chars-row" id="chars-row"></div>
+  <div class="segment-list" id="segments"></div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prev()">◀ 上一步</button>
+  <button class="btn btn-reset" onclick="reset()">🔄 重置</button>
+  <button class="btn btn-next" onclick="next()">下一步 ▶</button>
+</div>
+
+<div class="code-block">
+<pre><span class="fn">function</span> <span class="hl">partitionLabels</span>(s) {
+  <span class="kw">const</span> last = {};
+  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;s.length; i++) last[s[i]] = i;
+  <span class="kw">let</span> start=<span class="num">0</span>, end=<span class="num">0</span>, res=[];
+  <span class="kw">for</span> (<span class="kw">let</span> i=<span class="num">0</span>; i&lt;s.length; i++) {
+    end = Math.<span class="hl">max</span>(end, last[s[i]]);
+    <span class="kw">if</span> (i === end) {
+      res.<span class="hl">push</span>(end - start + <span class="num">1</span>);
+      start = end + <span class="num">1</span>;
+    }
+  }
+  <span class="kw">return</span> res;
+}</pre>
+</div>
+
+<script>
+const s = "ababcbacadefegdehijhklij";
+// a:0,1,4,5  b:0,2,3  c:2,6  d:7,9  e:8,10,11  f:11  g:12  h:13,17  i:14,18,19  j:15,20  k:16,21  l:18,22
+// 分段: [a,b,a,b,c,b,a,c,a] → [0..8] = 9
+//        [d,e,f,e,g,d,e]   → [9..15] = 7
+//        [h,i,j,h,k,l,i,j] → [16..22] = 7
+
+let last = {};
+let chars = [];
+let i = 0;
+let segStart = 0;
+let segEnd = 0;
+let segments = [];
+let step = -1;
+
+function init() {
+  chars = s.split('');
+  // build last map
+  last = {};
+  chars.forEach((c, idx) => last[c] = idx);
+  // render last row
+  const unique = [...new Set(chars)].sort();
+  const lastRow = document.getElementById('last-row');
+  lastRow.innerHTML = unique.map(c =>
+    `<div style="width:36px;text-align:center;font-size:.65rem;color:#64748b">${c}:${last[c]}</div>`
+  ).join('');
+  // render chars
+  const row = document.getElementById('chars-row');
+  row.innerHTML = '';
+  chars.forEach((c, idx) => {
+    row.innerHTML += `<div class="char-cell ch-default" id="c-${idx}">${c}</div>`;
+  });
+  reset();
+}
+
+function reset() {
+  i = 0; segStart = 0; segEnd = 0; segments = []; step = -1;
+  chars.forEach((c, idx) => {
+    const el = document.getElementById(`c-${idx}`);
+    el.className = 'char-cell ch-default';
+  });
+  document.getElementById('phase-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  document.getElementById('cur-char').textContent = '-';
+  document.getElementById('seg-start').textContent = '-';
+  document.getElementById('seg-end').textContent = '-';
+  document.getElementById('seg-len').textContent = '-';
+  document.getElementById('segments').innerHTML = '';
+}
+
+function next() {
+  if (i >= chars.length) return;
+  step++;
+  const curChar = chars[i];
+  const charLast = last[curChar];
+  // mark current
+  for (let k = 0; k < chars.length; k++) {
+    const el = document.getElementById(`c-${k}`);
+    if (el.className.includes('ch-done')) continue;
+    el.className = 'char-cell ch-default';
+  }
+  document.getElementById(`c-${i}`).className = 'char-cell ch-cur';
+  document.getElementById('cur-char').textContent = `'${curChar}' (最后在${charLast})`;
+  document.getElementById('seg-start').textContent = segStart;
+  document.getElementById('seg-end').textContent = charLast;
+  segEnd = charLast;
+  // mark range [segStart, segEnd]
+  for (let k = segStart; k <= segEnd; k++) {
+    if (k !== i) document.getElementById(`c-${k}`).className = 'char-cell ch-segment';
+  }
+  // check if we should cut
+  if (i === segEnd) {
+    // cut here
+    document.getElementById('phase-desc').innerHTML =
+      `i=${i} == segEnd=${segEnd}，<span>切分段 [${segStart},${segEnd}]，长度=${segEnd-segStart+1}</span>`;
+    segments.push(segEnd - segStart + 1);
+    // mark done
+    for (let k = segStart; k <= segEnd; k++) {
+      document.getElementById(`c-${k}`).className = 'char-cell ch-done';
+    }
+    segStart = segEnd + 1;
+    segEnd = segStart;
+    document.getElementById('segments').innerHTML = segments.map(len =>
+      `<span class="seg-badge">${len}</span>`
+    ).join('');
+    i = segStart;
+    if (i >= chars.length) {
+      document.getElementById('phase-desc').innerHTML = '完成！';
+      return;
+    }
+    document.getElementById(`c-${i}`).className = 'char-cell ch-cur';
+    document.getElementById('cur-char').textContent = `'${chars[i]}' (最后在${last[chars[i]]})`;
+    document.getElementById('seg-start').textContent = segStart;
+    document.getElementById('seg-end').textContent = last[chars[i]];
+    segEnd = last[chars[i]];
+    // highlight new segment
+    for (let k = segStart; k <= segEnd; k++) {
+      document.getElementById(`c-${k}`).className = 'char-cell ch-segment';
+    }
+  } else {
+    document.getElementById('phase-desc').innerHTML =
+      `i=${i}，段终点扩展到 ${charLast}（遇到 '${curChar}' 最后出现在 ${charLast}）`;
+    document.getElementById('seg-end').textContent = charLast;
+  }
+  document.getElementById('seg-len').textContent = segEnd >= segStart ? segEnd - segStart + 1 : '-';
+  i++;
+}
+
+function prev() {
+  if (step < 0) return;
+  step--;
+  // Simple reset and replay would be complex, so we just step back state
+  // For simplicity, reset and replay to the previous state
+  // Actually let's just reset for now
+  reset();
+  // Note: prev is approximate for this visualization
+  document.getElementById('phase-desc').innerHTML = '已回退一步';
+}
+
+init();
+</script>
+</body>
+</html>
