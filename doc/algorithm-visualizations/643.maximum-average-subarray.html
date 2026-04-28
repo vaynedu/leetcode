@@ -68,6 +68,42 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* ---- INTERACTIVE ---- */
+  .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-prev:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-btn-next { background: var(--accent); color: white; }
+  .anim-btn-next:hover { background: #9a3f27; }
+  .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-reset:hover { background: var(--paper-2); color: var(--ink); }
+  .anim-info-bar { display: flex; gap: 16px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; align-items: center; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; min-height: 20px; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .anim-num-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .anim-num-cell { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 600; color: var(--muted); position: relative; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); transition: all 0.25s; }
+  .anim-num-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .anim-num-cell.in-window { background: var(--accent-tint); border-color: var(--accent); color: var(--ink); transform: scale(1.05); }
+  .anim-num-cell.out-window { opacity: 0.35; }
+  .anim-num-cell.best-win { background: #dcfce7; border-color: #16a34a; color: #16a34a; transform: scale(1.08); }
+  .anim-bracket-row { display: flex; gap: 4px; align-items: flex-start; justify-content: center; margin: 20px 0 8px; flex-wrap: wrap; }
+  .anim-bracket { display: inline-block; font-size: 28px; color: var(--accent); font-family: 'Geist Mono', monospace; line-height: 1; margin: 0 2px; }
+  .anim-b-cell { width: 44px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--soft); }
+  .anim-b-cell.active { color: var(--accent); font-weight: 600; }
+  .anim-sum-display { display: flex; gap: 12px; align-items: center; justify-content: center; margin: 12px 0; }
+  .anim-sum-badge { font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 600; padding: 6px 16px; border-radius: 8px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); transition: all 0.25s; }
+  .anim-sum-badge.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .anim-sum-badge.best { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .anim-avg-badge { font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 700; padding: 8px 20px; border-radius: 8px; background: var(--accent-tint); border: 2px solid var(--accent); color: var(--accent); transition: all 0.25s; }
+  .anim-avg-badge.best { background: #dcfce7; border: 2px solid #16a34a; color: #16a34a; }
+  .anim-result-bar { display: flex; gap: 24px; margin-top: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-result-item { color: var(--muted); }
+  .anim-result-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
 </style>
 </head>
 <body>
@@ -335,6 +371,37 @@ func findMaxAverage(nums []int, k int) float64 {
     </div>
   </section>
 
+  <!-- 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">用 nums = [1,12,-3,-5,3,3,6,7]，k = 3 走一遍滑动窗口，观察每一步的窗口、sum 和 avg 变化</p>
+
+    <div class="anim-info-bar">
+      <div class="anim-info-item">R: <span id="ai-r">-</span></div>
+      <div class="anim-info-item">L: <span id="ai-l">-</span></div>
+      <div class="anim-info-item">窗口: <span id="ai-win">-</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+
+    <div class="anim-num-row" id="ai-chart"></div>
+    <div class="anim-bracket-row" id="ai-brackets"></div>
+    <div class="anim-sum-display">
+      <div class="anim-sum-badge" id="ai-sum">sum: 0</div>
+      <div class="anim-avg-badge" id="ai-avg">avg: —</div>
+    </div>
+
+    <div class="anim-result-bar">
+      <div class="anim-result-item">maxAvg: <span id="ai-max">0</span></div>
+      <div class="anim-result-item">最优窗口: <span id="ai-best-win">-</span></div>
+    </div>
+
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">◀ 上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">🔄 重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步 ▶</button>
+    </div>
+  </div>
+
   <!-- Summary -->
   <div class="summary">
     <div class="card">
@@ -356,5 +423,142 @@ func findMaxAverage(nums []int, k int) float64 {
 
 </div>
 <footer>doc/algorithm-visualizations/643.maximum-average-subarray.html</footer>
+</div>
+
+<script>
+const nums = [1, 12, -3, -5, 3, 3, 6, 7];
+const K = 3;
+const N = 8;
+let L = 0, R = 0, sum = 0, maxAvg = 0, bestL = -1;
+let step = -1;
+let windowFull = false;
+
+function renderChart() {
+  const chart = document.getElementById('ai-chart');
+  chart.innerHTML = nums.map((n, i) => {
+    let cls = '';
+    if (i >= L && i <= R) cls = 'in-window';
+    else if (L > 0 && i < L) cls = 'out-window';
+    else if (R >= N) cls = 'out-window';
+    if (bestL >= 0 && i >= bestL && i <= bestL + K - 1) cls = 'best-win';
+    return `<div class="anim-num-cell ${cls}">${n}<span class="idx">${i}</span></div>`;
+  }).join('');
+
+  const brackets = document.getElementById('ai-brackets');
+  brackets.innerHTML = nums.map((_, i) => {
+    let cls = '';
+    if (i >= L && i <= R) cls = 'active';
+    return `<div class="anim-b-cell ${cls}">${i}</div>`;
+  }).join('');
+  brackets.innerHTML = `<span class="anim-bracket">┌</span>` + brackets.innerHTML + `<span class="anim-bracket">┐</span>`;
+}
+
+function render() {
+  document.getElementById('ai-r').textContent = R;
+  document.getElementById('ai-l').textContent = L;
+  document.getElementById('ai-win').textContent = (L >= 0 && R >= L && R < N) ? `[${L}..${R}]` : '-';
+
+  const sumEl = document.getElementById('ai-sum');
+  const avgEl = document.getElementById('ai-avg');
+  sumEl.textContent = 'sum: ' + sum;
+  avgEl.textContent = windowFull ? 'avg: ' + (sum / K).toFixed(3) : 'avg: —';
+
+  document.getElementById('ai-max').textContent = maxAvg.toFixed(3);
+  document.getElementById('ai-best-win').textContent = bestL >= 0 ? `[${bestL}..${bestL+K-1}]` : '-';
+
+  sumEl.className = 'anim-sum-badge' + (windowFull ? ' active' : '');
+  avgEl.className = 'anim-avg-badge' + (windowFull && sum / K === maxAvg ? ' best' : '');
+  sumEl.className += (bestL >= 0 && L === bestL && windowFull ? ' best' : '');
+
+  renderChart();
+}
+
+function animReset() {
+  L = 0; R = 0; sum = 0; maxAvg = 0; bestL = -1; step = -1; windowFull = false;
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
+}
+
+function animNext() {
+  if (step >= N) return;
+  step++;
+
+  if (step < K) {
+    sum += nums[R];
+    const prevR = R;
+    R++;
+    if (R - L === K) {
+      windowFull = true;
+      const avg = sum / K;
+      if (avg > maxAvg) {
+        maxAvg = avg;
+        bestL = L;
+        document.getElementById('ai-desc').innerHTML =
+          `Step ${step}: 加入 nums[${prevR}]=${nums[prevR]}，窗口 [${L}..${R-1}] 满了，` +
+          `sum=${sum}，avg=${avg.toFixed(3)}，` +
+          `<span>更新 maxAvg=${maxAvg.toFixed(3)}</span>`;
+      } else {
+        document.getElementById('ai-desc').innerHTML =
+          `Step ${step}: 加入 nums[${prevR}]=${nums[prevR]}，窗口 [${L}..${R-1}] 满了，` +
+          `sum=${sum}，avg=${avg.toFixed(3)}，maxAvg 保持 ${maxAvg.toFixed(3)}`;
+      }
+    } else {
+      document.getElementById('ai-desc').innerHTML =
+        `Step ${step}: 加入 nums[${prevR}]=${nums[prevR]}，` +
+        `窗口未满 [${L}..${R-1}]，继续填充...`;
+    }
+  } else {
+    sum -= nums[L];
+    const prevL = L;
+    L++;
+    sum += nums[R];
+    const prevR = R;
+    R++;
+    windowFull = true;
+    const avg = sum / K;
+    if (avg > maxAvg) {
+      maxAvg = avg;
+      bestL = L;
+      document.getElementById('ai-desc').innerHTML =
+        `Step ${step}: 滑出 nums[${prevL}]=${nums[prevL]}，滑入 nums[${prevR}]=${nums[prevR]}，` +
+        `sum=${sum}，avg=${avg.toFixed(3)}，` +
+        `<span>更新 maxAvg=${maxAvg.toFixed(3)}</span>`;
+    } else {
+      document.getElementById('ai-desc').innerHTML =
+        `Step ${step}: 滑出 nums[${prevL}]=${nums[prevL]}，滑入 nums[${prevR}]=${nums[prevR]}，` +
+        `sum=${sum}，avg=${avg.toFixed(3)}，maxAvg 保持 ${maxAvg.toFixed(3)}`;
+    }
+  }
+  render();
+}
+
+function animPrev() {
+  if (step <= 0) { animReset(); return; }
+  L = 0; R = 0; sum = 0; maxAvg = 0; bestL = -1; windowFull = false;
+  for (let i = 0; i < step; i++) {
+    if (i < K) {
+      sum += nums[R];
+      R++;
+      if (R - L === K) {
+        windowFull = true;
+        const avg = sum / K;
+        if (avg > maxAvg) { maxAvg = avg; bestL = L; }
+      }
+    } else {
+      sum -= nums[L]; L++;
+      sum += nums[R]; R++;
+      windowFull = true;
+      const avg = sum / K;
+      if (avg > maxAvg) { maxAvg = avg; bestL = L; }
+    }
+  }
+  step--;
+  document.getElementById('ai-desc').innerHTML = `回退到 Step ${step}，窗口 [${L}..${Math.min(R-1, N-1)}]`;
+  render();
+}
+
+animReset();
+</script>
+
 </body>
 </html>

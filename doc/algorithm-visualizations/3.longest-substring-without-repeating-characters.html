@@ -252,6 +252,24 @@
   /* anim */
   @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.3); } 50% { box-shadow: 0 0 0 6px rgba(181,82,58,0); } }
   .in-window { animation: pulse 2s ease-in-out infinite; }
+  /* anim */
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 16px; }
+  .anim-controls button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper-2); font-family: 'Geist', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .anim-controls button:hover { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .anim-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .anim-info-bar { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+  .info-chip { font-size: 12px; color: var(--muted); background: var(--paper-2); border: 1px solid var(--rule); border-radius: 4px; padding: 4px 10px; }
+  .info-chip strong { color: var(--accent); font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--ink); background: var(--accent-tint); border: 1px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; min-height: 44px; display: flex; align-items: center; }
+  .anim-input-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .char-slot { width: 48px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid var(--rule); border-radius: 6px; background: var(--paper); font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 700; color: var(--muted); position: relative; transition: all 0.2s; }
+  .char-slot.in-win { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .char-slot.dup { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+  .char-slot .idx { position: absolute; bottom: -14px; font-size: 8px; color: var(--soft); }
+  .anim-timeline-wrap { min-height: 64px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 12px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .win-chip { padding: 4px 10px; border-radius: 4px; background: var(--accent-tint); border: 1px solid var(--accent); font-size: 12px; font-family: 'Geist Mono', monospace; color: var(--accent); }
+  .result-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .result-chip { padding: 4px 10px; border-radius: 4px; background: #dcfce7; border: 1px solid #16a34a; font-size: 12px; font-family: 'Geist Mono', monospace; color: #166534; }
 </style>
 </head>
 <body>
@@ -534,6 +552,136 @@ func lengthOfLongestSubstring(s string) int {
   </div>
 
 </div>
+  <!-- 互动演示 -->
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">s = <code>"abcba"</code>，用变长窗口追踪最长不重复子串</p>
+
+    <div class="anim-controls">
+      <button id="btn-reset" onclick="animReset()">重置</button>
+      <button id="btn-prev" onclick="animPrev()">上一步</button>
+      <button id="btn-next" onclick="animNext()">下一步</button>
+    </div>
+
+    <div class="anim-info-bar">
+      <span class="info-chip">阶段: <strong id="ai-phase">—</strong></span>
+      <span class="info-chip">窗口: <strong id="ai-window">—</strong></span>
+      <span class="info-chip">maxLen: <strong id="ai-max">0</strong></span>
+    </div>
+
+    <div class="anim-phase" id="ai-phase-text">点击「下一步」开始</div>
+
+    <div class="anim-input-row" id="ai-char-row"></div>
+    <div class="anim-timeline-wrap" id="ai-timeline"></div>
+
+    <div class="result-list" id="ai-result"></div>
+  </div>
 <footer>doc/algorithm-visualizations/3.longest-substring-without-repeating-characters.html</footer>
+<script>
+const S = "abcba";
+const N = S.length;
+let L = 0, R = 0, maxLen = 0;
+let last = {};
+let history = [];
+let step = -1;
+
+function snap() { return { L, R, maxLen, last: Object.assign({}, last) }; }
+
+function animReset() {
+  L = 0; R = 0; maxLen = 0; last = {}; history = []; step = -1;
+  document.getElementById('btn-prev').disabled = true;
+  document.getElementById('btn-next').disabled = false;
+  render();
+}
+
+function animNext() {
+  if (step === history.length - 1) {
+    // 往前走：先记录当前快照，再执行一步
+    history.push(snap());
+    step++;
+    // 执行算法一步
+    const ch = S[R];
+    last[ch] = R;
+    const prevL = L;
+    if (last[ch] !== undefined && last[ch] >= prevL) {
+      L = last[ch] + 1;
+    }
+    maxLen = Math.max(maxLen, R - L + 1);
+    R++;
+    // 渲染
+    render();
+    document.getElementById('btn-prev').disabled = false;
+    if (R >= N) document.getElementById('btn-next').disabled = true;
+  } else {
+    // 快进到终点
+    step = history.length - 1;
+    const h = history[step];
+    L = h.L; R = h.R; maxLen = h.maxLen; last = Object.assign({}, h.last);
+    render();
+    document.getElementById('btn-prev').disabled = false;
+    document.getElementById('btn-next').disabled = true;
+  }
+}
+
+function animPrev() {
+  if (step < 0) return;
+  const h = history[step];
+  L = h.L; R = h.R; maxLen = h.maxLen; last = Object.assign({}, h.last);
+  step--;
+  render();
+  document.getElementById('btn-next').disabled = false;
+  if (step < 0) { document.getElementById('btn-prev').disabled = true; animReset(); }
+}
+
+function render() {
+  const windowChars = [];
+  for (let i = L; i < R && i < N; i++) windowChars.push(S[i]);
+
+  document.getElementById('ai-phase').textContent = step < 0 ? '初始' : `Step ${step + 1}`;
+  document.getElementById('ai-window').textContent = windowChars.length === 0 ? '—' : `"${windowChars.join('')}"`;
+  document.getElementById('ai-max').textContent = maxLen;
+
+  // Phase text
+  const phaseTexts = [
+    `初始状态：L=${L} R=${R}，maxLen=${maxLen}`,
+    `R=${R}="${S[R]}" 入窗，last["${S[R]}"]=${last[S[R]]}，窗口扩张`,
+    `R=${R}="${S[R]}" 入窗，last["${S[R]}"]=${last[S[R]]}，窗口扩张，maxLen=${maxLen}`,
+    `R=${R}="${S[R]}" 入窗，发现重复 last["${S[R]}"]=${last[S[R]]}≥L=${L}，L=max(${L},${last[S[R]]}+1)=${L}，窗口收缩`,
+    `R=${R}="${S[R]}" 入窗，maxLen=${maxLen}，算法结束`,
+  ];
+  document.getElementById('ai-phase-text').textContent = step < 0 ? '点击「下一步」开始' : phaseTexts[step] || `Step ${step + 1}: R=${R}`;
+
+  // Char row
+  let html = '';
+  for (let i = 0; i < N; i++) {
+    const inWin = (i >= L && i < R);
+    const isDup = inWin && Object.values(last).filter(v => v === i).length === 0 &&
+                  (last[S[i]] !== undefined && last[S[i]] >= L && last[S[i]] < i);
+    html += `<div class="char-slot${inWin ? ' in-win' : ''}${isDup ? ' dup' : ''}">${S[i]}<span class="idx">${i}</span></div>`;
+  }
+  document.getElementById('ai-char-row').innerHTML = html;
+
+  // Timeline: show all windows seen so far
+  let tl = '';
+  history.forEach((h, i) => {
+    const w = [];
+    for (let j = h.L; j < h.R && j < N; j++) w.push(S[j]);
+    if (w.length > 0) tl += `<span class="win-chip">"${w.join('')}" (L=${h.L}→${h.L})</span>`;
+  });
+  document.getElementById('ai-timeline').innerHTML = tl || '<span style="color:var(--muted);font-size:12px;">窗口历史</span>';
+
+  // Results: longest substrings found
+  const results = [];
+  for (let i = 0; i < N; i++) {
+    let end = i + maxLen;
+    if (end <= N) results.push(`"${S.substring(i, end)}"`);
+  }
+  document.getElementById('ai-result').innerHTML = results.length > 0
+    ? results.slice(0,1).map(r => `<span class="result-chip">${r}</span>`).join('')
+    : '<span style="color:var(--muted);font-size:12px;">maxLen = ' + maxLen + '</span>';
+}
+
+animReset();
+</script>
 </body>
 </html>

@@ -213,6 +213,49 @@
   .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
   .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
 
+  /* ---- interactive controls ---- */
+  .controls {
+    display: flex; gap: 8px; align-items: center; justify-content: center;
+    margin: 16px 0; flex-wrap: wrap;
+  }
+  .ctrl-btn {
+    padding: 8px 16px; border-radius: 6px;
+    font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--rule); background: var(--paper);
+    color: var(--ink); transition: all 0.15s;
+  }
+  .ctrl-btn:hover { background: var(--paper-2); border-color: var(--muted); }
+  .ctrl-btn:active { transform: scale(0.97); }
+  .ctrl-btn.primary { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+  .ctrl-btn.primary:hover { background: #9a482e; }
+  .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .speed-group { display: flex; gap: 4px; align-items: center; }
+  .speed-label { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--muted); }
+  .speed-btn {
+    padding: 4px 8px; border-radius: 4px;
+    font-family: 'Geist Mono', monospace; font-size: 9px;
+    cursor: pointer; border: 1px solid var(--rule); background: var(--paper);
+    color: var(--muted);
+  }
+  .speed-btn.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .info-chip {
+    padding: 4px 12px; border-radius: 12px;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    background: rgba(28,25,23,0.04); border: 1px solid var(--rule);
+  }
+  .info-chip strong { color: var(--accent); font-weight: 700; }
+  .live-panel {
+    display: flex; gap: 16px; justify-content: center; align-items: center;
+    margin: 12px 0; flex-wrap: wrap;
+  }
+  .phase-text {
+    font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted);
+    text-align: center; min-height: 20px;
+  }
+  .phase-text .focal { color: var(--accent); font-weight: 600; }
+  .phase-text .blue { color: #2563eb; font-weight: 600; }
+  .phase-text .green { color: #16a34a; font-weight: 600; }
+
 </style>
 </head>
 <body>
@@ -222,6 +265,55 @@
     <h1>滑动窗口最大值</h1>
     <p class="subtitle">单调 deque 存下标 · 队首永远是当前窗口最大值</p>
   </header>
+
+  <!-- Interactive Demo -->
+  <section>
+    <h2>③ 互动演示</h2>
+    <p class="section-sub">点击播放或单步执行，观察 deque 实时变化和结果输出</p>
+
+    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:24px; margin-top:24px;">
+      <div style="text-align:center; font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:16px; letter-spacing:0.12em; text-transform:uppercase;">nums = [1, 3, -1, -3, 5, 3, 6, 7] &nbsp; k = 3</div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="ctrl-btn primary" id="playBtn" onclick="togglePlay()">▶ 播放</button>
+        <button class="ctrl-btn" id="stepBtn" onclick="step()">⏭ 单步</button>
+        <button class="ctrl-btn" id="resetBtn" onclick="resetDemo()">⟲ 重置</button>
+        <div class="speed-group">
+          <span class="speed-label">速度:</span>
+          <button class="speed-btn" onclick="setSpeed(0)">0.5x</button>
+          <button class="speed-btn active" onclick="setSpeed(1)">1x</button>
+          <button class="speed-btn" onclick="setSpeed(2)">2x</button>
+        </div>
+      </div>
+
+      <!-- Live info -->
+      <div class="live-panel">
+        <span class="info-chip">R = <strong id="ai-r">—</strong></span>
+        <span class="info-chip">nums[R] = <strong id="ai-num">—</strong></span>
+        <span class="info-chip">deque: <strong id="ai-dq">—</strong></span>
+        <span class="info-chip">窗口: <strong id="ai-win">—</strong></span>
+        <span class="info-chip">结果: <strong id="ai-res">—</strong></span>
+      </div>
+
+      <!-- Live window cells -->
+      <div class="deque-label">滑动窗口</div>
+      <div class="window-row" id="liveWindow"></div>
+
+      <!-- Live deque -->
+      <div class="deque-label">Deque（存下标，值单调递减）</div>
+      <div class="deque-row" id="liveDeque"></div>
+
+      <!-- Phase text -->
+      <div class="phase-text" id="phaseText"></div>
+
+      <!-- Answer row -->
+      <div style="margin-top:20px; text-align:center;">
+        <div style="font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:12px; letter-spacing:0.12em; text-transform:uppercase;">已得出答案</div>
+        <div class="answer-row" id="liveAnswer"></div>
+      </div>
+    </div>
+  </section>
 
   <!-- Section 1: deque 是什么 -->
   
@@ -592,5 +684,161 @@
 
   <footer>Time · O(n) &nbsp;·&nbsp; Space · O(k) &nbsp;·&nbsp; Monotonic deque</footer>
 </div>
+
+<script>
+(function() {
+  const nums = [1, 3, -1, -3, 5, 3, 6, 7];
+  const K = 3;
+  const N = 8;
+
+  let dq = [];      // deque of indices
+  let R = 0;        // right pointer
+  let result = [];
+  let isPlaying = false;
+  let playTimer = null;
+  let speedIdx = 1;
+  const speeds = [1000, 500, 250];  // ms per step
+
+  // Phase descriptions
+  const phases = [
+    () => {
+      if (R < K - 1) return `<span class="blue">R=${R} &lt; K-1=${K-1}，窗口未形成，不记录答案</span>`;
+      return `<span class="focal">窗口已形成！deque[0]=${dq[0]}，最大值=nums[${dq[0]}]=<strong>${nums[dq[0]]}</strong></span>`;
+    }
+  ];
+
+  function getPhaseText() {
+    if (R >= N) return `<span class="green">演示完成！结果: [${result.join(', ')}]</span>`;
+    const inWin = dq.filter(i => i > R - K && i <= R);
+    const outWin = dq.filter(i => i <= R - K);
+    let txt = `R=${R}, nums[${R}]=${nums[R]} → `;
+    txt += `deque=[${dq.join(',')}]`;
+    if (R >= K - 1) {
+      txt += ` → <span class="focal">max=${nums[dq[0]]}</span>`;
+    }
+    return txt;
+  }
+
+  function renderLiveWindow() {
+    const el = document.getElementById('liveWindow');
+    let html = '';
+    for (let i = 0; i < N; i++) {
+      const inWin = i >= R - K + 1 && i <= R;
+      const isMax = dq.length && dq[0] === i && R >= K - 1;
+      let cls = 'w-cell';
+      if (inWin) cls += ' in-window';
+      else cls += ' out-window';
+      if (isMax) cls += ' max';
+      html += `<div class="${cls}">${nums[i]}<span class="idx">${i}</span></div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  function renderLiveDeque() {
+    const el = document.getElementById('liveDeque');
+    let html = '';
+    for (let i = 0; i < dq.length; i++) {
+      const idx = dq[i];
+      const outWin = idx <= R - K;
+      const isHead = i === 0;
+      let cls = 'd-cell';
+      if (isHead) cls += ' head';
+      if (i === dq.length - 1 && dq.length > 1) cls += ' tail';
+      if (outWin) cls += ' out-of-window';
+      html += `<div class="${cls}">${idx}<span class="idx">val=${nums[idx]}</span></div>`;
+      if (i < dq.length - 1) html += '<div class="deque-arrow">←</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderAnswer() {
+    const el = document.getElementById('liveAnswer');
+    let html = '';
+    for (let i = 0; i < result.length; i++) {
+      html += `<div class="ans-cell">${result[i]}</div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  function updateInfo() {
+    document.getElementById('ai-r').textContent = R < N ? R : '—';
+    document.getElementById('ai-num').textContent = R < N ? nums[R] : '—';
+    document.getElementById('ai-dq').textContent = dq.length ? '[' + dq.join(',') + ']' : '[]';
+    const L = Math.max(0, R - K + 1);
+    document.getElementById('ai-win').textContent = R < N ? `[${L}..${R}]` : '—';
+    document.getElementById('ai-res').textContent = result.length ? '[' + result.join(',') + ']' : '—';
+    document.getElementById('phaseText').innerHTML = getPhaseText();
+    renderLiveWindow();
+    renderLiveDeque();
+    renderAnswer();
+    updateButtons();
+  }
+
+  function updateButtons() {
+    document.getElementById('playBtn').disabled = R >= N;
+    document.getElementById('stepBtn').disabled = R >= N;
+    document.getElementById('playBtn').textContent = isPlaying ? '⏸ 暂停' : '▶ 播放';
+  }
+
+  function doStep() {
+    if (R >= N) { stopPlay(); return; }
+    // deque ops
+    while (dq.length && dq[0] <= R - K) dq.shift();
+    while (dq.length && nums[dq[dq.length - 1]] < nums[R]) dq.pop();
+    dq.push(R);
+    if (R >= K - 1) result.push(nums[dq[0]]);
+    R++;
+    updateInfo();
+  }
+
+  function step() {
+    if (R >= N) return;
+    stopPlay();
+    doStep();
+  }
+
+  function stopPlay() {
+    isPlaying = false;
+    if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+    updateButtons();
+  }
+
+  function togglePlay() {
+    if (R >= N) { resetDemo(); return; }
+    if (isPlaying) {
+      stopPlay();
+    } else {
+      isPlaying = true;
+      updateButtons();
+      scheduleNext();
+    }
+  }
+
+  function scheduleNext() {
+    if (!isPlaying || R >= N) { stopPlay(); return; }
+    playTimer = setTimeout(() => {
+      doStep();
+      if (R < N) scheduleNext();
+      else stopPlay();
+    }, speeds[speedIdx]);
+  }
+
+  function setSpeed(idx) {
+    speedIdx = idx;
+    document.querySelectorAll('.speed-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === idx);
+    });
+  }
+
+  function resetDemo() {
+    stopPlay();
+    dq = []; R = 0; result = [];
+    updateInfo();
+  }
+
+  // init
+  resetDemo();
+})();
+</script>
 </body>
 </html>

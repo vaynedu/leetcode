@@ -408,6 +408,276 @@ func findAnagrams(s, p string) []int {
   </div>
 
 </div>
-<footer>doc/algorithm-visualizations/438.find-all-anagrams.html</footer>
+  <!-- Interactive Demo Section -->
+  <section id="interactive">
+    <h2>互动演示</h2>
+    <p class="section-sub">输入字符串 S 和 P，观察滑动窗口和 diff 计数的变化过程</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+      <div>
+        <label style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">S (源字符串)</label>
+        <input type="text" id="inputS" value="cbaebabacd" style="width:100%;padding:10px 12px;font-family:'Geist Mono',monospace;font-size:14px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink);">
+      </div>
+      <div>
+        <label style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">P (模式串)</label>
+        <input type="text" id="inputP" value="abc" style="width:100%;padding:10px 12px;font-family:'Geist Mono',monospace;font-size:14px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink);">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+      <button id="btnInit" style="padding:10px 20px;font-size:13px;font-weight:500;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;">初始化</button>
+      <button id="btnStep" style="padding:10px 20px;font-size:13px;font-weight:500;background:var(--ink);color:white;border:none;border-radius:6px;cursor:pointer;">单步 →</button>
+      <button id="btnPlay" style="padding:10px 20px;font-size:13px;font-weight:500;background:#16a34a;color:white;border:none;border-radius:6px;cursor:pointer;">自动播放</button>
+      <button id="btnReset" style="padding:10px 20px;font-size:13px;font-weight:500;background:var(--muted);color:white;border:none;border-radius:6px;cursor:pointer;">重置</button>
+    </div>
+
+    <!-- Status -->
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);">
+        状态: <strong id="statusText" style="color:var(--ink);">已就绪</strong>
+      </span>
+      <span class="info-chip">diff: <strong id="ai-diff">0</strong></span>
+      <span class="info-chip">结果: <strong id="ai-res">—</strong></span>
+    </div>
+
+    <!-- Window visualization -->
+    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:24px;margin-bottom:16px;">
+      <div id="visS" style="display:flex;gap:4px;align-items:center;justify-content:center;margin-bottom:8px;flex-wrap:wrap;"></div>
+      <div id="visPtr" style="display:flex;gap:4px;align-items:center;justify-content:center;margin-bottom:8px;"></div>
+      <div id="visBracket" style="display:flex;gap:4px;align-items:flex-start;justify-content:center;margin-bottom:16px;"></div>
+      <div id="visInfo" style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);text-align:center;"></div>
+    </div>
+
+    <!-- need array display -->
+    <div style="display:flex;gap:16px;align-items:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
+      <div id="needDisplay" style="display:flex;gap:8px;align-items:center;"></div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);">diff=<strong id="diffDisplay">0</strong></div>
+    </div>
+
+    <!-- Decision log -->
+    <div id="decisionLog" style="background:var(--paper-2);border-radius:6px;padding:16px;min-height:80px;font-size:13px;color:var(--muted);line-height:1.6;"></div>
+  </section>
+
+  <script>
+    // Algorithm state
+    let S = "cbaebabacd";
+    let P = "abc";
+    let K = P.length;
+    let need = new Array(26).fill(0);
+    let window = new Array(26).fill(0);
+    let diff = 0;
+    let L = 0, R = -1;
+    let res = [];
+    let stepLogs = [];
+    let currentStep = 0;
+    let playing = false;
+    let playInterval = null;
+
+    function idx(c) { return c.charCodeAt(0) - 'a'.charCodeAt(0); }
+
+    function initArrays() {
+      need.fill(0);
+      window.fill(0);
+      for (let c of P) {
+        if (c >= 'a' && c <= 'z') need[idx(c)]++;
+      }
+      diff = 0;
+      for (let i = 0; i < 26; i++) {
+        if (need[i] > 0) diff += need[i];
+      }
+    }
+
+    function buildStepLogs() {
+      stepLogs = [];
+      const s = S, p = P, k = K;
+      const nNeed = new Array(26).fill(0);
+      const nWindow = new Array(26).fill(0);
+      for (let c of p) nNeed[idx(c)]++;
+      let nDiff = 0;
+      for (let i = 0; i < 26; i++) if (nNeed[i] > 0) nDiff += nNeed[i];
+
+      let left = 0, right = -1;
+      let nRes = [];
+      let logs = [];
+
+      for (let i = 0; i < s.length; i++) {
+        const inChar = s[i];
+        const inIdx = idx(inChar);
+
+        // in window
+        if (nNeed[inIdx] > 0) {
+          nDiff--;
+        }
+        nNeed[inIdx]--;
+
+        right++;
+
+        // out window
+        if (right - left + 1 > k) {
+          const outChar = s[left];
+          const outIdx = idx(outChar);
+          if (nNeed[outIdx] >= 0) {
+            nDiff++;
+          }
+          nNeed[outIdx]++;
+          left++;
+        }
+
+        const log = {
+          L: left, R: right,
+          inChar: inChar,
+          outChar: right - left + 1 > k ? s[left - 1] : null,
+          diff: nDiff,
+          res: [...nRes],
+          inIdx: inIdx,
+          outIdx: right - left + 1 > k ? idx(s[left - 1]) : -1,
+          isMatch: nDiff === 0 && right - left + 1 === k,
+          windowChars: s.slice(left, right + 1).split('')
+        };
+
+        if (nDiff === 0 && right - left + 1 === k) {
+          nRes.push(left);
+        }
+
+        stepLogs.push(log);
+      }
+    }
+
+    function render() {
+      const log = stepLogs[currentStep];
+      if (!log) return;
+
+      // Render S string
+      const visS = document.getElementById('visS');
+      let html = '';
+      for (let i = 0; i < S.length; i++) {
+        const inWindow = i >= log.L && i <= log.R;
+        const isMatch = inWindow && log.isMatch;
+        html += `<div class="s-cell ${inWindow ? 'in-window' : ''} ${isMatch ? 'match' : ''}" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:16px;font-weight:500;${inWindow ? 'color:var(--ink);background:var(--accent-tint);border-color:var(--accent);' : 'color:var(--muted);'}position:relative;border:1px solid var(--rule);border-radius:4px;background:var(--paper);">${S[i]}<span class="idx" style="position:absolute;bottom:-14px;font-size:7px;color:var(--soft);font-family:'Geist Mono',monospace;">${i}</span></div>`;
+      }
+      visS.innerHTML = html;
+
+      // Render pointers
+      const visPtr = document.getElementById('visPtr');
+      let ptrHtml = '';
+      for (let i = 0; i < S.length; i++) {
+        if (i === log.L) {
+          ptrHtml += '<div class="ptr-slot"><span class="arr">↓</span><span class="label">L</span></div>';
+        } else if (i === log.R) {
+          ptrHtml += '<div class="ptr-slot"><span class="arr">↓</span><span class="label">R</span></div>';
+        } else {
+          ptrHtml += '<div class="ptr-slot empty"><span class="arr"> </span><span class="label"> </span></div>';
+        }
+      }
+      visPtr.innerHTML = ptrHtml;
+
+      // Render bracket row
+      const visBracket = document.getElementById('visBracket');
+      let bracketHtml = '<span class="bracket">┌</span>';
+      for (let i = 0; i < S.length; i++) {
+        const active = i >= log.L && i <= log.R;
+        bracketHtml += `<div class="b-cell ${active ? 'active' : ''}" style="width:40px;height:24px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:11px;color:${active ? 'var(--accent)' : 'var(--soft)'};">${S[i]}</div>`;
+      }
+      bracketHtml += '<span class="bracket">┐</span>';
+      visBracket.innerHTML = bracketHtml;
+
+      // Update info
+      document.getElementById('visInfo').textContent = `窗口: "${log.windowChars.join('')}" | R=${log.R} | L=${log.L} | diff=${log.diff}`;
+
+      // Update diff display
+      document.getElementById('diffDisplay').textContent = log.diff;
+      document.getElementById('ai-diff').textContent = log.diff;
+
+      // Update result
+      document.getElementById('ai-res').textContent = log.res.length > 0 ? JSON.stringify(log.res) : '—';
+
+      // Decision log
+      const logEl = document.getElementById('decisionLog');
+      let logHtml = '';
+      logHtml += `<div style="margin-bottom:4px;"><strong style="color:var(--accent);">步骤 ${currentStep + 1}:</strong> R=${log.R}, L=${log.L}</div>`;
+      logHtml += `<div style="margin-bottom:4px;">入窗: '${log.inChar}' (idx=${log.inIdx}) → ${log.diff === 0 ? 'diff--' : 'diff不变或变化'}</div>`;
+      if (log.outChar) {
+        logHtml += `<div style="margin-bottom:4px;">出窗: '${log.outChar}' → diff++ (因为移出的字母在 need 范围内)</div>`;
+      }
+      logHtml += `<div style="margin-bottom:4px;">当前 diff = <strong style="color:${log.diff === 0 ? '#16a34a' : 'var(--accent)'};">${log.diff}</strong></div>`;
+      if (log.isMatch) {
+        logHtml += `<div style="color:#16a34a;font-weight:600;">✓ diff==0! 找到异位词，起始位置 ${log.L}，结果: ${JSON.stringify(log.res)}</div>`;
+      } else {
+        logHtml += `<div>窗口尚未完全匹配</div>`;
+      }
+      logEl.innerHTML = logHtml;
+
+      // Update status
+      document.getElementById('statusText').textContent = `步骤 ${currentStep + 1}/${stepLogs.length}`;
+    }
+
+    function init() {
+      S = document.getElementById('inputS').value || "cbaebabacd";
+      P = document.getElementById('inputP').value || "abc";
+      K = P.length;
+      initArrays();
+      buildStepLogs();
+      currentStep = 0;
+      res = [];
+      playing = false;
+      if (playInterval) clearInterval(playInterval);
+      document.getElementById('statusText').textContent = '已就绪';
+      render();
+    }
+
+    function step() {
+      if (currentStep < stepLogs.length - 1) {
+        currentStep++;
+        render();
+      } else {
+        stopPlay();
+        document.getElementById('statusText').textContent = '已完成';
+      }
+    }
+
+    function play() {
+      if (playing) {
+        stopPlay();
+        return;
+      }
+      playing = true;
+      document.getElementById('btnPlay').textContent = '暂停';
+      playInterval = setInterval(() => {
+        if (currentStep < stepLogs.length - 1) {
+          step();
+        } else {
+          stopPlay();
+          document.getElementById('statusText').textContent = '已完成';
+        }
+      }, 1000);
+    }
+
+    function stopPlay() {
+      playing = false;
+      document.getElementById('btnPlay').textContent = '自动播放';
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+      }
+    }
+
+    function reset() {
+      stopPlay();
+      currentStep = 0;
+      document.getElementById('statusText').textContent = '已重置';
+      render();
+    }
+
+    // Event listeners
+    document.getElementById('btnInit').addEventListener('click', init);
+    document.getElementById('btnStep').addEventListener('click', step);
+    document.getElementById('btnPlay').addEventListener('click', play);
+    document.getElementById('btnReset').addEventListener('click', reset);
+
+    // Init on load
+    init();
+  </script>
+
+  <footer>doc/algorithm-visualizations/438.find-all-anagrams.html</footer>
 </body>
 </html>

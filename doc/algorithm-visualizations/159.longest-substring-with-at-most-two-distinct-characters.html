@@ -65,6 +65,23 @@
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
 
   @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); } 50% { box-shadow: 0 0 0 8px rgba(181,82,58,0); } }
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 16px; }
+  .anim-controls button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper-2); font-family: 'Geist', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .anim-controls button:hover { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .anim-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .anim-info-bar { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+  .info-chip { font-size: 12px; color: var(--muted); background: var(--paper-2); border: 1px solid var(--rule); border-radius: 4px; padding: 4px 10px; }
+  .info-chip strong { color: var(--accent); font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--ink); background: var(--accent-tint); border: 1px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; min-height: 44px; display: flex; align-items: center; }
+  .anim-input-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .char-slot { width: 48px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid var(--rule); border-radius: 6px; background: var(--paper); font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 700; color: var(--muted); position: relative; transition: all 0.2s; }
+  .char-slot.in-win { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .char-slot.dup { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+  .char-slot .idx { position: absolute; bottom: -14px; font-size: 8px; color: var(--soft); }
+  .anim-timeline-wrap { min-height: 64px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 12px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .win-chip { padding: 4px 10px; border-radius: 4px; background: var(--accent-tint); border: 1px solid var(--accent); font-size: 12px; font-family: 'Geist Mono', monospace; color: var(--accent); }
+  .result-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .result-chip { padding: 4px 10px; border-radius: 4px; background: #dcfce7; border: 1px solid #16a34a; font-size: 12px; font-family: 'Geist Mono', monospace; color: #166534; }
 </style>
 </head>
 <body>
@@ -269,8 +286,152 @@ func lengthOfLongestSubstringTwoDistinct(s string) int {
       <p>把 2 改成 k，就是 #340</p>
     </div>
   </div>
+  </div>
 
-</div>
+  <!-- 互动演示 -->
+  <section>
+    <h2>互动演示</h2>
+    <p class="section-sub">s = <code>"eceba"</code>，窗口内最多 2 种字符</p>
+
+    <div class="anim-controls">
+      <button id="btn-reset" onclick="animReset()">重置</button>
+      <button id="btn-prev" onclick="animPrev()">上一步</button>
+      <button id="btn-next" onclick="animNext()">下一步</button>
+    </div>
+
+    <div class="anim-info-bar">
+      <span class="info-chip">阶段: <strong id="ai-phase">—</strong></span>
+      <span class="info-chip">窗口: <strong id="ai-window">—</strong></span>
+      <span class="info-chip">种类: <strong id="ai-types">0</strong></span>
+      <span class="info-chip">maxLen: <strong id="ai-max">0</strong></span>
+    </div>
+
+    <div class="anim-phase" id="ai-phase-text">点击「下一步」开始</div>
+
+    <div class="anim-input-row" id="ai-char-row"></div>
+    <div class="anim-timeline-wrap" id="ai-timeline"></div>
+
+    <div class="result-list" id="ai-result"></div>
+  </section>
+
 <footer>doc/algorithm-visualizations/159.longest-substring-with-at-most-two-distinct-characters.html</footer>
+<script>
+const S = "eceba";
+const N = 5;
+let L = 0, R = 0, maxLen = 0;
+let count = {};
+let history = [];
+let step = -1;
+
+function snap() { return { L, R, maxLen, count: Object.assign({}, count) }; }
+
+function typeCount() { return Object.keys(count).filter(k => count[k] > 0).length; }
+
+function animReset() {
+  L = 0; R = 0; maxLen = 0; count = {}; history = []; step = -1;
+  document.getElementById('btn-prev').disabled = true;
+  document.getElementById('btn-next').disabled = false;
+  render();
+}
+
+function animNext() {
+  if (step < history.length - 1) {
+    // 回退后快进
+    step = history.length - 1;
+    const h = history[step];
+    L = h.L; R = h.R; maxLen = h.maxLen; count = Object.assign({}, h.count);
+    render();
+    document.getElementById('btn-prev').disabled = false;
+    document.getElementById('btn-next').disabled = (R >= N);
+    return;
+  }
+  if (R >= N) return;
+  history.push(snap());
+  step++;
+  // 执行算法一步
+  const ch = S[R];
+  count[ch] = (count[ch] || 0) + 1;
+  while (Object.keys(count).length > 2) {
+    const lc = S[L];
+    count[lc]--;
+    if (count[lc] === 0) delete count[lc];
+    L++;
+  }
+  maxLen = Math.max(maxLen, R - L + 1);
+  R++;
+  render();
+  document.getElementById('btn-prev').disabled = false;
+  if (R >= N) document.getElementById('btn-next').disabled = true;
+}
+
+function animPrev() {
+  if (step < 0) return;
+  if (step === 0) { animReset(); return; }
+  step--;
+  const h = history[step];
+  L = h.L; R = h.R; maxLen = h.maxLen; count = Object.assign({}, h.count);
+  render();
+  document.getElementById('btn-next').disabled = false;
+  if (step < 0) { document.getElementById('btn-prev').disabled = true; }
+}
+
+function render() {
+  const windowChars = [];
+  for (let i = L; i < R && i < N; i++) windowChars.push(S[i]);
+  const types = Object.keys(count).filter(k => count[k] > 0).length;
+
+  document.getElementById('ai-phase').textContent = step < 0 ? '初始' : `Step ${step + 1}`;
+  document.getElementById('ai-window').textContent = windowChars.length === 0 ? '—' : `"${windowChars.join('')}"`;
+  document.getElementById('ai-types').textContent = types;
+  document.getElementById('ai-max').textContent = maxLen;
+
+  // Phase text
+  const phaseTexts = [
+    `初始状态：L=${L} R=${R}，maxLen=${maxLen}`,
+    `R=${R-1}="${S[R-1]}" 入窗，${types} 种字符，窗口 "${windowChars.join('')}"`,
+    `R=${R-1}="${S[R-1]}" 入窗，${types} 种字符，窗口 "${windowChars.join('')}" → maxLen=${maxLen}`,
+    `R=${R-1}="${S[R-1]}" 入窗，${types} 种字符，窗口 "${windowChars.join('')}" → maxLen=${maxLen}`,
+    `R=${R-1}="${S[R-1]}" 入窗 → ${types} 种 → 收缩 L，窗口 "${windowChars.join('')}" → maxLen=${maxLen}`,
+    `R=${R-1}="${S[R-1]}" 入窗 → ${types} 种 → 多次收缩 L，窗口 "${windowChars.join('')}" → maxLen=${maxLen}`,
+    `算法结束，maxLen=${maxLen}`,
+  ];
+  const textIdx = step < 0 ? 0 : Math.min(step, phaseTexts.length - 1);
+  document.getElementById('ai-phase-text').textContent = step < 0 ? '点击「下一步」开始' : phaseTexts[textIdx];
+
+  // Char row
+  let html = '';
+  for (let i = 0; i < N; i++) {
+    const inWin = (i >= L && i < R);
+    html += `<div class="char-slot${inWin ? ' in-win' : ''}">${S[i]}<span class="idx">${i}</span></div>`;
+  }
+  document.getElementById('ai-char-row').innerHTML = html;
+
+  // Timeline
+  let tl = '';
+  history.forEach((h, i) => {
+    const w = [];
+    for (let j = h.L; j < h.R && j < N; j++) w.push(S[j]);
+    if (w.length > 0) tl += `<span class="win-chip">"${w.join('')}" (len=${h.maxLen})</span>`;
+  });
+  document.getElementById('ai-timeline').innerHTML = tl || '<span style="color:var(--muted);font-size:12px;">窗口历史</span>';
+
+  // Results
+  if (maxLen > 0) {
+    const results = [];
+    for (let i = 0; i <= N - maxLen; i++) {
+      let end = i + maxLen;
+      const sub = S.substring(i, end);
+      const tc = {};
+      for (const c of sub) tc[c] = (tc[c] || 0) + 1;
+      if (Object.keys(tc).length <= 2) results.push(`"${sub}"`);
+    }
+    document.getElementById('ai-result').innerHTML = results.slice(0, 3).map(r => `<span class="result-chip">${r}</span>`).join('');
+  } else {
+    document.getElementById('ai-result').innerHTML = '<span style="color:var(--muted);font-size:12px;">maxLen = 0</span>';
+  }
+}
+
+animReset();
+</script>
 </body>
 </html>

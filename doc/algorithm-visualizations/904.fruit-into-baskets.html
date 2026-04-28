@@ -89,6 +89,50 @@
 
   @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.3); } 50% { box-shadow: 0 0 0 6px rgba(181,82,58,0); } }
   .in-window { animation: pulse 2s ease-in-out infinite; }
+
+  /* 控制按钮 */
+  .controls { display: flex; gap: 8px; justify-content: center; margin: 24px 0 16px; flex-wrap: wrap; }
+  .btn { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 600; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #9a4530; }
+  .btn-primary:disabled { background: var(--soft); cursor: not-allowed; }
+  .btn-secondary { background: var(--paper-2); color: var(--ink); border: 1px solid var(--rule); }
+  .btn-secondary:hover { background: var(--paper); }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .speed-control { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 16px; font-size: 12px; color: var(--muted); }
+  .speed-control input[type="range"] { width: 120px; }
+
+  /* 实时 info */
+  .realtime-info { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
+  .info-chip { font-family: 'Geist Mono', monospace; font-size: 12px; background: var(--paper-2); border: 1px solid var(--rule); padding: 6px 14px; border-radius: 20px; }
+  .info-chip strong { color: var(--accent); }
+
+  /* 动态树行 */
+  .dynamic-trees { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 8px; flex-wrap: wrap; }
+  .d-tree { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 700; border-radius: 8px; position: relative; transition: all 0.3s ease; }
+  .d-tree span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .d-tree.t0 { background: #dbeafe; border: 2px solid #3b82f6; color: #1d4ed8; }
+  .d-tree.t1 { background: #dcfce7; border: 2px solid #16a34a; color: #15803d; }
+  .d-tree.t2 { background: #fef9c3; border: 2px solid #ca8a04; color: #a16207; }
+  .d-tree.t3 { background: #fce7f3; border: 2px solid #db2777; color: #9d174d; }
+  .d-tree.in-win { box-shadow: 0 0 0 3px var(--accent); transform: scale(1.08); }
+  .d-tree.out { opacity: 0.35; }
+  .d-tree.r-active { animation: r-pulse 0.5s ease; }
+  @keyframes r-pulse { 0% { box-shadow: 0 0 0 0 var(--accent); } 50% { box-shadow: 0 0 0 8px rgba(181,82,58,0.4); } 100% { box-shadow: 0 0 0 3px var(--accent); } }
+
+  /* ptr 行 */
+  .ptr-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 24px 0 8px; flex-wrap: wrap; }
+  .ptr-s { width: 44px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ptr-s span.arr { font-size: 14px; color: var(--accent); line-height: 1; }
+  .ptr-s span.lbl { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+
+  /* phase text */
+  .phase-text { background: var(--paper-2); border-radius: 4px; padding: 12px 16px; margin: 16px 0 0; font-size: 13px; color: var(--muted); text-align: center; min-height: 48px; display: flex; align-items: center; justify-content: center; }
+  .phase-text.focal { color: var(--accent); font-weight: 600; background: var(--accent-tint); }
+
+  /* dynamic basket */
+  .dyn-basket-display { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
 </style>
 </head>
 <body>
@@ -314,8 +358,238 @@ func totalFruit(trees []int) int {
       <p>窗口内种类数始终 ≤2，每次更新 maxLen</p>
     </div>
   </div>
+  </div>
 
-</div>
-<footer>doc/algorithm-visualizations/904.fruit-into-baskets.html</footer>
+  <footer>doc/algorithm-visualizations/904.fruit-into-baskets.html</footer>
+
+  <!-- 互动演示区域 -->
+  <section id="interactive-demo">
+    <h2>互动演示</h2>
+    <p class="section-sub">trees = <code>[1,2,3,2,2,4]</code>，点击「下一步」或「自动播放」观察滑动窗口过程</p>
+
+    <div class="speed-control">
+      <span>慢速</span>
+      <input type="range" id="speedSlider" min="100" max="1500" value="800">
+      <span>快速</span>
+      <span style="margin-left:8px;font-family:'Geist Mono',monospace;" id="speedLabel">800ms</span>
+    </div>
+
+    <div class="realtime-info">
+      <div class="info-chip">L: <strong id="ai-L">0</strong></div>
+      <div class="info-chip">R: <strong id="ai-R">-</strong></div>
+      <div class="info-chip">种类: <strong id="ai-types">—</strong></div>
+      <div class="info-chip">maxLen: <strong id="ai-max">0</strong></div>
+    </div>
+
+    <div class="dynamic-trees" id="dTrees"></div>
+    <div class="ptr-row" id="dPtrs"></div>
+    <div class="dyn-basket-display" id="dBaskets"></div>
+    <div class="phase-text" id="phaseText">点击「下一步」开始</div>
+
+    <div class="controls">
+      <button class="btn btn-secondary" id="btnReset">重置</button>
+      <button class="btn btn-secondary" id="btnStep">下一步</button>
+      <button class="btn btn-primary" id="btnPlay">自动播放</button>
+    </div>
+  </section>
+
 </body>
+<script>
+const trees = [1,2,3,2,2,4];
+const N = 6;
+const typeColors = ['t0','t1','t2','t3'];
+
+// 状态
+let L = 0, R = -1;
+let maxLen = 0;
+let count = {};
+let typesInWindow = 0;
+let stepCount = 0;
+let timer = null;
+let done = false;
+
+const btnStep = document.getElementById('btnStep');
+const btnPlay = document.getElementById('btnPlay');
+const btnReset = document.getElementById('btnReset');
+const speedSlider = document.getElementById('speedSlider');
+const speedLabel = document.getElementById('speedLabel');
+
+speedSlider.oninput = () => { speedLabel.textContent = speedSlider.value + 'ms'; };
+
+function getSpeed() { return parseInt(speedSlider.value); }
+
+function reset() {
+  clearInterval(timer);
+  L = 0; R = -1; maxLen = 0; count = {}; typesInWindow = 0; stepCount = 0; done = false;
+  btnStep.disabled = false;
+  btnPlay.textContent = '自动播放';
+  renderAll();
+  updatePhase('点击「下一步」开始');
+}
+
+function updatePhase(text, focal=false) {
+  const el = document.getElementById('phaseText');
+  el.textContent = text;
+  el.className = 'phase-text' + (focal ? ' focal' : '');
+}
+
+function updateInfo() {
+  document.getElementById('ai-L').textContent = L;
+  document.getElementById('ai-R').textContent = R >= 0 ? R : '-';
+  const keys = Object.keys(count);
+  document.getElementById('ai-types').textContent = keys.length > 0 ? keys.join(', ') : '—';
+  document.getElementById('ai-max').textContent = maxLen;
+}
+
+function renderTrees() {
+  const container = document.getElementById('dTrees');
+  container.innerHTML = '';
+  for (let i = 0; i < N; i++) {
+    const t = trees[i];
+    const div = document.createElement('div');
+    div.className = 'd-tree ' + typeColors[t % 4];
+    div.id = 'dtree' + i;
+    if (i >= L && i <= R) div.classList.add('in-win');
+    else if (R >= 0 && i > R) div.classList.add('out');
+    else if (i < L) div.classList.add('out');
+    div.innerHTML = t + '<span class="idx">' + i + '</span>';
+    container.appendChild(div);
+  }
+}
+
+function renderPtrs() {
+  const container = document.getElementById('dPtrs');
+  container.innerHTML = '';
+  for (let i = 0; i < N; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'ptr-s';
+    let label = '';
+    if (i === L) label = 'L';
+    else if (i === R) label = 'R';
+    if (label) {
+      slot.innerHTML = '<span class="arr">↓</span><span class="lbl">' + label + '</span>';
+    }
+    container.appendChild(slot);
+  }
+}
+
+function renderBaskets() {
+  const container = document.getElementById('dBaskets');
+  container.innerHTML = '';
+  const keys = Object.keys(count);
+  // 两个篮子
+  for (let b = 0; b < 2; b++) {
+    const basket = document.createElement('div');
+    basket.className = 'basket';
+    const icon = document.createElement('div');
+    if (b < keys.length) {
+      const k = parseInt(keys[b]);
+      icon.className = 'basket-icon ' + typeColors[k % 4];
+      icon.textContent = k;
+    } else {
+      icon.className = 'basket-icon empty';
+      icon.textContent = '?';
+    }
+    const lbl = document.createElement('span');
+    lbl.className = 'basket-label';
+    lbl.textContent = b < keys.length ? '类型 ' + keys[b] : '空';
+    const cnt = document.createElement('span');
+    cnt.className = 'basket-count';
+    cnt.textContent = b < keys.length ? 'x' + count[keys[b]] : '';
+    basket.appendChild(icon);
+    basket.appendChild(lbl);
+    basket.appendChild(cnt);
+    container.appendChild(basket);
+  }
+}
+
+function renderAll() {
+  renderTrees();
+  renderPtrs();
+  renderBaskets();
+  updateInfo();
+}
+
+function animR() {
+  const el = document.getElementById('dtree' + R);
+  if (el) {
+    el.classList.remove('r-active');
+    void el.offsetWidth;
+    el.classList.add('r-active');
+  }
+}
+
+function animL() {
+  // 闪烁 L 位置
+  const el = document.getElementById('dtree' + L);
+  if (el) {
+    el.style.transition = 'none';
+    el.style.opacity = '0.3';
+    setTimeout(() => { el.style.transition = ''; el.style.opacity = ''; }, 200);
+  }
+}
+
+function doStep() {
+  if (done) return;
+  stepCount++;
+
+  if (R < N - 1) {
+    R++;
+    count[trees[R]] = (count[trees[R]] || 0) + 1;
+    animR();
+    updateInfo();
+    renderTrees();
+    renderPtrs();
+    renderBaskets();
+
+    // 收缩
+    while (Object.keys(count).length > 2) {
+      count[trees[L]]--;
+      if (count[trees[L]] === 0) delete count[trees[L]];
+      animL();
+      L++;
+    }
+
+    maxLen = Math.max(maxLen, R - L + 1);
+    renderTrees();
+    renderPtrs();
+    renderBaskets();
+    updateInfo();
+
+    // phase text
+    const types = Object.keys(count).length;
+    if (types > 2) {
+      updatePhase('R=' + R + ' 加入类型 ' + trees[R] + ' → 超过2种，开始收缩 L', true);
+    } else if (types === 2) {
+      updatePhase('R=' + R + ' 加入类型 ' + trees[R] + ' → 窗口 [{1},{2}] len=' + (R-L+1) + '，maxLen=' + maxLen);
+    } else {
+      updatePhase('R=' + R + ' 加入类型 ' + trees[R] + ' → 窗口 [单类型] len=' + (R-L+1));
+    }
+  } else {
+    done = true;
+    updatePhase('算法完成！maxLen = ' + maxLen + '（窗口 [' + L + ',' + R + ']）', true);
+    btnStep.disabled = true;
+    clearInterval(timer);
+    btnPlay.textContent = '已完成';
+  }
+}
+
+btnStep.onclick = doStep;
+
+btnPlay.onclick = function() {
+  if (done) { reset(); return; }
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+    btnPlay.textContent = '继续';
+  } else {
+    btnPlay.textContent = '暂停';
+    timer = setInterval(doStep, getSpeed());
+  }
+};
+
+btnReset.onclick = reset;
+
+renderAll();
+</script>
 </html>

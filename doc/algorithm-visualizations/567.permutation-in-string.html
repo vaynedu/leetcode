@@ -79,6 +79,50 @@
   @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.3); } 50% { box-shadow: 0 0 0 6px rgba(181,82,58,0); } }
   .match { animation: pulse 2s ease-in-out infinite; }
   .found-badge { display: inline-block; background: #16a34a; color: white; font-family: 'Geist Mono', monospace; font-size: 9px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+
+  /* Interactive section */
+  .demo-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  .demo-title { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .demo-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .demo-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+
+  .demo-controls { display: flex; gap: 12px; align-items: center; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+  .demo-btn { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 600; padding: 8px 20px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: white; cursor: pointer; transition: all 0.15s; }
+  .demo-btn:hover { background: #9a442e; }
+  .demo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .demo-btn.secondary { background: transparent; color: var(--accent); }
+  .demo-btn.secondary:hover { background: var(--accent-tint); }
+
+  .phase-text { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.1rem; color: var(--accent); text-align: center; min-height: 28px; margin: 16px 0 8px; }
+  .phase-text.found { color: #16a34a; }
+
+  .info-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+  .info-chip { font-family: 'Geist Mono', monospace; font-size: 12px; padding: 4px 12px; border-radius: 12px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .info-chip.zero { background: #dcfce7; border-color: #86efac; color: #16a34a; }
+
+  .demo-s-row { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 16px 0 4px; flex-wrap: wrap; }
+  .demo-s-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 500; color: var(--muted); position: relative; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); transition: all 0.3s; }
+  .demo-s-cell.in-window { color: var(--ink); background: var(--accent-tint); border-color: var(--accent); }
+  .demo-s-cell.match { color: white; background: var(--accent); border-color: var(--accent); }
+  .demo-s-cell span.idx { position: absolute; bottom: -14px; font-size: 7px; color: var(--soft); font-family: 'Geist Mono', monospace; }
+  .demo-s-cell.in-window span.idx { color: var(--accent); }
+
+  .demo-bracket-row { display: flex; gap: 4px; align-items: flex-start; justify-content: center; margin: 20px 0 8px; flex-wrap: wrap; }
+  .demo-bracket { display: inline-block; font-size: 28px; color: var(--accent); font-family: 'Geist Mono', monospace; line-height: 1; margin: 0 2px; }
+  .demo-b-cell { width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--soft); transition: all 0.3s; }
+  .demo-b-cell.active { color: var(--accent); font-weight: 600; }
+
+  .demo-step-detail { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; margin-top: 16px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .demo-kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; text-align: center; }
+  .demo-kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .demo-kv.focal { color: var(--accent); font-weight: 600; }
+  .demo-kv.found { color: #16a34a; font-weight: 600; }
+  .demo-kv.highlight { background: var(--accent-tint); border-radius: 4px; padding: 4px 8px; display: inline-block; }
+
+  .phase-progress { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .phase-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); transition: all 0.3s; }
+  .phase-dot.done { background: var(--accent); }
+  .phase-dot.current { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-strong); }
 </style>
 </head>
 <body>
@@ -318,6 +362,43 @@ func checkInclusion(s1, s2 string) bool {
     </p>
   </section>
 
+  <!-- Section 5: 互动演示 -->
+  <section class="demo-section">
+    <h2 class="demo-title">互动演示</h2>
+    <p class="demo-sub">
+      s2 = <code>"eidbaooo"</code>，s1 = <code>"ab"</code>，窗口大小 = 2<br>
+      点击「下一步」逐步执行 sliding window，diff==0 时 found=true
+    </p>
+
+    <div class="phase-progress" id="ai-progress">
+      <div class="phase-dot" id="dot-0"></div>
+      <div class="phase-dot" id="dot-1"></div>
+      <div class="phase-dot" id="dot-2"></div>
+      <div class="phase-dot" id="dot-3"></div>
+      <div class="phase-dot" id="dot-4"></div>
+    </div>
+
+    <div class="phase-text" id="ai-phase-text">准备开始</div>
+
+    <div class="info-row">
+      <span class="info-chip">窗口: <strong id="ai-window">—</strong></span>
+      <span class="info-chip">diff: <strong id="ai-diff">0</strong></span>
+      <span class="info-chip">找到: <strong id="ai-found">否</strong></span>
+    </div>
+
+    <div class="demo-s-row" id="ai-s-row"></div>
+    <div class="demo-bracket-row" id="ai-bracket-row"></div>
+
+    <div class="demo-step-detail" id="ai-detail">
+      <div class="demo-kv">点击「下一步」开始演示</div>
+    </div>
+
+    <div class="demo-controls">
+      <button class="demo-btn" id="ai-next-btn" onclick="aiNext()">下一步 →</button>
+      <button class="demo-btn secondary" id="ai-reset-btn" onclick="aiReset()">重置</button>
+    </div>
+  </section>
+
   <!-- Summary -->
   <div class="summary">
     <div class="card">
@@ -339,5 +420,172 @@ func checkInclusion(s1, s2 string) bool {
 
 </div>
 <footer>doc/algorithm-visualizations/567.permutation-in-string.html</footer>
+<script>
+const S = "eidbaooo";
+const S1 = "ab";
+const K = 2;
+
+const phases = [
+  {
+    phaseText: "R=0，窗口仅含 'e'，长度不足 2",
+    window: "e",
+    diff: 1,
+    found: false,
+    inWindow: [0],
+    activeBracket: [0],
+    detail: "加入 'e'，need[e]--，但 e 不在 s1 中<br>窗口长度 1 &lt; len(s1)=2，还需扩展"
+  },
+  {
+    phaseText: "R=1，窗口 'ei'，diff≠0",
+    window: "ei",
+    diff: 2,
+    found: false,
+    inWindow: [0, 1],
+    activeBracket: [0, 1],
+    detail: "加入 'i'，diff++（i 在 s1 中）<br>移出无（窗口未满 len=2）<br>diff=2，'e' 和 'i' 不匹配 'ab'"
+  },
+  {
+    phaseText: "R=2，窗口 'id'，diff≠0",
+    window: "id",
+    diff: 2,
+    found: false,
+    inWindow: [1, 2],
+    activeBracket: [1, 2],
+    detail: "加入 'd'，移出 'e'<br>'d' 不在 s1 中，diff 不变<br>diff=2，继续滑动"
+  },
+  {
+    phaseText: "R=3，窗口 'db'，diff≠0",
+    window: "db",
+    diff: 2,
+    found: false,
+    inWindow: [2, 3],
+    activeBracket: [2, 3],
+    detail: "加入 'b'（b 在 s1，diff++）<br>移出 'i'（i 在 s1，diff--）<br>diff=2，'d' 和 'b' 不匹配 'ab'"
+  },
+  {
+    phaseText: "R=4，窗口 'ba'，diff=0 → 找到!",
+    window: "ba",
+    diff: 0,
+    found: true,
+    inWindow: [3, 4],
+    activeBracket: [3, 4],
+    isMatch: true,
+    detail: "加入 'a'（a 在 s1，diff++）<br>移出 'd'（d 不在 s1，diff 不变）<br>然后 diff--（移出的是之前匹配过的）<br>diff 归零！窗口 'ba' 是 'ab' 的排列"
+  }
+];
+
+let phase = -1;
+
+function $(id) { return document.getElementById(id); }
+
+function buildCells() {
+  const row = $('ai-s-row');
+  row.innerHTML = '';
+  for (let i = 0; i < S.length; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'demo-s-cell';
+    cell.id = 'cell-' + i;
+    cell.innerHTML = S[i] + '<span class="idx">' + i + '</span>';
+    row.appendChild(cell);
+  }
+}
+
+function buildBrackets() {
+  const row = $('ai-bracket-row');
+  row.innerHTML = '';
+  for (let i = 0; i < S.length; i++) {
+    const bracket = document.createElement('span');
+    bracket.className = 'demo-bracket';
+    bracket.id = 'bracket-' + i;
+    if (i === 0) bracket.textContent = '┌';
+    else if (i === S.length - 1) bracket.textContent = '┐';
+    else bracket.textContent = '';
+    row.appendChild(bracket);
+
+    const bcell = document.createElement('div');
+    bcell.className = 'demo-b-cell';
+    bcell.id = 'bc-' + i;
+    bcell.textContent = S[i];
+    row.appendChild(bcell);
+  }
+}
+
+function updateDots() {
+  for (let i = 0; i < phases.length; i++) {
+    const dot = $('dot-' + i);
+    dot.className = 'phase-dot' + (i < phase ? ' done' : (i === phase ? ' current' : ''));
+  }
+}
+
+function aiNext() {
+  phase++;
+  if (phase >= phases.length) return;
+
+  const p = phases[phase];
+
+  // Update phase text
+  const pt = $('ai-phase-text');
+  pt.textContent = p.phaseText;
+  pt.className = 'phase-text' + (p.found ? ' found' : '');
+
+  // Update info chips
+  $('ai-window').textContent = p.window;
+  $('ai-diff').textContent = p.diff;
+  $('ai-diff').parentElement.className = 'info-chip' + (p.diff === 0 ? ' zero' : '');
+  $('ai-found').textContent = p.found ? '是' : '否';
+  $('ai-found').parentElement.className = 'info-chip' + (p.found ? ' zero' : '');
+
+  // Update cells
+  for (let i = 0; i < S.length; i++) {
+    const cell = $('cell-' + i);
+    cell.className = 'demo-s-cell';
+    if (p.inWindow.includes(i)) cell.classList.add('in-window');
+    if (p.isMatch && p.inWindow.includes(i)) cell.classList.add('match');
+  }
+
+  // Update brackets
+  for (let i = 0; i < S.length; i++) {
+    const bc = $('bc-' + i);
+    if (bc) bc.className = 'demo-b-cell' + (p.activeBracket.includes(i) ? ' active' : '');
+  }
+
+  // Update detail
+  $('ai-detail').innerHTML = '<div class="demo-kv">' + p.detail + '</div>';
+
+  // Update dots
+  updateDots();
+
+  // Update buttons
+  $('ai-next-btn').disabled = p.found || phase >= phases.length - 1;
+}
+
+function aiReset() {
+  phase = -1;
+  $('ai-phase-text').textContent = '准备开始';
+  $('ai-phase-text').className = 'phase-text';
+  $('ai-window').textContent = '—';
+  $('ai-diff').textContent = '0';
+  $('ai-diff').parentElement.className = 'info-chip';
+  $('ai-found').textContent = '否';
+  $('ai-found').parentElement.className = 'info-chip';
+  $('ai-detail').innerHTML = '<div class="demo-kv">点击「下一步」开始演示</div>';
+  $('ai-next-btn').disabled = false;
+
+  for (let i = 0; i < S.length; i++) {
+    const cell = $('cell-' + i);
+    if (cell) cell.className = 'demo-s-cell';
+    const bc = $('bc-' + i);
+    if (bc) bc.className = 'demo-b-cell';
+  }
+  for (let i = 0; i < phases.length; i++) {
+    const dot = $('dot-' + i);
+    if (dot) dot.className = 'phase-dot';
+  }
+}
+
+// Init
+buildCells();
+buildBrackets();
+</script>
 </body>
 </html>
