@@ -558,130 +558,161 @@ func lengthOfLongestSubstring(s string) int {
     <p class="section-sub">s = <code>"abcba"</code>，用变长窗口追踪最长不重复子串</p>
 
     <div class="anim-controls">
-      <button id="btn-reset" onclick="animReset()">重置</button>
-      <button id="btn-prev" onclick="animPrev()">上一步</button>
-      <button id="btn-next" onclick="animNext()">下一步</button>
+      <button id="a3-reset" onclick="a3Reset()">重置</button>
+      <button id="a3-prev" onclick="a3Prev()" disabled>上一步</button>
+      <button id="a3-next" onclick="a3Next()">下一步</button>
     </div>
 
     <div class="anim-info-bar">
-      <span class="info-chip">阶段: <strong id="ai-phase">—</strong></span>
-      <span class="info-chip">窗口: <strong id="ai-window">—</strong></span>
-      <span class="info-chip">maxLen: <strong id="ai-max">0</strong></span>
+      <span class="info-chip">阶段: <strong id="a3-phase">—</strong></span>
+      <span class="info-chip">窗口: <strong id="a3-window">—</strong></span>
+      <span class="info-chip">maxLen: <strong id="a3-max">0</strong></span>
     </div>
 
-    <div class="anim-phase" id="ai-phase-text">点击「下一步」开始</div>
+    <div class="anim-phase" id="a3-phase-text">点击「下一步」开始</div>
 
-    <div class="anim-input-row" id="ai-char-row"></div>
-    <div class="anim-timeline-wrap" id="ai-timeline"></div>
+    <div class="anim-input-row" id="a3-char-row"></div>
+    <div class="anim-timeline-wrap" id="a3-timeline"></div>
 
-    <div class="result-list" id="ai-result"></div>
+    <div class="result-list" id="a3-result"></div>
   </div>
-<footer>doc/algorithm-visualizations/3.longest-substring-without-repeating-characters.html</footer>
+</div>
+
 <script>
-const S = "abcba";
-const N = S.length;
-let L = 0, R = 0, maxLen = 0;
-let last = {};
-let history = [];
-let step = -1;
+(function() {
+  var S = "abcba";
+  var N = S.length;
 
-function snap() { return { L, R, maxLen, last: Object.assign({}, last) }; }
-
-function animReset() {
-  L = 0; R = 0; maxLen = 0; last = {}; history = []; step = -1;
-  document.getElementById('btn-prev').disabled = true;
-  document.getElementById('btn-next').disabled = false;
-  render();
-}
-
-function animNext() {
-  if (step === history.length - 1) {
-    // 往前走：先记录当前快照，再执行一步
-    history.push(snap());
-    step++;
-    // 执行算法一步
-    const ch = S[R];
-    last[ch] = R;
-    const prevL = L;
-    if (last[ch] !== undefined && last[ch] >= prevL) {
-      L = last[ch] + 1;
-    }
-    maxLen = Math.max(maxLen, R - L + 1);
-    R++;
-    // 渲染
-    render();
-    document.getElementById('btn-prev').disabled = false;
-    if (R >= N) document.getElementById('btn-next').disabled = true;
-  } else {
-    // 快进到终点
-    step = history.length - 1;
-    const h = history[step];
-    L = h.L; R = h.R; maxLen = h.maxLen; last = Object.assign({}, h.last);
-    render();
-    document.getElementById('btn-prev').disabled = false;
-    document.getElementById('btn-next').disabled = true;
-  }
-}
-
-function animPrev() {
-  if (step < 0) return;
-  const h = history[step];
-  L = h.L; R = h.R; maxLen = h.maxLen; last = Object.assign({}, h.last);
-  step--;
-  render();
-  document.getElementById('btn-next').disabled = false;
-  if (step < 0) { document.getElementById('btn-prev').disabled = true; animReset(); }
-}
-
-function render() {
-  const windowChars = [];
-  for (let i = L; i < R && i < N; i++) windowChars.push(S[i]);
-
-  document.getElementById('ai-phase').textContent = step < 0 ? '初始' : `Step ${step + 1}`;
-  document.getElementById('ai-window').textContent = windowChars.length === 0 ? '—' : `"${windowChars.join('')}"`;
-  document.getElementById('ai-max').textContent = maxLen;
-
-  // Phase text
-  const phaseTexts = [
-    `初始状态：L=${L} R=${R}，maxLen=${maxLen}`,
-    `R=${R}="${S[R]}" 入窗，last["${S[R]}"]=${last[S[R]]}，窗口扩张`,
-    `R=${R}="${S[R]}" 入窗，last["${S[R]}"]=${last[S[R]]}，窗口扩张，maxLen=${maxLen}`,
-    `R=${R}="${S[R]}" 入窗，发现重复 last["${S[R]}"]=${last[S[R]]}≥L=${L}，L=max(${L},${last[S[R]]}+1)=${L}，窗口收缩`,
-    `R=${R}="${S[R]}" 入窗，maxLen=${maxLen}，算法结束`,
+  // 预计算每一步状态
+  // 算法: last[ch]记录ch上次出现位置，重复时L=max(L, last[ch]+1)
+  var STEPS = [
+    // {L, R, maxLen, newChar, dup, desc}
+    // Step 0: R=0, ch='a', 新字符入窗，maxLen=1
+    {L:0, R:1, maxLen:1, ch:'a', dup:null, desc:'R=0 → "a" 入窗，无重复，maxLen=1'},
+    // Step 1: R=1, ch='b', 新字符，maxLen=2
+    {L:0, R:2, maxLen:2, ch:'b', dup:null, desc:'R=1 → "b" 入窗，无重复，maxLen=2'},
+    // Step 2: R=2, ch='c', 新字符，maxLen=3
+    {L:0, R:3, maxLen:3, ch:'c', dup:null, desc:'R=2 → "c" 入窗，无重复，maxLen=3'},
+    // Step 3: R=3, ch='b', 重复！b上次在pos=1，>=L=0，故L=pos+1=2，maxLen=3（窗口"bc"）
+    {L:2, R:4, maxLen:3, ch:'b', dup:'b@1', desc:'R=3 → "b" 重复（上次在pos=1≥L=0），L=1+1=2，窗口收缩为"bc"，maxLen=3'},
+    // Step 4: R=4, ch='a', 重复！a上次在pos=0，但0<L=2（已被前面收缩拉大），故无影响，maxLen=3
+    {L:2, R:5, maxLen:3, ch:'a', dup:null, desc:'R=4 → "a" 入窗（上次pos=0<L=2，不影响），窗口"cba"，maxLen=3'},
+    // Done
+    {L:2, R:5, maxLen:3, ch:null, dup:null, desc:'结束！最长不重复子串="abc"（或"cba"），长度=3'},
   ];
-  document.getElementById('ai-phase-text').textContent = step < 0 ? '点击「下一步」开始' : phaseTexts[step] || `Step ${step + 1}: R=${R}`;
 
-  // Char row
-  let html = '';
-  for (let i = 0; i < N; i++) {
-    const inWin = (i >= L && i < R);
-    const isDup = inWin && Object.values(last).filter(v => v === i).length === 0 &&
-                  (last[S[i]] !== undefined && last[S[i]] >= L && last[S[i]] < i);
-    html += `<div class="char-slot${inWin ? ' in-win' : ''}${isDup ? ' dup' : ''}">${S[i]}<span class="idx">${i}</span></div>`;
+  var step = -1;
+
+  function windowChars(L, R) {
+    return S.substring(L, R);
   }
-  document.getElementById('ai-char-row').innerHTML = html;
 
-  // Timeline: show all windows seen so far
-  let tl = '';
-  history.forEach((h, i) => {
-    const w = [];
-    for (let j = h.L; j < h.R && j < N; j++) w.push(S[j]);
-    if (w.length > 0) tl += `<span class="win-chip">"${w.join('')}" (L=${h.L}→${h.L})</span>`;
-  });
-  document.getElementById('ai-timeline').innerHTML = tl || '<span style="color:var(--muted);font-size:12px;">窗口历史</span>';
+  function renderStep(s) {
+    document.getElementById('a3-phase').textContent = step < 0 ? '初始' : ('Step ' + (step + 1));
+    document.getElementById('a3-window').textContent = '"' + windowChars(s.L, s.R) + '"';
+    document.getElementById('a3-max').textContent = s.maxLen;
 
-  // Results: longest substrings found
-  const results = [];
-  for (let i = 0; i < N; i++) {
-    let end = i + maxLen;
-    if (end <= N) results.push(`"${S.substring(i, end)}"`);
+    var phaseText = step < 0
+      ? '点击「下一步」开始滑动窗口'
+      : s.desc;
+    document.getElementById('a3-phase-text').textContent = phaseText;
+
+    // 渲染字符格子
+    var html = '';
+    for (var i = 0; i < N; i++) {
+      var inWin = (i >= s.L && i < s.R);
+      var isNew = (s.ch !== null && S[i] === s.ch && i === s.R - 1);
+      var isDup = (s.dup !== null);
+      // 判断这个格子是否是对应的dup位置
+      var dupMatch = false;
+      if (s.dup !== null && i === parseInt(s.dup.split('@')[1])) {
+        dupMatch = true;
+      }
+      var cls = 'char-slot';
+      if (inWin) cls += ' in-win';
+      if (isNew) cls += ' new-char';
+      if (dupMatch) cls += ' dup';
+      html += '<div class="' + cls + '">' + S[i] + '<span class="idx">' + i + '</span></div>';
+    }
+    document.getElementById('a3-char-row').innerHTML = html;
+
+    // 结果 chips
+    var results = [];
+    for (var i = 0; i <= N - s.maxLen; i++) {
+      results.push('"' + S.substring(i, i + s.maxLen) + '"');
+    }
+    if (results.length > 0 && s.maxLen > 0) {
+      document.getElementById('a3-result').innerHTML =
+        '<span class="result-chip">' + results[0] + ' (len=' + s.maxLen + ')</span>';
+    } else {
+      document.getElementById('a3-result').innerHTML = '';
+    }
   }
-  document.getElementById('ai-result').innerHTML = results.length > 0
-    ? results.slice(0,1).map(r => `<span class="result-chip">${r}</span>`).join('')
-    : '<span style="color:var(--muted);font-size:12px;">maxLen = ' + maxLen + '</span>';
-}
 
-animReset();
+  function a3Reset() {
+    step = -1;
+    document.getElementById('a3-prev').disabled = true;
+    document.getElementById('a3-next').disabled = false;
+    document.getElementById('a3-phase').textContent = '初始';
+    document.getElementById('a3-window').textContent = '—';
+    document.getElementById('a3-max').textContent = '0';
+    document.getElementById('a3-phase-text').textContent = '点击「下一步」开始滑动窗口';
+    document.getElementById('a3-char-row').innerHTML = '';
+    document.getElementById('a3-result').innerHTML = '';
+    // 渲染所有字符为默认状态
+    var html = '';
+    for (var i = 0; i < N; i++) {
+      html += '<div class="char-slot">' + S[i] + '<span class="idx">' + i + '</span></div>';
+    }
+    document.getElementById('a3-char-row').innerHTML = html;
+  }
+
+  function a3Next() {
+    if (step >= STEPS.length - 1) return;
+    step++;
+    renderStep(STEPS[step]);
+    document.getElementById('a3-prev').disabled = false;
+    if (step >= STEPS.length - 1) {
+      document.getElementById('a3-next').disabled = true;
+    }
+  }
+
+  function a3Prev() {
+    if (step < 0) return;
+    step--;
+    if (step < 0) {
+      a3Reset();
+      return;
+    }
+    document.getElementById('a3-next').disabled = false;
+    renderStep(STEPS[step]);
+  }
+
+  // 点击字符格子快进
+  var charRow = document.getElementById('a3-char-row');
+  if (charRow) {
+    charRow.addEventListener('click', function(e) {
+      var slot = e.target.closest('.char-slot');
+      if (!slot) return;
+      var idx = parseInt(slot.querySelector('.idx').textContent);
+      // 找到第一个 R > idx 的 step
+      var targetStep = -1;
+      for (var i = 0; i < STEPS.length; i++) {
+        if (STEPS[i].ch !== null) {
+          var chPos = STEPS[i].R - 1;
+          if (chPos >= idx) { targetStep = i; break; }
+        }
+      }
+      if (targetStep === -1 || targetStep <= step) return;
+      step = targetStep - 1;
+      a3Next();
+    });
+  }
+
+  // 点击单元格时，快进到该位置所在的那一步
+  // 初始化
+  a3Reset();
+})();
 </script>
 </body>
 </html>
