@@ -334,6 +334,75 @@ function animPrev() {
 }
 
 animReset();
+
+(function(){
+  var f = [];
+  animReset();
+  if (step !== -1) f.push('Reset后step!=-1 当前='+step);
+  animReset(); animPrev();
+  if (step !== -1) f.push('Prev@start后step!=-1 当前='+step);
+  animReset();
+  for (var k = 0; k < 30; k++) {
+    var old = step;
+    animNext();
+    if (step === old && old >= 0) { f.push('Next卡住@'+step); break; }
+    if (step < 0) break;
+  }
+
+  animReset(); var pp = 0;
+  for (var k = 0; k < 10; k++) {
+    if (profit < 0) f.push('profit负:'+profit);
+    if (profit < pp) f.push('profit递减');
+    pp = profit; animNext(); if (step < 0) break;
+  }
+  var ok = f.length === 0;
+  var el = document.createElement('div');
+  el.id = 'sc-result';
+  el.style = 'position:fixed;top:8px;right:8px;z-index:99999;font-family:monospace;font-size:13px;padding:12px 16px;border-radius:8px;min-width:220px;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,0.15);line-height:1.6;';
+  el.textContent = ok ? '✅ SELF-CHECK PASS' : '❌ FAIL:\n' + f.join('\n');
+  el.style.background = ok ? '#dcfce7' : '#fee2e2';
+  el.style.color = ok ? '#166534' : '#991b1b';
+  el.style.border = ok ? '2px solid #86efac' : '2px solid #fca5a5';
+  document.body.appendChild(el);
+  console.log(ok ? '%c✅ PASS' : '%c❌ FAIL: ' + f.join(' | '), ok ? 'color:#16a34a;font-weight:bold' : 'color:#dc2626;font-weight:bold');
+})();
+
+(function(){
+  var f = [];
+  animReset();
+  if (step !== -1) f.push('Reset后step!=-1 当前='+step);
+  animReset(); animPrev();
+  if (step !== -1) f.push('Prev@start后step!=-1 当前='+step);
+  animReset();
+  // 通用: step在有效范围内Next必须推进
+  var converged = false;
+  for (var k = 0; k < 30; k++) {
+    var old = step;
+    animNext();
+    if (step === old && old >= 0 && !converged) { f.push('Next卡住@'+step); break; }
+    if (step < 0) break;
+    // 对双指针收敛: 检测收敛条件(left>=right)
+    if (typeof left !== 'undefined' && typeof right !== 'undefined' && left >= right) { converged = true; break; }
+  }
+
+  animReset(); var pp = 0;
+  for (var k = 0; k < 10; k++) {
+    if (profit < 0) f.push('profit负:'+profit);
+    if (profit < pp) f.push('profit递减');
+    pp = profit; animNext(); if (step < 0) break;
+  }
+  var ok = f.length === 0;
+  var el = document.getElementById('sc-result') || (function(){
+    var d = document.createElement('div'); d.id = 'sc-result';
+    d.style = 'position:fixed;top:8px;right:8px;z-index:99999;font-family:monospace;font-size:13px;padding:12px 16px;border-radius:8px;min-width:220px;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,0.15);line-height:1.6;';
+    document.body.appendChild(d); return d;
+  })();
+  el.textContent = ok ? '✅ SELF-CHECK PASS' : '❌ FAIL:\n' + f.join('\n');
+  el.style.background = ok ? '#dcfce7' : '#fee2e2';
+  el.style.color = ok ? '#166534' : '#991b1b';
+  el.style.border = ok ? '2px solid #86efac' : '2px solid #fca5a5';
+  console.log(ok ? '%c✅ PASS' : '%c❌ FAIL: ' + f.join(' | '), ok ? 'color:#16a34a;font-weight:bold' : 'color:#dc2626;font-weight:bold');
+})();
 </script>
 </body>
 </html>
