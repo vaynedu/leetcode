@@ -265,6 +265,7 @@
   .char-slot { width: 48px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid var(--rule); border-radius: 6px; background: var(--paper); font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 700; color: var(--muted); position: relative; transition: all 0.2s; }
   .char-slot.in-win { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
   .char-slot.dup { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+  .char-slot.new-char { background: var(--accent-strong); border-color: var(--accent); color: var(--accent); transform: scale(1.1); box-shadow: 0 0 0 4px rgba(181,82,58,0.25); }
   .char-slot .idx { position: absolute; bottom: -14px; font-size: 8px; color: var(--soft); }
   .anim-timeline-wrap { min-height: 64px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 12px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .win-chip { padding: 4px 10px; border-radius: 4px; background: var(--accent-tint); border: 1px solid var(--accent); font-size: 12px; font-family: 'Geist Mono', monospace; color: var(--accent); }
@@ -549,11 +550,10 @@ func lengthOfLongestSubstring(s string) int {
       <h3><span class="dot"></span>L 只能 max 前进</h3>
       <p>L = max(L, pos+1) 防止被拉回窗口外</p>
     </div>
-  </div>
-
 </div>
+
   <!-- 互动演示 -->
-  <div class="anim-section">
+  <section>
     <h2>互动演示</h2>
     <p class="section-sub">s = <code>"abcba"</code>，用变长窗口追踪最长不重复子串</p>
 
@@ -575,7 +575,8 @@ func lengthOfLongestSubstring(s string) int {
     <div class="anim-timeline-wrap" id="a3-timeline"></div>
 
     <div class="result-list" id="a3-result"></div>
-  </div>
+  </section>
+
 </div>
 
 <script>
