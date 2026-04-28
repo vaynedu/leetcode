@@ -67,6 +67,29 @@
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
 
   @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); } 50% { box-shadow: 0 0 0 8px rgba(181,82,58,0); } }
+
+  /* ── 互动演示 ── */
+  .anim-controls { display: flex; gap: 8px; justify-content: center; margin: 20px 0 12px; }
+  .anim-controls button { padding: 8px 20px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper); font-family: 'Geist', sans-serif; font-size: 13px; cursor: pointer; color: var(--ink); transition: all 0.15s; }
+  .anim-controls button:hover:not(:disabled) { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .anim-controls button:disabled { opacity: 0.35; cursor: default; }
+
+  .anim-info-bar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .info-chip { background: var(--paper); border: 1px solid var(--rule); border-radius: 20px; padding: 4px 12px; font-size: 11px; color: var(--muted); font-family: 'Geist Mono', monospace; }
+  .info-chip strong { color: var(--ink); }
+
+  .anim-phase { background: var(--accent-tint); border: 1px solid var(--accent); border-radius: 6px; padding: 12px 16px; text-align: center; font-size: 13px; color: var(--accent); margin-bottom: 16px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+
+  .num-row.anim { margin: 16px 0; }
+  .num-cell { transition: all 0.25s; }
+  .num-cell.cur { background: var(--accent-tint) !important; border-color: var(--accent) !important; color: var(--accent) !important; transform: scale(1.08); }
+  .num-cell.path-hi { background: rgba(181,82,58,0.18) !important; border-color: rgba(181,82,58,0.5) !important; color: var(--accent) !important; }
+
+  .result-list { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+  .result-chip { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-family: 'Geist Mono', monospace; }
+  .result-chip.yes { background: #dcfce7; border: 1px solid #16a34a; color: #16a34a; }
+  .result-chip.no { background: #fee2e2; border: 1px solid #dc2626; color: #dc2626; }
+  .result-chip.info { background: var(--accent-tint); border: 1px solid var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -254,7 +277,156 @@ func findMin(nums []int) int {
     </div>
   </div>
 
-</div>
+  <!-- 互动演示 -->
+  <section>
+    <h2>互动演示</h2>
+    <p class="section-sub">nums = [4,5,6,7,0,1,2]，体验无重复时的严格二分</p>
+
+    <div class="anim-controls">
+      <button id="a153-reset" onclick="a153Reset()">重置</button>
+      <button id="a153-prev" onclick="a153Prev()" disabled>上一步</button>
+      <button id="a153-next" onclick="a153Next()">下一步</button>
+    </div>
+
+    <div class="anim-info-bar">
+      <span class="info-chip">L: <strong id="a153-L">0</strong></span>
+      <span class="info-chip">R: <strong id="a153-R">6</strong></span>
+      <span class="info-chip">mid: <strong id="a153-mid">—</strong></span>
+      <span class="info-chip">nums[mid]: <strong id="a153-midv">—</strong></span>
+      <span class="info-chip">nums[R]: <strong id="a153-rv">—</strong></span>
+    </div>
+
+    <div class="anim-phase" id="a153-msg">点击「下一步」开始二分</div>
+
+    <div class="num-row anim" id="a153-row">
+      <div class="num-cell" id="a153-c0">4<span class="idx">0</span></div>
+      <div class="num-cell" id="a153-c1">5<span class="idx">1</span></div>
+      <div class="num-cell" id="a153-c2">6<span class="idx">2</span></div>
+      <div class="num-cell" id="a153-c3">7<span class="idx">3</span></div>
+      <div class="num-cell" id="a153-c4">0<span class="idx">4</span></div>
+      <div class="num-cell" id="a153-c5">1<span class="idx">5</span></div>
+      <div class="num-cell" id="a153-c6">2<span class="idx">6</span></div>
+    </div>
+
+    <div class="result-list" id="a153-result"></div>
+  </section>
+
 <footer>doc/algorithm-visualizations/153.find-minimum-in-rotated-sorted-array.html</footer>
+</div>
+
+<script>
+(function() {
+  var nums = [4,5,6,7,0,1,2];
+  var N = nums.length;
+
+  // 步骤：
+  // S0: L=0,R=6,mid=3, nums[3]=7 > nums[6]=2 → L=mid+1=4
+  // S1: L=4,R=6,mid=5, nums[5]=1 < nums[6]=2 → R=mid=5
+  // S2: L=4,R=5,mid=4, nums[4]=0 < nums[5]=1 → R=mid=4
+  // S3: L=4,R=4 → nums[4]=0 是答案
+  var STEPS = [
+    {L:0, R:6, mid:3, action:'init',    msg:'初始 L=0 R=6，计算 mid=3'},
+    {L:0, R:6, mid:3, action:'greater',  msg:'nums[3]=7 > nums[6]=2，最小值在右半边 → L=mid+1（L=4）'},
+    {L:4, R:6, mid:5, action:'less',     msg:'nums[5]=1 < nums[6]=2，最小值在左半边 → R=mid（R=5）'},
+    {L:4, R:5, mid:4, action:'less',     msg:'nums[4]=0 < nums[5]=1，最小值在左半边 → R=mid（R=4）'},
+    {L:4, R:4, mid:null, action:'done',  msg:'L==R，nums[R]=0 是最小值 → 返回 0'},
+  ];
+
+  var step = -1;
+  var done = false;
+
+  function resetUI() {
+    for (var i = 0; i < N; i++) {
+      var el = document.getElementById('a153-c' + i);
+      if (el) el.setAttribute('class', 'num-cell');
+    }
+  }
+
+  function a153Reset() {
+    step = -1; done = false;
+    document.getElementById('a153-L').textContent = '0';
+    document.getElementById('a153-R').textContent = '6';
+    document.getElementById('a153-mid').textContent = '—';
+    document.getElementById('a153-midv').textContent = '—';
+    document.getElementById('a153-rv').textContent = '—';
+    document.getElementById('a153-msg').textContent = '点击「下一步」开始二分';
+    document.getElementById('a153-result').innerHTML = '';
+    document.getElementById('a153-prev').disabled = true;
+    document.getElementById('a153-next').disabled = false;
+    resetUI();
+  }
+
+  function renderStep(s) {
+    resetUI();
+    document.getElementById('a153-L').textContent = s.L;
+    document.getElementById('a153-R').textContent = s.R;
+    document.getElementById('a153-mid').textContent = s.mid !== null ? s.mid : '—';
+    document.getElementById('a153-midv').textContent = s.mid !== null ? nums[s.mid] : '—';
+    document.getElementById('a153-rv').textContent = s.R < N ? nums[s.R] : '—';
+    document.getElementById('a153-msg').textContent = s.msg;
+
+    if (s.mid !== null) {
+      var cur = document.getElementById('a153-c' + s.mid);
+      if (cur) cur.setAttribute('class', 'num-cell cur');
+      for (var i = s.L; i <= s.R; i++) {
+        var el = document.getElementById('a153-c' + i);
+        if (el && i !== s.mid) el.setAttribute('class', 'num-cell path-hi');
+      }
+      for (var i = 0; i < N; i++) {
+        if (i < s.L || i > s.R) {
+          var el = document.getElementById('a153-c' + i);
+          if (el) el.setAttribute('class', 'num-cell eliminated');
+        }
+      }
+    }
+  }
+
+  function a153Next() {
+    if (done) return;
+    if (step >= STEPS.length - 1) return;
+    step++;
+    var s = STEPS[step];
+    renderStep(s);
+    document.getElementById('a153-prev').disabled = false;
+    if (s.action === 'done') {
+      done = true;
+      var ans = nums[s.R];
+      var ansEl = document.getElementById('a153-c' + s.R);
+      if (ansEl) ansEl.setAttribute('class', 'num-cell ans');
+      document.getElementById('a153-result').innerHTML =
+        '<span class="result-chip yes">最小值 = ' + ans + '</span>';
+      document.getElementById('a153-next').disabled = true;
+    }
+  }
+
+  function a153Prev() {
+    if (step <= 0) { a153Reset(); return; }
+    step--; done = false;
+    document.getElementById('a153-next').disabled = false;
+    renderStep(STEPS[step]);
+  }
+
+  // 点击单元格跳转
+  for (var i = 0; i < N; i++) {
+    var el = document.getElementById('a153-c' + i);
+    if (el) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', (function(idx) {
+        return function() {
+          var targetStep = -1;
+          for (var j = step + 1; j < STEPS.length; j++) {
+            if (STEPS[j].mid === idx) { targetStep = j; break; }
+          }
+          if (targetStep === -1) return;
+          step = targetStep - 1;
+          a153Next();
+        };
+      })(i));
+    }
+  }
+
+  a153Reset();
+})();
+</script>
 </body>
 </html>
