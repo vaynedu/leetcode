@@ -49,6 +49,28 @@
   .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
   .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
 
+  /* anim */
+  .anim-controls { display: flex; gap: 8px; margin-bottom: 16px; }
+  .anim-controls button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper-2); font-family: 'Geist', sans-serif; font-size: 13px; cursor: pointer; }
+  .anim-controls button:hover { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .anim-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .anim-info-bar { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+  .info-chip { font-size: 12px; color: var(--muted); background: var(--paper-2); border: 1px solid var(--rule); border-radius: 4px; padding: 4px 10px; }
+  .info-chip strong { color: var(--accent); font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--ink); background: var(--accent-tint); border: 1px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; min-height: 44px; display: flex; align-items: center; }
+  .tree-demo-wrap { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 24px; margin-bottom: 16px; }
+  .tree-demo-svg { display: block; margin: 0 auto; max-width: 100%; }
+  .tree-node { cursor: pointer; transition: fill 0.2s; }
+  .tree-node:hover { fill: #d4a; }
+  .tree-node.active { fill: var(--accent); }
+  .tree-node.leaf-yes { fill: #22c55e; }
+  .tree-node.leaf-no { fill: #ef4444; }
+  .tree-node.path { fill: var(--accent-tint); stroke: var(--accent); stroke-width: 2; }
+  .tree-node.dim { opacity: 0.3; }
+  .result-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .result-chip { padding: 4px 10px; border-radius: 4px; background: #dcfce7; border: 1px solid #16a34a; font-size: 12px; font-family: 'Geist Mono', monospace; color: #166534; }
+  .result-chip.no { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+
 </style>
 </head>
 <body>
@@ -143,7 +165,243 @@
 </div>
 </section>
 
+<!-- 互动演示 -->
+<section>
+<h2>互动演示</h2>
+<p class="section-sub">点击节点展开递归，target 逐节点递减，叶子处判断归零</p>
+
+<div class="anim-controls">
+  <button id="btn-reset" onclick="animReset()">重置</button>
+  <button id="btn-prev" onclick="animPrev()" disabled>上一步</button>
+  <button id="btn-next" onclick="animNext()">下一步</button>
+</div>
+
+<div class="anim-info-bar">
+  <span class="info-chip">阶段: <strong id="ai-phase">—</strong></span>
+  <span class="info-chip">当前节点: <strong id="ai-node">—</strong></span>
+  <span class="info-chip">target: <strong id="ai-target">22</strong></span>
+  <span class="info-chip">路径: <strong id="ai-path">—</strong></span>
+</div>
+
+<div class="anim-phase" id="ai-phase-text">点击「下一步」开始递归</div>
+
+<div class="tree-demo-wrap">
+  <svg id="ai-svg" class="tree-demo-svg" viewBox="0 0 400 220" width="400" height="220">
+    <!-- edges -->
+    <line id="e-5-4" x1="200" y1="40" x2="120" y2="90" stroke="#c8c8c8" stroke-width="1.5"/>
+    <line id="e-5-11" x1="200" y1="40" x2="280" y2="90" stroke="#c8c8c8" stroke-width="1.5"/>
+    <line id="e-4-7" x1="120" y1="90" x2="80" y2="140" stroke="#c8c8c8" stroke-width="1.5"/>
+    <line id="e-4-2" x1="120" y1="90" x2="160" y2="140" stroke="#c8c8c8" stroke-width="1.5"/>
+    <line id="e-11-13" x1="280" y1="90" x2="240" y2="140" stroke="#c8c8c8" stroke-width="1.5"/>
+    <line id="e-11-1" x1="280" y1="90" x2="320" y2="140" stroke="#c8c8c8" stroke-width="1.5"/>
+    <!-- nodes (interactive) -->
+    <circle id="n-5" class="tree-node" cx="200" cy="40" r="20" fill="#1c1917" onclick="clickNode(5)"/>
+    <text id="t-5" x="200" y="44" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="12" font-weight="600">5</text>
+    <circle id="n-4" class="tree-node" cx="120" cy="90" r="20" fill="#1c1917" onclick="clickNode(4)"/>
+    <text id="t-4" x="120" y="94" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="12" font-weight="600">4</text>
+    <circle id="n-11" class="tree-node" cx="280" cy="90" r="20" fill="#1c1917" onclick="clickNode(11)"/>
+    <text id="t-11" x="280" y="94" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="12" font-weight="600">11</text>
+    <circle id="n-7" class="tree-node" cx="80" cy="140" r="20" fill="#1c1917" onclick="clickNode(7)"/>
+    <text id="t-7" x="80" y="144" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="12" font-weight="600">7</text>
+    <circle id="n-2" class="tree-node" cx="160" cy="140" r="20" fill="#1c1917" onclick="clickNode(2)"/>
+    <text id="t-2" x="160" y="144" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="12" font-weight="600">2</text>
+    <circle id="n-13" class="tree-node" cx="240" cy="140" r="20" fill="#1c1917" onclick="clickNode(13)"/>
+    <text id="t-13" x="240" y="144" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="12" font-weight="600">13</text>
+    <circle id="n-1" class="tree-node" cx="320" cy="140" r="20" fill="#1c1917" onclick="clickNode(1)"/>
+    <text id="t-1" x="320" y="144" text-anchor="middle" fill="white" font-family="Geist Mono" font-size="12" font-weight="600">1</text>
+  </svg>
+</div>
+
+<div class="result-list" id="ai-result"></div>
+</section>
+
 <footer>LeetCode 112 · 路径总和</footer>
 </div>
+
+<script>
+// 112 Path Sum — 递归演示
+const TARGET = 22;
+const TREE = {
+  val: 5, children: [
+    { val: 4, children: [
+      { val: 7, children: [] },
+      { val: 2, children: [] }
+    ]},
+    { val: 11, children: [
+      { val: 13, children: [] },
+      { val: 1, children: [] }
+    ]}
+  ]
+};
+
+// 节点信息：val -> {x, y, parent}
+const NODE_POS = {
+  5:  {x: 200, y: 40,  parent: null},
+  4:  {x: 120, y: 90,  parent: 5},
+  11: {x: 280, y: 90,  parent: 5},
+  7:  {x: 80,  y: 140, parent: 4},
+  2:  {x: 160, y: 140, parent: 4},
+  13: {x: 240, y: 140, parent: 11},
+  1:  {x: 320, y: 140, parent: 11}
+};
+
+let step = -1;
+let history = [];  // 每步快照: {cur, target, path, verdict, prevVerdict}
+let verdict = null; // 最终判断
+
+function snap() {
+  return { verdict };
+}
+
+function animReset() {
+  step = -1;
+  verdict = null;
+  history = [];
+  document.getElementById('btn-prev').disabled = true;
+  document.getElementById('btn-next').disabled = false;
+  document.getElementById('ai-phase').textContent = '—';
+  document.getElementById('ai-node').textContent = '—';
+  document.getElementById('ai-target').textContent = TARGET;
+  document.getElementById('ai-path').textContent = '—';
+  document.getElementById('ai-phase-text').textContent = '点击「下一步」开始递归';
+  document.getElementById('ai-result').innerHTML = '';
+  resetNodeStyle();
+}
+
+function resetNodeStyle() {
+  Object.keys(NODE_POS).forEach(v => {
+    const c = document.getElementById('n-' + v);
+    if (c) { c.setAttribute('fill', '#1c1917'); c.setAttribute('class', 'tree-node'); }
+  });
+  ['5-4','5-11','4-7','4-2','11-13','11-1'].forEach(k => {
+    const e = document.getElementById('e-' + k);
+    if (e) e.setAttribute('stroke', '#c8c8c8');
+  });
+}
+
+// 预先计算递归路径 steps
+const STEPS = [
+  {cur: 5,  target: 22, path: '5',   desc: '根节点5，target=22-5=17，进入左子树4'},
+  {cur: 4,  target: 17, path: '5→4', desc: '节点4，target=17-4=13，进入左子树7'},
+  {cur: 7,  target: 13, path: '5→4→7', desc: '节点7(叶子)，target=13-7=6，6≠0 → 返回false，递归右子树2'},
+  {cur: 2,  target: 6,  path: '5→4→7→2', desc: '节点2(叶子)，target=6-2=4，4≠0 → 返回false，左子树全失败，回溯到根'},
+  {cur: 11, target: 17, path: '5→11', desc: '回到根，进入右子树11，target=22-5=17'},
+  {cur: 13, target: 6,  path: '5→11→13', desc: '节点13(叶子)，target=6-13=-7≠0 → 返回false'},
+  {cur: 1,  target: 6,  path: '5→11→1', desc: '节点1(叶子)，target=6-1=5≠0 → 返回false，右子树也全失败'},
+  {cur: null, target: null, path: null, desc: '所有路径尝试完毕，无路径和=22 → 返回false'},
+];
+
+function animNext() {
+  if (verdict !== null) return;
+  if (step < history.length - 1) {
+    step = history.length - 1;
+    renderStep();
+    return;
+  }
+  if (step >= STEPS.length - 1) return;
+
+  history.push(snap());
+  step++;
+  const s = STEPS[step];
+
+  resetNodeStyle();
+
+  // 高亮路径
+  const pathVals = s.path ? s.path.split('→').map(Number) : [];
+  pathVals.forEach((v, i) => {
+    const c = document.getElementById('n-' + v);
+    if (c) c.setAttribute('fill', i === pathVals.length - 1 ? 'var(--accent)' : 'rgba(181,82,58,0.4)');
+    // 高亮边
+    if (i > 0) {
+      const prev = pathVals[i-1];
+      const e = document.getElementById('e-' + prev + '-' + v);
+      if (e) e.setAttribute('stroke', 'var(--accent)');
+    }
+  });
+
+  // 叶子判断
+  if (s.cur !== null) {
+    const isLeaf = (s.cur === 7 || s.cur === 2 || s.cur === 13 || s.cur === 1);
+    if (isLeaf) {
+      if (s.target === 0) {
+        verdict = true;
+        const c = document.getElementById('n-' + s.cur);
+        if (c) c.setAttribute('fill', '#22c55e');
+        document.getElementById('ai-phase-text').textContent = '✅ 找到！' + s.path + ' = ' + TARGET + ' → true';
+        document.getElementById('ai-result').innerHTML = '<span class="result-chip">true — 路径和=' + TARGET + '</span>';
+      } else {
+        verdict = false;
+        const c = document.getElementById('n-' + s.cur);
+        if (c) c.setAttribute('fill', '#ef4444');
+        document.getElementById('ai-phase-text').textContent = '❌ ' + s.cur + '是叶子但target=' + s.target + '≠0 → false';
+      }
+    } else {
+      document.getElementById('ai-phase-text').textContent = s.desc;
+    }
+  } else {
+    document.getElementById('ai-phase-text').textContent = s.desc;
+    verdict = false;
+    document.getElementById('ai-result').innerHTML = '<span class="result-chip no">false — 无路径和=' + TARGET + '</span>';
+  }
+
+  document.getElementById('ai-phase').textContent = 'Step ' + (step + 1);
+  document.getElementById('ai-node').textContent = s.cur !== null ? s.cur : '—';
+  document.getElementById('ai-target').textContent = s.target !== null ? s.target : '—';
+  document.getElementById('ai-path').textContent = s.path || '—';
+
+  document.getElementById('btn-prev').disabled = false;
+  if (step >= STEPS.length - 1 || verdict !== null) {
+    document.getElementById('btn-next').disabled = true;
+  }
+}
+
+function renderStep() {
+  const s = STEPS[step];
+  resetNodeStyle();
+  const pathVals = s.path ? s.path.split('→').map(Number) : [];
+  pathVals.forEach((v, i) => {
+    const c = document.getElementById('n-' + v);
+    if (c) c.setAttribute('fill', i === pathVals.length - 1 ? 'var(--accent)' : 'rgba(181,82,58,0.4)');
+    if (i > 0) {
+      const e = document.getElementById('e-' + pathVals[i-1] + '-' + v);
+      if (e) e.setAttribute('stroke', 'var(--accent)');
+    }
+  });
+  document.getElementById('ai-phase').textContent = 'Step ' + (step + 1);
+  document.getElementById('ai-node').textContent = s.cur !== null ? s.cur : '—';
+  document.getElementById('ai-target').textContent = s.target !== null ? s.target : '—';
+  document.getElementById('ai-path').textContent = s.path || '—';
+  document.getElementById('ai-phase-text').textContent = s.desc;
+  if (verdict === true) {
+    document.getElementById('ai-result').innerHTML = '<span class="result-chip">true</span>';
+  } else if (verdict === false) {
+    document.getElementById('ai-result').innerHTML = '<span class="result-chip no">false</span>';
+  }
+}
+
+function animPrev() {
+  if (step < 0) return;
+  verdict = null;
+  step--;
+  if (step < 0) {
+    animReset();
+    return;
+  }
+  document.getElementById('btn-next').disabled = false;
+  renderStep();
+}
+
+function clickNode(v) {
+  // 找到 v 在 STEPS 中的位置
+  const idx = STEPS.findIndex(s => s.cur === v && s.target !== null);
+  if (idx === -1 || idx <= step) return;
+  // 快进到该节点
+  while (step < idx - 1) animNext();
+  animNext();
+}
+
+// 初始
+animReset();
+</script>
 </body>
 </html>
