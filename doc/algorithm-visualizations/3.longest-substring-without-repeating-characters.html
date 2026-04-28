@@ -667,6 +667,7 @@ func lengthOfLongestSubstring(s string) int {
     }
     document.getElementById('a3-char-row').innerHTML = html;
   }
+  window.a3Reset = a3Reset;
 
   function a3Next() {
     if (step >= STEPS.length - 1) return;
@@ -677,6 +678,7 @@ func lengthOfLongestSubstring(s string) int {
       document.getElementById('a3-next').disabled = true;
     }
   }
+  window.a3Next = a3Next;
 
   function a3Prev() {
     if (step < 0) return;
@@ -688,6 +690,7 @@ func lengthOfLongestSubstring(s string) int {
     document.getElementById('a3-next').disabled = false;
     renderStep(STEPS[step]);
   }
+  window.a3Prev = a3Prev;
 
   // 点击字符格子快进
   var charRow = document.getElementById('a3-char-row');
