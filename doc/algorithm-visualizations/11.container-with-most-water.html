@@ -675,6 +675,14 @@ function animNext() {
   if (area > maxA) maxA = area;
   history.push({ left, right, h, w, area, maxA, improved: area > prevMax });
   step++;
+
+  // 移动短边指针
+  if (heights[left] < heights[right]) {
+    left++;
+  } else {
+    right--;
+  }
+
   render();
   document.getElementById('btnPrev').disabled = false;
   if (left >= right) document.getElementById('btnNext').disabled = true;
@@ -682,19 +690,15 @@ function animNext() {
 
 function animPrev() {
   if (step < 0) return;
-  const last = history[step];
-  if (step === 0) {
-    left = 0; right = heights.length - 1; maxA = 0;
-  } else {
-    const prev = history[step - 1];
-    left = prev.left; right = prev.right; maxA = prev.maxA;
-  }
+  const prev = history[step];  // 恢复指针状态
+  left = prev.left; right = prev.right; maxA = prev.maxA;
   step--;
   render();
   document.getElementById('btnNext').disabled = false;
   if (step < 0) {
-    left = 0; right = heights.length - 1; maxA = 0;
-    document.getElementById('btnPrev').disabled = true;
+    animReset();
+  } else {
+    document.getElementById('btnPrev').disabled = false;
   }
 }
 
