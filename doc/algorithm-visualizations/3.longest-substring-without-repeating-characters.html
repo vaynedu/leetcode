@@ -270,6 +270,9 @@
   .anim-timeline-wrap { min-height: 64px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 12px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .win-chip { padding: 4px 10px; border-radius: 4px; background: var(--accent-tint); border: 1px solid var(--accent); font-size: 12px; font-family: 'Geist Mono', monospace; color: var(--accent); }
   .result-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .step-chip { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--rule); font-size: 11px; font-family: 'Geist Mono', monospace; color: var(--soft); background: var(--paper); }
+  .step-chip.done { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .step-chip.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
   .result-chip { padding: 4px 10px; border-radius: 4px; background: #dcfce7; border: 1px solid #16a34a; font-size: 12px; font-family: 'Geist Mono', monospace; color: #166534; }
 </style>
 </head>
@@ -553,7 +556,7 @@ func lengthOfLongestSubstring(s string) int {
 </div>
 
   <!-- 互动演示 -->
-  <section>
+  <section class="anim-section">
     <h2>互动演示</h2>
     <p class="section-sub">s = <code>"abcba"</code>，用变长窗口追踪最长不重复子串</p>
 
@@ -636,6 +639,16 @@ func lengthOfLongestSubstring(s string) int {
       html += '<div class="' + cls + '">' + S[i] + '<span class="idx">' + i + '</span></div>';
     }
     document.getElementById('a3-char-row').innerHTML = html;
+
+    // 时间轴：渲染所有步骤的缩略进度
+    var timelineHtml = '';
+    for (var i = 0; i < STEPS.length; i++) {
+      var cls = 'step-chip';
+      if (i < step) cls += ' done';
+      else if (i === step) cls += ' active';
+      timelineHtml += '<span class="' + cls + '">' + (i + 1) + '</span>';
+    }
+    document.getElementById('a3-timeline').innerHTML = timelineHtml;
 
     // 结果 chips
     var results = [];
