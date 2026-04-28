@@ -375,6 +375,7 @@ function animReset() {
   document.getElementById('ai-result').innerHTML = '';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= sorted.length) return;
@@ -385,7 +386,8 @@ function animNext() {
     document.getElementById('ai-cur').textContent = '-';
     merged = [[...sorted[0]]];
     render();
-  } else {
+  }
+  window.animNext = animNext; else {
     i = step - 1;
     const cur = sorted[i];
     document.getElementById('ai-cur').textContent = `[${cur[0]},${cur[1]}]`;
@@ -410,6 +412,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   step--;
   if (step === 0) {
     merged = [];

@@ -294,6 +294,7 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= nums.length - 1) return;
@@ -302,7 +303,8 @@ function animNext() {
   curFarthest = Math.max(curFarthest, i + nums[i]);
   if (i === curEnd) {
     steps++;
-    jumps.push(`从${curEnd}→${curFarthest}`);
+    jumps.push(`从${curEnd}
+  window.animNext = animNext;→${curFarthest}`);
     document.getElementById('ai-desc').innerHTML = `i=${i}: 到达 curEnd=${curEnd}，跳一步！<span>steps=${steps}</span>，curEnd=${curFarthest}`;
     curEnd = curFarthest;
   } else {
@@ -313,6 +315,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   steps = 0; curEnd = 0; curFarthest = 0; jumps = [];
   for (let k = 0; k < step; k++) {
     curFarthest = Math.max(curFarthest, k + nums[k]);

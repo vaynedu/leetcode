@@ -306,6 +306,7 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= gas.length - 1) return;
@@ -317,7 +318,8 @@ function animNext() {
   if (cur < 0) {
     curStart = i + 1;
     cur = 0;
-    document.getElementById('ai-desc').innerHTML = `i=${i}: net=${diff}，cur=${cur-diff}+${diff}=${cur} < 0 → <span>换起点到 ${curStart}</span>`;
+    document.getElementById('ai-desc').innerHTML = `i=${i}
+  window.animNext = animNext;: net=${diff}，cur=${cur-diff}+${diff}=${cur} < 0 → <span>换起点到 ${curStart}</span>`;
   } else {
     document.getElementById('ai-desc').innerHTML = `i=${i}: net=${diff}，cur=${cur} ≥ 0，起点保持为 ${curStart}`;
   }
@@ -326,6 +328,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   cur = 0; total = 0; curStart = 0;
   for (let k = 0; k < step; k++) {
     const diff = gas[k] - cost[k];

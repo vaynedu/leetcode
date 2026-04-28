@@ -299,6 +299,7 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= prices.length - 1) return;
@@ -309,7 +310,8 @@ function animNext() {
     document.getElementById('ai-diff').textContent = (diff >= 0 ? '+' : '') + diff;
     if (diff > 0) {
       profit += diff;
-      trades.push({ type: 'profit', label: `+${diff} (d${i-1}→d${i})` });
+      trades.push({ type: 'profit', label: `+${diff}
+  window.animNext = animNext; (d${i-1}→d${i})` });
       document.getElementById('ai-desc').innerHTML = `d${i-1}→d${i}: ${prices[i-1]}→${prices[i]}，差值 <span>+${diff}</span>，加入利润`;
     } else {
       document.getElementById('ai-desc').innerHTML = `d${i-1}→d${i}: ${prices[i-1]}→${prices[i]}，差值 ${diff}，跳过`;
@@ -322,6 +324,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   profit = 0; trades = [];
   for (let k = 1; k < step; k++) {
     const diff = prices[k] - prices[k-1];

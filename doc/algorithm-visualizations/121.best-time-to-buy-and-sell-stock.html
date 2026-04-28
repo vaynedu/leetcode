@@ -319,6 +319,7 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= prices.length - 1) return;
@@ -326,7 +327,8 @@ function animNext() {
   i = step;
   if (prices[i] < minPrice) {
     minPrice = prices[i];
-    document.getElementById('ai-desc').innerHTML = `Day ${i}: 价格 ${prices[i]}，更新历史最低价 → <span>minPrice=${minPrice}</span>`;
+    document.getElementById('ai-desc').innerHTML = `Day ${i}
+  window.animNext = animNext;: 价格 ${prices[i]}，更新历史最低价 → <span>minPrice=${minPrice}</span>`;
   } else {
     const profit = prices[i] - minPrice;
     document.getElementById('ai-desc').innerHTML = `Day ${i}: 价格 ${prices[i]}，利润 = ${prices[i]}-${minPrice}=<span>${profit}</span>`;
@@ -341,6 +343,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   step--;
   i = step;
   // 简单重置到 step 位置

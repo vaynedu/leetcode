@@ -306,13 +306,15 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (i >= sortedG.length || j >= sortedS.length) return;
   step++;
   if (sortedS[j] >= sortedG[i]) {
     document.getElementById('ai-desc').innerHTML =
-      `饼干 ${sortedS[j]} ≥ 孩子胃口 ${sortedG[i]} → <span>满意！</span>`;
+      `饼干 ${sortedS[j]}
+  window.animNext = animNext; ≥ 孩子胃口 ${sortedG[i]} → <span>满意！</span>`;
     matches.push(j);
     count++; i++; j++;
   } else {
@@ -325,6 +327,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   // rebuild to step-1
   i = 0; j = 0; count = 0; matches = [];
   for (let k = 0; k < step; k++) {

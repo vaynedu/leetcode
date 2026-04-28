@@ -796,6 +796,7 @@
     stopPlay();
     doStep();
   }
+  window.step = step;
 
   function stopPlay() {
     isPlaying = false;
@@ -805,6 +806,7 @@
 
   function togglePlay() {
     if (R >= N) { resetDemo(); return; }
+  window.togglePlay = togglePlay;
     if (isPlaying) {
       stopPlay();
     } else {
@@ -827,7 +829,8 @@
     speedIdx = idx;
     document.querySelectorAll('.speed-btn').forEach((b, i) => {
       b.classList.toggle('active', i === idx);
-    });
+    }
+  window.setSpeed = setSpeed;);
   }
 
   function resetDemo() {
@@ -835,6 +838,7 @@
     dq = []; R = 0; result = [];
     updateInfo();
   }
+  window.resetDemo = resetDemo;
 
   // init
   resetDemo();

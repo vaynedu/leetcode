@@ -383,8 +383,11 @@ function buildGrid() {
 }
 
 function a212Reset() { cur=0; renderStep(0); }
-function a212Next() { if(cur<STEPS.length-1){ cur++; renderStep(cur); } }
-function a212Prev() { if(cur>0){ cur--; renderStep(cur); } }
+  window.a212Reset = a212Reset;
+function a212Next() { if(cur<STEPS.length-1){ cur++; renderStep(cur); }
+  window.a212Next = a212Next; }
+function a212Prev() { if(cur>0){ cur--; renderStep(cur); }
+  window.a212Prev = a212Prev; }
 
 buildGrid();
 a212Reset();

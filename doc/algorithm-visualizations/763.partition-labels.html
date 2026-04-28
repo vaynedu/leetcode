@@ -332,6 +332,7 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始（first pos: ' + uniq + '）';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= s.length - 1) return;
@@ -340,7 +341,8 @@ function animNext() {
   const curLast = last[s.charCodeAt(i) - 97];
   if (curLast > end) {
     end = curLast;
-    document.getElementById('ai-desc').innerHTML = `i=${i}: '${s[i]}' 最后位置=${curLast}，更新段终点 → <span>end=${end}</span>`;
+    document.getElementById('ai-desc').innerHTML = `i=${i}
+  window.animNext = animNext;: '${s[i]}' 最后位置=${curLast}，更新段终点 → <span>end=${end}</span>`;
   } else {
     document.getElementById('ai-desc').innerHTML = `i=${i}: '${s[i]}' 最后位置=${curLast} ≤ end=${end}，继续`;
   }
@@ -356,6 +358,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   // rebuild
   segments = []; start = 0; end = 0;
   for (let j = 0; j < step; j++) {

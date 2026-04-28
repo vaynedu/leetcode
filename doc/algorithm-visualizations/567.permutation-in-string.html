@@ -542,6 +542,7 @@ function aiNext() {
     if (p.inWindow.includes(i)) cell.classList.add('in-window');
     if (p.isMatch && p.inWindow.includes(i)) cell.classList.add('match');
   }
+  window.aiNext = aiNext;
 
   // Update brackets
   for (let i = 0; i < S.length; i++) {
@@ -577,6 +578,7 @@ function aiReset() {
     const bc = $('bc-' + i);
     if (bc) bc.className = 'demo-b-cell';
   }
+  window.aiReset = aiReset;
   for (let i = 0; i < phases.length; i++) {
     const dot = $('dot-' + i);
     if (dot) dot.className = 'phase-dot';

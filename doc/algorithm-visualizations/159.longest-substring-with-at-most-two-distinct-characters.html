@@ -328,7 +328,8 @@ function snap() { return { L, R, maxLen, count: Object.assign({}, count) }; }
 function typeCount() { return Object.keys(count).filter(k => count[k] > 0).length; }
 
 function animReset() {
-  L = 0; R = 0; maxLen = 0; count = {}; history = []; step = -1;
+  L = 0; R = 0; maxLen = 0; count = {}
+  window.animReset = animReset;; history = []; step = -1;
   document.getElementById('btn-prev').disabled = true;
   document.getElementById('btn-next').disabled = false;
   render();
@@ -339,7 +340,8 @@ function animNext() {
     // 回退后快进
     step = history.length - 1;
     const h = history[step];
-    L = h.L; R = h.R; maxLen = h.maxLen; count = Object.assign({}, h.count);
+    L = h.L; R = h.R; maxLen = h.maxLen; count = Object.assign({}
+  window.animNext = animNext;, h.count);
     render();
     document.getElementById('btn-prev').disabled = false;
     document.getElementById('btn-next').disabled = (R >= N);
@@ -367,6 +369,7 @@ function animNext() {
 function animPrev() {
   if (step < 0) return;
   if (step === 0) { animReset(); return; }
+  window.animPrev = animPrev;
   step--;
   const h = history[step];
   L = h.L; R = h.R; maxLen = h.maxLen; count = Object.assign({}, h.count);

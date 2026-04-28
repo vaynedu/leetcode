@@ -253,13 +253,15 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= nums.length - 1) return;
   step++;
   i = step;
   if (i > reach) {
-    document.getElementById('ai-desc').innerHTML = `i=${i} > reach=${reach} → <span>死胡同！失败</span>`;
+    document.getElementById('ai-desc').innerHTML = `i=${i}
+  window.animNext = animNext; > reach=${reach} → <span>死胡同！失败</span>`;
     render();
     return;
   }
@@ -270,6 +272,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   reach = 0;
   for (let k = 0; k < step; k++) {
     if (k > reach) break;

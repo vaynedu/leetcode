@@ -478,6 +478,7 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= N) return;
@@ -494,7 +495,8 @@ function animNext() {
         maxAvg = avg;
         bestL = L;
         document.getElementById('ai-desc').innerHTML =
-          `Step ${step}: 加入 nums[${prevR}]=${nums[prevR]}，窗口 [${L}..${R-1}] 满了，` +
+          `Step ${step}
+  window.animNext = animNext;: 加入 nums[${prevR}]=${nums[prevR]}，窗口 [${L}..${R-1}] 满了，` +
           `sum=${sum}，avg=${avg.toFixed(3)}，` +
           `<span>更新 maxAvg=${maxAvg.toFixed(3)}</span>`;
       } else {
@@ -534,6 +536,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   L = 0; R = 0; sum = 0; maxAvg = 0; bestL = -1; windowFull = false;
   for (let i = 0; i < step; i++) {
     if (i < K) {

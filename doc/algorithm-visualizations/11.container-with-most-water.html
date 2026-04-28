@@ -665,6 +665,7 @@ function animReset() {
   document.getElementById('btnPrev').disabled = true;
   document.getElementById('btnNext').disabled = false;
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (left >= right) return;
@@ -673,7 +674,8 @@ function animNext() {
   const area = h * w;
   const prevMax = maxA;
   if (area > maxA) maxA = area;
-  history.push({ left, right, h, w, area, maxA, improved: area > prevMax });
+  history.push({ left, right, h, w, area, maxA, improved: area > prevMax }
+  window.animNext = animNext;);
   step++;
 
   // 移动短边指针
@@ -697,7 +699,8 @@ function animPrev() {
   document.getElementById('btnNext').disabled = false;
   if (step < 0) {
     animReset();
-  } else {
+  }
+  window.animPrev = animPrev; else {
     document.getElementById('btnPrev').disabled = false;
   }
 }

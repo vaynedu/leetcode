@@ -290,12 +290,14 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
+  window.animReset = animReset;
 
 function animNext() {
   if (step >= nums.length - 1) return;
   step++;
   i = step;
   if (step === 0) { seq = [0]; render(); return; }
+  window.animNext = animNext;
   const diff = nums[i] - nums[i-1];
   if (prevDiff === 0) {
     if (diff !== 0) { result = 2; prevDiff = diff; seq.push(i); }
@@ -312,6 +314,7 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
+  window.animPrev = animPrev;
   result = 1; prevDiff = 0; seq = [0];
   for (let k = 1; k < step; k++) {
     const diff = nums[k] - nums[k-1];

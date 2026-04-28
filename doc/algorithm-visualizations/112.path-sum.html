@@ -267,6 +267,7 @@ function animReset() {
   document.getElementById('ai-result').innerHTML = '';
   resetNodeStyle();
 }
+  window.animReset = animReset;
 
 function resetNodeStyle() {
   Object.keys(NODE_POS).forEach(v => {
@@ -298,6 +299,7 @@ function animNext() {
     renderStep();
     return;
   }
+  window.animNext = animNext;
   if (step >= STEPS.length - 1) return;
 
   history.push(snap());
@@ -387,6 +389,7 @@ function animPrev() {
     animReset();
     return;
   }
+  window.animPrev = animPrev;
   document.getElementById('btn-next').disabled = false;
   renderStep();
 }
@@ -399,6 +402,7 @@ function clickNode(v) {
   while (step < idx - 1) animNext();
   animNext();
 }
+  window.clickNode = clickNode;
 
 // 初始
 animReset();

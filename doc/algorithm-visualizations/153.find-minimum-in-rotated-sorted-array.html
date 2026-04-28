@@ -355,6 +355,7 @@ func findMin(nums []int) int {
     document.getElementById('a153-next').disabled = false;
     resetUI();
   }
+  window.a153Reset = a153Reset;
 
   function renderStep(s) {
     resetUI();
@@ -397,10 +398,12 @@ func findMin(nums []int) int {
         '<span class="result-chip yes">最小值 = ' + ans + '</span>';
       document.getElementById('a153-next').disabled = true;
     }
+  window.a153Next = a153Next;
   }
 
   function a153Prev() {
     if (step <= 0) { a153Reset(); return; }
+  window.a153Prev = a153Prev;
     step--; done = false;
     document.getElementById('a153-next').disabled = false;
     renderStep(STEPS[step]);
