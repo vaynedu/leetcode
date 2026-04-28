@@ -132,8 +132,8 @@
     </div>
   </div>
 
-<!-- 互动演示 -->
-  <section id="anim" style="display:none;">
+  <!-- 互动演示 -->
+  <section id="a22-anim">
     <h2>互动演示</h2>
     <p class="section-sub">回溯算法 step-by-step 展开，n=3</p>
 
@@ -273,13 +273,10 @@
   };
 
   window.a22Show = function () {
-    document.getElementById('anim').style.display = 'block';
+    document.getElementById('a22-anim').style.display = 'block';
     a22Reset();
     setTimeout(function () { updateUI('Press Next to start'); }, 50);
   };
-
-  // 自动显示演示区
-  a22Show();
 })();
 </script>
 </html>
