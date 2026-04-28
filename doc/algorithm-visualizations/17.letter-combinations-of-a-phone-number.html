@@ -64,6 +64,38 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* ====== 动画演示 ====== */
+  .anim-section { margin-top: 32px; }
+  .anim-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+  .anim-btn { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; transition: all 0.15s; }
+  .anim-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .anim-btn:active { transform: scale(0.97); }
+  .anim-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+  .anim-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .anim-btn.primary:hover { background: #9a4730; }
+  .anim-info-bar { display: flex; gap: 16px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .anim-info-item { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); padding: 4px 10px; border-radius: 4px; }
+  .anim-info-item b { color: var(--accent); }
+  .anim-phase { text-align: center; font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--soft); margin-bottom: 16px; text-transform: uppercase; }
+  .anim-tree { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .anim-tree-row { display: flex; align-items: center; gap: 10px; font-family: 'Geist Mono', monospace; font-size: 12px; }
+  .anim-tree-label { color: var(--soft); min-width: 80px; }
+  .anim-tree-label b { color: var(--accent); }
+  .anim-letters { display: flex; gap: 4px; }
+  .anim-letter { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 12px; font-weight: 600; border: 1px solid var(--rule); background: var(--paper); color: var(--muted); cursor: default; transition: all 0.2s; }
+  .anim-letter.active { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); transform: scale(1.1); }
+  .anim-letter.chosen { border-color: #16a34a; background: #dcfce7; color: #16a34a; }
+  .anim-letter.used { opacity: 0.35; }
+  .anim-result-area { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; min-height: 56px; }
+  .anim-result-label { font-family: 'Geist Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--soft); margin-bottom: 10px; }
+  .result-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .result-chip { font-family: 'Geist Mono', monospace; font-size: 12px; padding: 4px 10px; border-radius: 5px; border: 1px solid var(--rule); background: var(--paper-2); color: var(--muted); transition: all 0.25s; }
+  .result-chip.fresh { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); transform: scale(1.08); }
+  .result-chip.done { border-color: #16a34a; background: #dcfce7; color: #16a34a; }
+  .anim-progress { display: flex; gap: 4px; justify-content: center; margin-top: 12px; }
+  .anim-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rule); transition: background 0.2s; }
+  .anim-dot.on { background: var(--accent); }
 </style>
 </head>
 <body>
@@ -252,7 +284,135 @@ func letterCombinations(digits string) []string {
     </div>
   </div>
 
+<!-- Section 5: 互动演示 -->
+  <section class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">digits = <code>"23"</code>，按 <strong>Next</strong> 逐步展开回溯树</p>
+
+    <div class="anim-controls">
+      <button class="anim-btn" id="a17-reset" onclick="a17Reset()">Reset</button>
+      <button class="anim-btn" id="a17-prev" onclick="a17Prev()" disabled>Prev</button>
+      <button class="anim-btn primary" id="a17-next" onclick="a17Next()">Next</button>
+    </div>
+
+    <div class="anim-info-bar">
+      <span class="anim-info-item">Step: <b id="a17-step">0</b> / <b>13</b></span>
+      <span class="anim-info-item">path: <b id="a17-path"></b></span>
+      <span class="anim-info-item">idx: <b id="a17-idx">0</b></span>
+    </div>
+
+    <div class="anim-phase" id="a17-phase">初始状态</div>
+
+    <div class="anim-tree">
+      <div class="anim-tree-row">
+        <span class="anim-tree-label">depth=0</span>
+        <div class="anim-letters" id="a17-d0"></div>
+      </div>
+      <div class="anim-tree-row">
+        <span class="anim-tree-label">depth=1</span>
+        <div class="anim-letters" id="a17-d1"></div>
+      </div>
+    </div>
+
+    <div class="anim-result-area">
+      <div class="anim-result-label">已生成组合</div>
+      <div class="result-chips" id="a17-results"></div>
+    </div>
+
+    <div class="anim-progress" id="a17-dots"></div>
+  </section>
+
 </div>
 <footer>doc/algorithm-visualizations/17.letter-combinations-of-a-phone-number.html</footer>
+<script>
+(function(){
+  var phone = {'2':'abc','3':'def'};
+  var digits = '23';
+  var steps = [
+    {phase:'初始状态', idx:0, path:'', d0Active:-1, d1Active:-1, d1Used:[], results:[], msg:'准备开始'},
+    {phase:'depth=0 选 a', idx:0, path:'a', d0Active:0, d1Active:-1, d1Used:[], results:[], msg:"选择 2 的第 1 个字母 'a'"},
+    {phase:'depth=1 选 d → ad', idx:1, path:'ad', d0Active:0, d1Active:0, d1Used:[0], results:['ad'], msg:"选择 3 的 'd' → 生成 'ad'"},
+    {phase:'depth=1 选 e', idx:1, path:'ae', d0Active:0, d1Active:1, d1Used:[0,1], results:['ad','ae'], msg:"回溯，换 'e' → 'ae'"},
+    {phase:'depth=1 选 f → af', idx:1, path:'af', d0Active:0, d1Active:2, d1Used:[0,1,2], results:['ad','ae','af'], msg:"选 'f' → 'af'，depth=1 完毕"},
+    {phase:'depth=0 选 b → 回溯', idx:0, path:'b', d0Active:1, d1Active:-1, d1Used:[], results:['ad','ae','af'], msg:"depth=0 换 'b'"},
+    {phase:'depth=1 选 d → bd', idx:1, path:'bd', d0Active:1, d1Active:0, d1Used:[0], results:['ad','ae','af','bd'], msg:"depth=1 选 'd' → 'bd'"},
+    {phase:'depth=1 选 e → be', idx:1, path:'be', d0Active:1, d1Active:1, d1Used:[0,1], results:['ad','ae','af','bd','be'], msg:"换 'e' → 'be'"},
+    {phase:'depth=1 选 f → bf', idx:1, path:'bf', d0Active:1, d1Active:2, d1Used:[0,1,2], results:['ad','ae','af','bd','be','bf'], msg:"选 'f' → 'bf'，depth=1 完毕"},
+    {phase:'depth=0 选 c → 回溯', idx:0, path:'c', d0Active:2, d1Active:-1, d1Used:[], results:['ad','ae','af','bd','be','bf'], msg:"depth=0 换 'c'"},
+    {phase:'depth=1 选 d → cd', idx:1, path:'cd', d0Active:2, d1Active:0, d1Used:[0], results:['ad','ae','af','bd','be','bf','cd'], msg:"depth=1 选 'd' → 'cd'"},
+    {phase:'depth=1 选 e → ce', idx:1, path:'ce', d0Active:2, d1Active:1, d1Used:[0,1], results:['ad','ae','af','bd','be','bf','cd','ce'], msg:"换 'e' → 'ce'"},
+    {phase:'完成 9 组', idx:1, path:'cf', d0Active:2, d1Active:2, d1Used:[0,1,2], results:['ad','ae','af','bd','be','bf','cd','ce','cf'], msg:"完成！共 9 种组合"}
+  ];
+  var cur = 0;
+
+  function buildDots() {
+    var d = document.getElementById('a17-dots');
+    d.innerHTML = '';
+    for (var i=0; i<steps.length; i++) {
+      var span = document.createElement('span');
+      span.className = 'anim-dot' + (i <= cur ? ' on' : '');
+      d.appendChild(span);
+    }
+  }
+
+  function render() {
+    var s = steps[cur];
+    document.getElementById('a17-step').textContent = cur;
+    document.getElementById('a17-path').textContent = '"' + s.path + '"';
+    document.getElementById('a17-idx').textContent = s.idx;
+    document.getElementById('a17-phase').textContent = s.phase;
+    document.getElementById('a17-prev').disabled = cur === 0;
+    document.getElementById('a17-next').disabled = cur === steps.length - 1;
+
+    var d0 = document.getElementById('a17-d0');
+    var d1 = document.getElementById('a17-d1');
+    var l0 = phone['2'].split('');
+    var l1 = phone['3'].split('');
+
+    d0.innerHTML = '';
+    l0.forEach(function(ch, i){
+      var sp = document.createElement('span');
+      sp.className = 'anim-letter';
+      sp.textContent = ch;
+      if (i === s.d0Active) sp.className += ' active';
+      if (i < s.d0Active) sp.className += ' chosen';
+      d0.appendChild(sp);
+    });
+
+    d1.innerHTML = '';
+    l1.forEach(function(ch, i){
+      var sp = document.createElement('span');
+      sp.className = 'anim-letter';
+      sp.textContent = ch;
+      if (i === s.d1Active) sp.className += ' active';
+      if (s.d1Used.indexOf(i) !== -1) sp.className += ' used';
+      d1.appendChild(sp);
+    });
+
+    var res = document.getElementById('a17-results');
+    res.innerHTML = '';
+    s.results.forEach(function(r, i){
+      var chip = document.createElement('span');
+      chip.className = 'result-chip' + (i === s.results.length - 1 && cur < steps.length - 1 ? ' fresh' : ' done');
+      chip.textContent = r;
+      res.appendChild(chip);
+    });
+
+    buildDots();
+  }
+
+  window.a17Next = function() {
+    if (cur < steps.length - 1) { cur++; render(); }
+  };
+  window.a17Prev = function() {
+    if (cur > 0) { cur--; render(); }
+  };
+  window.a17Reset = function() {
+    cur = 0; render();
+  };
+
+  render();
+})();
+</script>
 </body>
 </html>

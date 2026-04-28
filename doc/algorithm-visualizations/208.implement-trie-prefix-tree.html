@@ -65,6 +65,17 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* Animation demo styles */
+  .anim-controls { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+  .anim-controls button { background: var(--ink); color: var(--paper); border: none; padding: 8px 20px; border-radius: 6px; font-family: 'Geist', sans-serif; font-size: 13px; cursor: pointer; transition: opacity 0.15s; }
+  .anim-controls button:hover { opacity: 0.8; }
+  .anim-controls button:disabled { opacity: 0.3; cursor: default; }
+  .anim-info-bar { display: flex; justify-content: center; gap: 24px; margin: 12px 0; font-size: 12px; color: var(--muted); }
+  .anim-phase { font-family: 'Geist Mono', monospace; font-size: 10px; background: var(--accent-tint); color: var(--accent); padding: 3px 10px; border-radius: 4px; }
+  .result-chip { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .result-chip.true { background: #dcfce7; color: #16a34a; }
+  .result-chip.false { background: #fee2e2; color: #dc2626; }
 </style>
 </head>
 <body>
@@ -272,7 +283,149 @@ func (t *Trie) searchPrefix(prefix string) *TrieNode {
     </div>
   </div>
 
-</div>
+  <!-- Interactive Demo -->
+  <section>
+    <h2>互动演示</h2>
+    <p class="section-sub">点击操作按钮体验 Trie 的插入和搜索过程</p>
+
+    <div style="display:flex;gap:12px;justify-content:center;margin:20px 0;flex-wrap:wrap;">
+      <button id="btn-insert" class="anim-btn" style="background:var(--accent);color:white;border:none;padding:10px 24px;border-radius:6px;font-family:'Geist',sans-serif;font-size:13px;cursor:pointer;">insert("app")</button>
+      <button id="btn-search" class="anim-btn" style="background:var(--paper-2);color:var(--ink);border:1px solid var(--rule);padding:10px 24px;border-radius:6px;font-family:'Geist',sans-serif;font-size:13px;cursor:pointer;">search("app")</button>
+      <button id="btn-starts" class="anim-btn" style="background:var(--paper-2);color:var(--ink);border:1px solid var(--rule);padding:10px 24px;border-radius:6px;font-family:'Geist',sans-serif;font-size:13px;cursor:pointer;">startsWith("ap")</button>
+    </div>
+
+    <div id="anim-container" style="background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:24px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div id="anim-word-row" class="word-row" style="margin:16px 0;"></div>
+      <div id="anim-message" style="font-size:13px;color:var(--muted);margin:8px 0;">选择上方操作开始演示</div>
+    </div>
+
+    <div id="anim-info-bar" class="anim-info-bar" style="display:none;">
+      <span id="anim-phase" class="anim-phase"></span>
+      <span id="anim-step-info"></span>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+      <span id="anim-result" class="result-chip" style="display:none;"></span>
+    </div>
+
+    <div class="anim-controls">
+      <button id="btn-prev" onclick="a208Prev()" disabled>◀ 上一步</button>
+      <button id="btn-next" onclick="a208Next()">下一步 ▶</button>
+      <button id="btn-reset" onclick="a208Reset()">重置</button>
+    </div>
+  </section>
+
 <footer>doc/algorithm-visualizations/208.implement-trie-prefix-tree.html</footer>
 </body>
+<script>
+(function() {
+  var STEPS = [];
+  var currentStep = -1;
+  var currentOp = null;
+
+  function renderStep() {
+    var row = document.getElementById('anim-word-row');
+    var msg = document.getElementById('anim-message');
+    var infoBar = document.getElementById('anim-info-bar');
+    var phase = document.getElementById('anim-phase');
+    var stepInfo = document.getElementById('anim-step-info');
+    var result = document.getElementById('anim-result');
+    var btnPrev = document.getElementById('btn-prev');
+    var btnNext = document.getElementById('btn-next');
+
+    if (currentStep < 0) {
+      row.innerHTML = '';
+      msg.textContent = '选择上方操作开始演示';
+      msg.style.display = 'block';
+      infoBar.style.display = 'none';
+      result.style.display = 'none';
+      btnPrev.disabled = true;
+      btnNext.disabled = true;
+      return;
+    }
+
+    var s = STEPS[currentStep];
+    msg.style.display = 'none';
+    infoBar.style.display = 'flex';
+    phase.textContent = s.phase;
+    stepInfo.textContent = s.info;
+
+    var letters = '';
+    for (var i = 0; i < s.word.length; i++) {
+      var cls = 'letter';
+      if (i < s.highlight) cls += ' inserted';
+      else if (i === s.highlight) cls += ' active';
+      letters += '<div class="' + cls + '">' + s.word[i] + '</div>';
+    }
+    row.innerHTML = letters;
+
+    if (s.result !== undefined) {
+      result.style.display = 'inline-block';
+      result.className = 'result-chip ' + s.result;
+      result.textContent = s.result === 'true' ? '✓ true' : '✗ false';
+    } else {
+      result.style.display = 'none';
+    }
+
+    btnPrev.disabled = currentStep === 0;
+    btnNext.disabled = currentStep >= STEPS.length - 1;
+  }
+
+  window.a208Reset = function() {
+    STEPS = [];
+    currentStep = -1;
+    currentOp = null;
+    renderStep();
+  };
+
+  window.a208Next = function() {
+    if (currentStep < STEPS.length - 1) {
+      currentStep++;
+      renderStep();
+    }
+  };
+
+  window.a208Prev = function() {
+    if (currentStep > 0) {
+      currentStep--;
+      renderStep();
+    }
+  };
+
+  function startOp(op) {
+    currentOp = op;
+    STEPS = [];
+    currentStep = -1;
+
+    if (op === 'insert') {
+      STEPS = [
+        { phase: 'Insert', info: '从 root 开始，查找子节点', word: 'app', highlight: 0 },
+        { phase: 'Insert', info: 'root 没有子节点 \'a\' → 创建节点', word: 'app', highlight: 1 },
+        { phase: 'Insert', info: '节点 \'a\' 没有子节点 \'p\' → 创建节点', word: 'app', highlight: 2 },
+        { phase: 'Insert', info: '到达末尾，设置 isEnd = true', word: 'app', highlight: 3, result: 'true' }
+      ];
+    } else if (op === 'search') {
+      STEPS = [
+        { phase: 'Search', info: '从 root 开始，查找 \'a\'', word: 'app', highlight: 0 },
+        { phase: 'Search', info: '找到节点 \'a\'，继续查找 \'p\'', word: 'app', highlight: 1 },
+        { phase: 'Search', info: '找到节点 \'p\'，继续查找 \'p\'', word: 'app', highlight: 2 },
+        { phase: 'Search', info: '找到末尾节点，检查 isEnd = true', word: 'app', highlight: 3, result: 'true' }
+      ];
+    } else if (op === 'startsWith') {
+      STEPS = [
+        { phase: 'StartsWith', info: '从 root 开始，查找 \'a\'', word: 'ap', highlight: 0 },
+        { phase: 'StartsWith', info: '找到节点 \'a\'，继续查找 \'p\'', word: 'ap', highlight: 1 },
+        { phase: 'StartsWith', info: '找到末尾节点，存在此前缀', word: 'ap', highlight: 2, result: 'true' }
+      ];
+    }
+
+    currentStep = 0;
+    renderStep();
+  }
+
+  document.getElementById('btn-insert').onclick = function() { startOp('insert'); };
+  document.getElementById('btn-search').onclick = function() { startOp('search'); };
+  document.getElementById('btn-starts').onclick = function() { startOp('startsWith'); };
+})();
+</script>
 </html>

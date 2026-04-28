@@ -52,6 +52,42 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* ---- 互动演示 ---- */
+  .anim-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+  .anim-btn { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 600; padding: 8px 20px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; transition: all 0.15s; }
+  .anim-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .anim-btn:disabled { opacity: 0.35; cursor: default; }
+  .anim-btn:disabled:hover { background: var(--paper); color: var(--ink); border-color: var(--rule); }
+
+  .anim-info-bar { text-align: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 12px; min-height: 18px; }
+
+  .anim-phase { font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 600; background: var(--accent-tint); color: var(--accent); border: 1px solid var(--accent); padding: 2px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.08em; display: inline-block; margin-bottom: 8px; }
+
+  .demo-area { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 24px; margin-top: 24px; }
+
+  .trie-canvas { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+  .trie-level { display: flex; gap: 12px; justify-content: center; align-items: center; }
+
+  .trie-node { width: 38px; height: 38px; border: 2px solid var(--rule); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; background: var(--paper); color: var(--muted); transition: all 0.25s; position: relative; }
+  .trie-node.root { width: 44px; height: 44px; font-size: 11px; border-color: var(--muted); }
+  .trie-node.is-end { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .trie-node.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; transform: scale(1.12); }
+  .trie-node.fail { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+  .trie-node.success { background: #dcfce7; border-color: #22c55e; color: #166534; }
+  .trie-node.dim { opacity: 0.3; }
+
+  .trie-edge { display: flex; align-items: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--soft); padding: 0 4px; }
+  .trie-edge.active { color: #f59e0b; font-weight: 600; }
+
+  .result-chip { display: inline-block; font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 700; padding: 6px 18px; border-radius: 6px; margin-top: 10px; }
+  .result-chip.false { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+  .result-chip.true { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
+
+  .code-tag { font-family: 'Geist Mono', monospace; font-size: 10px; background: var(--accent); color: white; padding: 1px 6px; border-radius: 3px; margin-right: 4px; }
+  .code-line { font-size: 12px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .code-line.focal { color: var(--ink); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -187,26 +223,217 @@ func (w *WordDictionary) dfs(word string, index int, node *TrieNode) bool {
     </div>
   </section>
 
-  <!-- Summary -->
-  <div class="summary">
-    <div class="card">
-      <p class="card-eyebrow">与208区别</p>
-      <h3><span class="dot"></span>search 支持 '.'</h3>
-      <p>遇到 '.' 遍历所有子节点</p>
+  <!-- 互动演示 -->
+  <div class="demo-area">
+    <div style="text-align:center;">
+      <div class="anim-phase" id="a211-phase">阶段 0 / 4</div>
+      <div class="anim-info-bar" id="a211-info">准备开始</div>
     </div>
-    <div class="card">
-      <p class="card-eyebrow">关键</p>
-      <h3><span class="dot"></span>DFS 递归搜索</h3>
-      <p>每个 '.' 分支都需要递归回溯</p>
+
+    <div class="anim-controls">
+      <button class="anim-btn" id="a211-reset" onclick="a211Reset()">重置</button>
+      <button class="anim-btn" id="a211-prev" onclick="a211Prev()" disabled>◀ 上一步</button>
+      <button class="anim-btn" id="a211-next" onclick="a211Next()">下一步 ▶</button>
     </div>
-    <div class="card">
-      <p class="card-eyebrow">最坏情况</p>
-      <h3><span class="dot"></span>全是 '.'</h3>
-      <p>需要遍历整棵树，O(m × 26^m)</p>
+
+    <div class="trie-canvas" id="a211-canvas">
+      <!-- Trie 渲染区 -->
+    </div>
+
+    <div style="margin-top:16px;" id="a211-explanation">
+      <div class="code-line" id="a211-code"></div>
+      <div id="a211-result"></div>
     </div>
   </div>
 
 </div>
 <footer>doc/algorithm-visualizations/211.design-add-and-search-words-data-structure.html</footer>
+<script>
+(function(){
+  /* ====== 211 互动演示 ====== */
+  /* Trie 结构:
+     阶段 0: 初始状态
+     阶段 1: addWord("bad")  →  b→a→d
+     阶段 2: addWord("dad")  →  d→a→d
+     阶段 3: search("pad")  →  p不存在 → false
+     阶段 4: search("bad")  →  b→a→d 全部存在 → true
+  */
+
+  var cur = 0;
+  var phases = [
+    { phase: '0 / 4', info: '空 Trie，无任何单词', code: 'WordDictionary wd = new WordDictionary();', result: '' },
+    { phase: '1 / 4', info: 'addWord("bad") — 插入 b→a→d', code: '<span class="code-tag">addWord</span>addWord("bad")', result: '' },
+    { phase: '2 / 4', info: 'addWord("dad") — 插入 d→a→d', code: '<span class="code-tag">addWord</span>addWord("dad")', result: '' },
+    { phase: '3 / 4', info: 'search("pad") — p 不存在 → false', code: '<span class="code-tag">search</span>search("pad") → <span style="color:#ef4444;font-weight:700;">false</span>', result: '' },
+    { phase: '4 / 4', info: 'search("bad") — b→a→d 全部存在 → true', code: '<span class="code-tag">search</span>search("bad") → <span style="color:#22c55e;font-weight:700;">true</span>', result: '' }
+  ];
+
+  // nodes: id, label, cls, parentId
+  var allNodes = [
+    { id: 'r', label: 'root', cls: 'root', parentId: null }
+  ];
+
+  // 阶段 1 后
+  var stage1Nodes = [
+    { id: 'r',  label: 'root', cls: 'root',  parentId: null },
+    { id: 'b',  label: 'b',    cls: 'is-end', parentId: 'r' },
+    { id: 'a1', label: 'a',    cls: '',        parentId: 'b' },
+    { id: 'd1', label: 'd',    cls: 'is-end', parentId: 'a1' }
+  ];
+
+  // 阶段 2 后
+  var stage2Nodes = [
+    { id: 'r',  label: 'root', cls: 'root',  parentId: null },
+    { id: 'b',  label: 'b',    cls: 'is-end', parentId: 'r' },
+    { id: 'a1', label: 'a',    cls: '',        parentId: 'b' },
+    { id: 'd1', label: 'd',    cls: 'is-end', parentId: 'a1' },
+    { id: 'd',  label: 'd',    cls: 'is-end', parentId: 'r' },
+    { id: 'a2', label: 'a',    cls: '',        parentId: 'd' },
+    { id: 'd2', label: 'd',    cls: 'is-end', parentId: 'a2' }
+  ];
+
+  function nodeById(nodes, id) {
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].id === id) return nodes[i];
+    }
+    return null;
+  }
+
+  function buildTrieHTML(nodes, activePath, failPath) {
+    var html = '<div class="trie-canvas">';
+
+    // level 0: root
+    var r = nodeById(nodes, 'r');
+    var rCls = r.cls;
+    if (activePath && activePath[0] === 'r') rCls += ' active';
+    if (failPath && failPath[0] === 'r') rCls += ' fail';
+    html += '<div class="trie-level"><div class="trie-node ' + rCls + '">' + r.label + '</div></div>';
+
+    // 从 root 子节点开始，按字符排序分两层
+    var children = [];
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].parentId === 'r') children.push(nodes[i]);
+    }
+    children.sort(function(a,b){ return a.label.localeCompare(b.label); });
+
+    if (children.length > 0) {
+      html += '<div class="trie-edge">';
+      var edgeCls = (activePath && activePath.length > 1 && activePath[1] === children[0].label) ? 'active' : '';
+      html += '<span class="' + edgeCls + '">';
+      for (var c = 0; c < children.length; c++) {
+        html += '<span style="margin:0 8px;">' + children[c].label + '</span>';
+      }
+      html += '</span></div>';
+
+      // level 1
+      var level1 = '<div class="trie-level">';
+      for (var c = 0; c < children.length; c++) {
+        var n = children[c];
+        var nCls = n.cls;
+        if (activePath && activePath.length > 1 && activePath[1] === n.id) nCls += ' active';
+        if (failPath && failPath.length > 0 && failPath[0] === n.id) nCls += ' fail';
+        level1 += '<div class="trie-node ' + nCls + '">' + n.label + '</div>';
+      }
+      level1 += '</div>';
+      html += level1;
+
+      // level 2 (a 的子节点 d)
+      var hasAChildren = false;
+      var aChildren = [];
+      for (var i = 0; i < nodes.length; i++) {
+        if (nodes[i].parentId === 'a1' || nodes[i].parentId === 'a2') {
+          aChildren.push(nodes[i]);
+          hasAChildren = true;
+        }
+      }
+
+      // 只渲染 a1 和 a2 的 d 子节点（因为 a1/a2 都叫 a，只渲染一次）
+      // 实际上 a1 和 a2 都是 'a'，但 id 不同
+      // 检查 a1 和 a2 的子节点
+      var d1Node = nodeById(nodes, 'd1');
+      var d2Node = nodeById(nodes, 'd2');
+      if (d1Node || d2Node) {
+        // edge label a→d (只显示一次，因为两个 a)
+        html += '<div class="trie-edge">d</div>';
+        var level2 = '<div class="trie-level">';
+        var items = [];
+        if (d1Node) items.push(d1Node);
+        if (d2Node) items.push(d2Node);
+        for (var c = 0; c < items.length; c++) {
+          var n = items[c];
+          var nCls = n.cls;
+          if (activePath && activePath.length > 2 && activePath[2] === n.id) nCls += ' active';
+          if (failPath && failPath.length > 1 && failPath[1] === n.id) nCls += ' fail';
+          level2 += '<div class="trie-node ' + nCls + '">' + n.label + '</div>';
+        }
+        level2 += '</div>';
+        html += level2;
+      }
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function render() {
+    var phaseEl = document.getElementById('a211-phase');
+    var infoEl  = document.getElementById('a211-info');
+    var codeEl  = document.getElementById('a211-code');
+    var canvasEl = document.getElementById('a211-canvas');
+    var resultEl = document.getElementById('a211-result');
+    var prevBtn  = document.getElementById('a211-prev');
+    var nextBtn  = document.getElementById('a211-next');
+
+    var p = phases[cur];
+    phaseEl.textContent = '阶段 ' + p.phase;
+    infoEl.textContent  = p.info;
+    codeEl.innerHTML    = p.code;
+    resultEl.innerHTML  = '';
+
+    var nodes, activePath, failPath;
+
+    if (cur === 0) {
+      nodes = allNodes;
+      canvasEl.innerHTML = buildTrieHTML(nodes, null, null);
+    } else if (cur === 1) {
+      nodes = stage1Nodes;
+      activePath = ['r','b','a1','d1'];
+      canvasEl.innerHTML = buildTrieHTML(nodes, activePath, null);
+    } else if (cur === 2) {
+      nodes = stage2Nodes;
+      activePath = ['r','d','a2','d2'];
+      canvasEl.innerHTML = buildTrieHTML(nodes, activePath, null);
+    } else if (cur === 3) {
+      // search pad → p 不存在
+      nodes = stage2Nodes;
+      failPath = ['r'];
+      canvasEl.innerHTML = buildTrieHTML(nodes, null, failPath);
+      resultEl.innerHTML = '<span class="result-chip false">✗ false — "pad" 不在字典中</span>';
+    } else if (cur === 4) {
+      // search bad → true
+      nodes = stage2Nodes;
+      activePath = ['r','b','a1','d1'];
+      canvasEl.innerHTML = buildTrieHTML(nodes, activePath, null);
+      resultEl.innerHTML = '<span class="result-chip true">✓ true — "bad" 匹配成功</span>';
+    }
+
+    prevBtn.disabled = (cur === 0);
+    nextBtn.disabled = (cur === phases.length - 1);
+  }
+
+  window.a211Reset = function() {
+    cur = 0;
+    render();
+  };
+  window.a211Next = function() {
+    if (cur < phases.length - 1) { cur++; render(); }
+  };
+  window.a211Prev = function() {
+    if (cur > 0) { cur--; render(); }
+  };
+
+  render();
+})();
+</script>
 </body>
 </html>

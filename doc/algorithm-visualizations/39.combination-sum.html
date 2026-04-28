@@ -57,6 +57,31 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* 39 互动演示 */
+  .anim-controls { display: flex; gap: 8px; justify-content: center; margin: 24px 0 16px; }
+  .anim-btn { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; transition: all 0.15s; }
+  .anim-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .anim-btn:disabled { opacity: 0.35; cursor: default; }
+  .anim-info-bar { display: flex; gap: 16px; justify-content: center; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .anim-phase { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent); background: var(--accent-tint); padding: 4px 12px; border-radius: 4px; border: 1px solid rgba(181,82,58,0.2); }
+  .anim-kv { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); }
+  .anim-kv span { color: var(--ink); font-weight: 600; }
+  .result-chip { font-family: 'Geist Mono', monospace; font-size: 13px; padding: 5px 12px; border-radius: 6px; background: #dcfce7; border: 1px solid #16a34a; color: #16a34a; margin: 4px; display: inline-block; }
+  .result-chip.backtrack { background: #fef3c7; border-color: #d97706; color: #d97706; }
+  .anim-candidates { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+  .anim-candidates .num-cell { width: 48px; height: 48px; font-size: 18px; }
+  .anim-path { display: flex; gap: 6px; justify-content: center; align-items: center; min-height: 52px; margin: 12px 0; }
+  .anim-path .num-cell { width: 40px; height: 40px; font-size: 15px; }
+  .anim-arrow { color: var(--muted); font-size: 18px; }
+  .anim-choices { display: flex; gap: 8px; justify-content: center; margin: 12px 0; }
+  .choice-pill { font-family: 'Geist Mono', monospace; font-size: 12px; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--rule); background: var(--paper); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .choice-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .choice-pill.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .choice-pill.used { background: #dcfce7; border-color: #16a34a; color: #16a34a; cursor: default; }
+  .choice-pill.pruned { background: #fee2e2; border-color: #dc2626; color: #dc2626; cursor: default; text-decoration: line-through; }
+  .anim-results { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 16px; min-height: 36px; }
+  .demo-section { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 28px 32px; margin: 32px 0 0; }
 </style>
 </head>
 <body>
@@ -246,5 +271,110 @@ func combinationSum(candidates []int, target int) [][]int {
     </div>
   </div>
 
-</div>
-<footer>doc/algorithm-visualizations/39.combination-sum.html
+  <!-- 39 互动演示 -->
+  <div class="demo-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">candidates = <code>[2,3,6,7]</code>，target = <code>7</code>，点击「下一步」驱动回溯</p>
+
+    <div class="anim-controls">
+      <button class="anim-btn" id="a39-reset" onclick="a39Reset()">重置</button>
+      <button class="anim-btn" id="a39-prev" onclick="a39Prev()" disabled>上一步</button>
+      <button class="anim-btn" id="a39-next" onclick="a39Next()">下一步</button>
+    </div>
+
+    <div class="anim-info-bar">
+      <span class="anim-phase" id="a39-phase">初始状态</span>
+      <span class="anim-kv">target = <span id="a39-target">7</span></span>
+      <span class="anim-kv">path = <span id="a39-path">[]</span></span>
+    </div>
+
+    <div class="anim-candidates" id="a39-candidates"></div>
+    <div class="anim-arrow">↓</div>
+    <div class="anim-path" id="a39-path-display"></div>
+
+    <div class="anim-choices" id="a39-choices"></div>
+    <div class="anim-results" id="a39-results"></div>
+  </div>
+
+  <!-- 39 互动演示 -->
+  <script>
+  (function() {
+    var candidates = [2, 3, 6, 7];
+    var target = 7;
+    // 步骤定义: step = { phase, target, path, highlights, choices, results, choiceStates }
+    // choiceStates: 'normal' | 'active' | 'used' | 'pruned'
+    var steps = [
+      { phase: '初始', target: 7, path: [], highlights: [], choices: [2,3,6,7], results: [], choiceStates: ['normal','normal','normal','normal'] },
+      { phase: '选 2', target: 5, path: [2], highlights: [0], choices: [2,3,6,7], results: [], choiceStates: ['active','normal','normal','normal'] },
+      { phase: '选 2', target: 3, path: [2,2], highlights: [0,0], choices: [2,3,6,7], results: [], choiceStates: ['active','normal','normal','normal'] },
+      { phase: '选 3 ✓', target: 0, path: [2,2,3], highlights: [0,0,1], choices: [], results: ['[2,2,3]'], choiceStates: [], backtrack: true },
+      { phase: '回溯 → 试 7', target: 7, path: [7], highlights: [3], choices: [7], results: ['[2,2,3]'], choiceStates: ['active'] },
+      { phase: '选 7 ✓', target: 0, path: [7], highlights: [3], choices: [], results: ['[2,2,3]','[7]'], choiceStates: [], done: true }
+    ];
+
+    var cur = 0;
+
+    function render() {
+      var s = steps[cur];
+      document.getElementById('a39-phase').textContent = s.phase;
+      document.getElementById('a39-target').textContent = s.target;
+      document.getElementById('a39-path').textContent = JSON.stringify(s.path);
+
+      // candidates 行
+      var cHtml = '';
+      for (var i = 0; i < candidates.length; i++) {
+        var cls = 'num-cell';
+        if (s.highlights.indexOf(i) >= 0) cls += ' active';
+        cHtml += '<div class="' + cls + '">' + candidates[i] + '</div>';
+      }
+      document.getElementById('a39-candidates').innerHTML = cHtml;
+
+      // path 行
+      var pHtml = '';
+      for (var j = 0; j < s.path.length; j++) {
+        pHtml += '<div class="num-cell used">' + s.path[j] + '</div>';
+        if (j < s.path.length - 1) pHtml += '<span class="anim-arrow">+</span>';
+      }
+      if (s.target > 0 && s.path.length > 0) pHtml += '<span class="anim-arrow">=</span><div class="num-cell" style="color:var(--accent);border-color:var(--accent);">' + (s.path.length > 0 ? s.path.reduce(function(a,b){return a+b;}, 0) : 0) + '</div>';
+      document.getElementById('a39-path-display').innerHTML = pHtml;
+
+      // choices
+      var chHtml = '';
+      for (var k = 0; k < s.choices.length; k++) {
+        var v = s.choices[k];
+        var cs = s.choiceStates[k];
+        var cls = 'choice-pill ' + cs;
+        var extra = '';
+        if (v > s.target && s.target > 0) { cls = 'choice-pill pruned'; extra = ' — 剪枝'; }
+        chHtml += '<span class="' + cls + '">' + v + extra + '</span>';
+      }
+      document.getElementById('a39-choices').innerHTML = chHtml;
+
+      // results
+      var rHtml = '';
+      for (var m = 0; m < s.results.length; m++) {
+        var rc = 'result-chip';
+        if (s.backtrack && m === s.results.length - 1) rc += ' backtrack';
+        rHtml += '<span class="' + rc + '">' + s.results[m] + '</span>';
+      }
+      document.getElementById('a39-results').innerHTML = rHtml;
+
+      document.getElementById('a39-prev').disabled = cur === 0;
+      document.getElementById('a39-next').disabled = cur === steps.length - 1;
+    }
+
+    window.a39Next = function() {
+      if (cur < steps.length - 1) { cur++; render(); }
+    };
+    window.a39Prev = function() {
+      if (cur > 0) { cur--; render(); }
+    };
+    window.a39Reset = function() {
+      cur = 0; render();
+    };
+
+    render();
+  })();
+  </script>
+</body>
+</html>

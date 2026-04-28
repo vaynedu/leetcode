@@ -58,6 +58,28 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* ── 212 互动演示 CSS ── */
+  .anim-controls { display: flex; gap: 8px; margin: 16px 0 8px; }
+  .anim-btn { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 600; padding: 7px 18px; border-radius: 6px; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .anim-btn:hover { background: var(--accent); color: #fff; }
+  .anim-btn:active { opacity: 0.8; }
+  .anim-btn:disabled { opacity: 0.35; cursor: default; }
+  .anim-btn:disabled:hover { background: transparent; color: var(--accent); }
+  .anim-info-bar { display: flex; align-items: center; gap: 10px; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 8px; min-height: 20px; }
+  .anim-phase { font-weight: 600; color: var(--accent); }
+  .anim-progress { flex: 1; height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+  .anim-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+  .anim-trie { font-family: 'Geist Mono', monospace; font-size: 11px; line-height: 1.8; color: var(--muted); white-space: pre; margin: 8px 0; padding: 10px 14px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; min-height: 60px; }
+  .anim-trie .hl { color: var(--accent); font-weight: 700; }
+  .anim-trie .found { color: #16a34a; font-weight: 700; }
+  .result-chip { display: inline-block; font-family: 'Geist Mono', monospace; font-size: 11px; padding: 3px 10px; border-radius: 4px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); margin: 3px; }
+  .result-chip.found { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .anim-path { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); margin: 4px 0; }
+  .anim-path .arrow { color: var(--accent); margin: 0 2px; }
+  .anim-queue { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .queue-item { font-family: 'Geist Mono', monospace; font-size: 10px; padding: 3px 8px; border-radius: 4px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .queue-item.cur { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -237,7 +259,136 @@ func findWords(board [][]byte, words []string) []string {
     </div>
   </div>
 
+  <!-- 互动演示区域 -->
+  <section id="anim-demo">
+    <h2>互动演示</h2>
+    <p class="section-sub">Trie 构建 → 从每个格子 DFS 回溯 → 收集结果</p>
+
+    <div class="anim-info-bar">
+      <span class="anim-phase" id="a212-phase">构建 Trie</span>
+      <div class="anim-progress"><div class="anim-progress-fill" id="a212-bar" style="width:0%"></div></div>
+      <span id="a212-counter">1 / 7</span>
+    </div>
+
+    <!-- 网格 -->
+    <div id="a212-grid" style="display:grid;grid-template-columns:repeat(4,44px);gap:4px;margin:12px 0;width:fit-content;"></div>
+
+    <!-- Trie 可视化 -->
+    <div class="anim-trie" id="a212-trie">root</div>
+
+    <!-- 搜索队列 -->
+    <div class="anim-queue" id="a212-queue"></div>
+
+    <!-- 当前路径 -->
+    <div class="anim-path" id="a212-path"></div>
+
+    <!-- 找到的词 -->
+    <div id="a212-results" style="margin:8px 0;"></div>
+
+    <div class="anim-controls">
+      <button class="anim-btn" id="a212-reset" onclick="a212Reset()">重置</button>
+      <button class="anim-btn" id="a212-prev" onclick="a212Prev()" disabled>上一步</button>
+      <button class="anim-btn" id="a212-next" onclick="a212Next()">下一步</button>
+    </div>
+  </section>
+
 </div>
 <footer>doc/algorithm-visualizations/212.word-search-ii.html</footer>
+<script>
+(function(){
+/* ═══════════════════════════════════════════
+   212 Word Search II · 互动演示
+   Trie 构建 + DFS 回溯网格
+═══════════════════════════════════════════ */
+var GRID = [
+  ['o','a','a','n'],
+  ['e','t','a','e'],
+  ['i','h','k','r'],
+  ['i','f','l','v']
+];
+var WORDS = ['oath','tree','apple','eat','rain','a','an'];
+
+/* 步骤定义 */
+var STEPS = [
+  { phase:'构建 Trie',   info:'插入 "oath" — 沿途创建节点',     trie:'root\n└─ <span class="hl">o</span>\n   └─ <span class="hl">a</span>\n      └─ <span class="hl">a</span>\n         └─ <span class="hl">n</span> ✓',  queue:[],  path:'',   results:[] },
+  { phase:'构建 Trie',   info:'插入 "eat" — 复用 o→a 分支',     trie:'root\n└─ o\n   └─ a\n      ├─ <span class="hl">a</span> n ✓\n      └─ <span class="hl">e</span>\n         └─ <span class="hl">t</span> ✓', queue:[], path:'', results:[] },
+  { phase:'构建 Trie',   info:'插入 "tree" — 走 o→a→e 分支',    trie:'root\n└─ o\n   └─ a\n      ├─ a n ✓\n      └─ e\n         ├─ <span class="hl">t</span> ✓\n         └─ <span class="hl">r</span>\n            └─ <span class="hl">e</span>\n               └─ <span class="hl">e</span> ✓', queue:[], path:'', results:[] },
+  { phase:'构建 Trie',   info:'Trie 构建完毕，开始 DFS',         trie:'root\n└─ o\n   └─ a\n      ├─ a n ✓\n      └─ e\n         ├─ t ✓\n         └─ r\n            └─ e\n               └─ e ✓', queue:[], path:'', results:[] },
+  { phase:'DFS 起点',   info:'从 (0,0)='o' 开始 DFS',           trie:'', queue:['<span class="cur">(0,0) o</span>'], path:'(0,0)', results:[] },
+  { phase:'DFS 扩展',    info:'(0,0)→(0,1) 搜索 "oa"',          trie:'', queue:['(0,0) o','<span class="cur">(0,1) a</span>'], path:'(0,0) → (0,1)', results:[] },
+  { phase:'DFS 扩展',    info:'继续 →(0,2) 搜索 "oaa"',         trie:'', queue:['(0,0) o','(0,1) a','<span class="cur">(0,2) a</span>'], path:'(0,0) → (0,1) → (0,2)', results:[] },
+  { phase:'DFS 扩展',    info:'→(1,2) 搜索 "oate"...',          trie:'', queue:['(0,0) o','(0,1) a','(0,2) a','<span class="cur">(1,2) t</span>'], path:'(0,0) → (0,1) → (0,2) → (1,2)', results:[] },
+  { phase:'DFS 扩展',    info:'→(1,1) 回溯搜索 "oath"',         trie:'', queue:['(0,0) o','(0,1) a','(0,2) a','(1,2) t','<span class="cur">(1,1) e</span>'], path:'(0,0) → (0,1) → (0,2) → (1,2) → (1,1)', results:[] },
+  { phase:'✓ 找到 oath',info:'路径 (0,0)-(0,1)-(0,2)-(1,2)-(1,1)',trie:'', queue:[], path:'(0,0) → (0,1) → (0,2) → (1,2) → (1,1) <span class="found">"oath"</span>', results:['oath'] },
+  { phase:'DFS 起点',    info:'从 (1,0)='e' 开始 DFS',           trie:'', queue:['<span class="cur">(1,0) e</span>'], path:'(1,0)', results:['oath'] },
+  { phase:'DFS 扩展',    info:'(1,0)→(1,1) 搜索 "ee"',          trie:'', queue:['(1,0) e','<span class="cur">(1,1) t</span>'], path:'(1,0) → (1,1)', results:['oath'] },
+  { phase:'DFS 扩展',    info:'(1,1)→(0,1) 搜索 "eat"',         trie:'', queue:['(1,0) e','(1,1) t','<span class="cur">(0,1) a</span>'], path:'(1,0) → (1,1) → (0,1)', results:['oath'] },
+  { phase:'DFS 扩展',    info:'(0,1)→(0,2) 搜索 "eata"',        trie:'', queue:['(1,0) e','(1,1) t','(0,1) a','<span class="cur">(0,2) a</span>'], path:'(1,0) → (1,1) → (0,1) → (0,2)', results:['oath'] },
+  { phase:'✓ 找到 eat', info:'路径 (1,0)-(1,1)-(0,1)-(0,2)',    trie:'', queue:[], path:'(1,0) → (1,1) → (0,1) → (0,2) <span class="found">"eat"</span>', results:['oath','eat'] },
+  { phase:'完成',        info:'所有搜索完成，结果: oath, eat',   trie:'', queue:[], path:'', results:['oath','eat'] }
+];
+
+var cur = 0;
+
+function renderStep(idx) {
+  var s = STEPS[idx];
+  var total = STEPS.length;
+  document.getElementById('a212-phase').textContent = s.phase;
+  document.getElementById('a212-bar').style.width = ((idx+1)/total*100)+'%';
+  document.getElementById('a212-counter').textContent = (idx+1)+' / '+total;
+  document.getElementById('a212-trie').innerHTML = s.trie || 'Trie 已构建完毕';
+
+  /* 网格高亮 */
+  var grid = document.getElementById('a212-grid');
+  var cells = grid.querySelectorAll('.grid-cell');
+  cells.forEach(function(c){ c.classList.remove('active','visited','found','path'); });
+  /* 解析路径坐标 */
+  var coordRe = /\((\d+),(\d+)\)/g, m;
+  var foundRe = /"([^"]+)"/;
+  var foundWord = s.path.match(foundRe);
+  var pathCoords = [];
+  while((m=coordRe.exec(s.path))!==null){ pathCoords.push([+m[1],+m[2]]); }
+  pathCoords.forEach(function(p){ var c=cells[p[0]*4+p[1]]; if(c) c.classList.add(foundWord?'found':'path'); });
+
+  /* 队列 */
+  document.getElementById('a212-queue').innerHTML = (s.queue||[]).join('');
+
+  /* 路径 */
+  document.getElementById('a212-path').innerHTML = '<span class="arrow">→</span> '.replace(/arrow">→<\/span>/, 'arrow">' + s.path.split('→').join('</span> <span class="arrow">→</span> <span>'));
+
+  /* 结果 */
+  var html = '';
+  var allDone = ['oath','eat','tree'].concat(WORDS);
+  WORDS.forEach(function(w){
+    var done = s.results.indexOf(w)!==-1;
+    html += '<span class="result-chip'+(done?' found':'')+'">'+w+'</span>';
+  });
+  document.getElementById('a212-results').innerHTML = html;
+
+  document.getElementById('a212-prev').disabled = (idx===0);
+  document.getElementById('a212-next').disabled = (idx===total-1);
+}
+
+function buildGrid() {
+  var grid = document.getElementById('a212-grid');
+  grid.innerHTML = '';
+  GRID.forEach(function(row){
+    row.forEach(function(ch){
+      var d = document.createElement('div');
+      d.className = 'grid-cell';
+      d.textContent = ch;
+      grid.appendChild(d);
+    });
+  });
+}
+
+function a212Reset() { cur=0; renderStep(0); }
+function a212Next() { if(cur<STEPS.length-1){ cur++; renderStep(cur); } }
+function a212Prev() { if(cur>0){ cur--; renderStep(cur); } }
+
+buildGrid();
+a212Reset();
+})();
+</script>
 </body>
 </html>

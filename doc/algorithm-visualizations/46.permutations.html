@@ -57,6 +57,33 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* 46 动画演示 */
+  .anim-section { margin-top: 32px; }
+  .anim-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+  .anim-controls button { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; transition: all 0.15s; }
+  .anim-controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .anim-controls button:active { transform: scale(0.97); }
+  .anim-info-bar { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .anim-counter { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .anim-counter strong { color: var(--accent); font-weight: 600; }
+  .anim-phase { font-family: 'Geist Mono', monospace; font-size: 11px; padding: 3px 10px; border-radius: 4px; background: var(--accent-tint); color: var(--accent); }
+  .anim-state-row { display: flex; gap: 24px; justify-content: center; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; }
+  .anim-state-block { text-align: center; }
+  .anim-state-label { font-family: 'Geist Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .anim-state-values { display: flex; gap: 4px; justify-content: center; }
+  .letter { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 600; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--muted); transition: all 0.2s; flex-shrink: 0; }
+  .letter.used { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+  .letter.fixed { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  .anim-path-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+  .anim-path-label { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); align-self: center; margin-right: 4px; }
+  .anim-result-area { min-height: 52px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .anim-result-label { font-family: 'Geist Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .result-chip { font-family: 'Geist Mono', monospace; font-size: 13px; padding: 6px 12px; border-radius: 6px; background: var(--paper); border: 1px solid var(--rule); color: var(--muted); }
+  .result-chip.fresh { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); animation: chip-pop 0.3s ease; }
+  .result-chip.done { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+  @keyframes chip-pop { 0% { transform: scale(0.85); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+  .anim-all-results { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 400px; margin: 0 auto; }
 </style>
 </head>
 <body>
@@ -243,7 +270,191 @@ func permute(nums []int) [][]int {
     </div>
   </div>
 
+  </div>
+
+  <!-- 46 互动演示 -->
+  <section class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">回溯生成所有排列：used 追踪已选，path 记录路径</p>
+
+    <div class="anim-controls">
+      <button id="a46-reset" onclick="a46Reset()">重置</button>
+      <button id="a46-prev" onclick="a46Prev()">上一步</button>
+      <button id="a46-next" onclick="a46Next()">下一步</button>
+    </div>
+
+    <div class="anim-info-bar">
+      <span class="anim-counter"><strong id="a46-cur">0</strong> / <span id="a46-tot">6</span></span>
+      <span class="anim-phase" id="a46-phase">就绪</span>
+    </div>
+
+    <div class="anim-state-row">
+      <div class="anim-state-block">
+        <div class="anim-state-label">nums</div>
+        <div class="anim-state-values" id="a46-nums"></div>
+      </div>
+      <div class="anim-state-block">
+        <div class="anim-state-label">used</div>
+        <div class="anim-state-values" id="a46-used"></div>
+      </div>
+      <div class="anim-state-block">
+        <div class="anim-state-label">path</div>
+        <div class="anim-state-values" id="a46-path"></div>
+      </div>
+    </div>
+
+    <div class="anim-path-row" id="a46-path-row"></div>
+
+    <div class="anim-result-area">
+      <div class="anim-result-label" id="a46-result-label">当前结果</div>
+      <div id="a46-current-result"></div>
+      <div class="anim-all-results" id="a46-all-results"></div>
+    </div>
+  </section>
+
 </div>
 <footer>doc/algorithm-visualizations/46.permutations.html</footer>
+<script>
+(function(){
+  var nums = [1,2,3];
+
+  // 步骤定义：每个步骤记录 path, used 状态, phase 描述, 当前结果(若有)
+  var steps = [
+    {path:[], used:[0,0,0], phase:"初始状态", cur:null},
+    {path:[1], used:[1,0,0], phase:"选择 1", cur:null},
+    {path:[1,2], used:[1,1,0], phase:"选择 2", cur:null},
+    {path:[1,2,3], used:[1,1,1], phase:"完成 [1,2,3]", cur:"[1,2,3]"},
+    {path:[1,2], used:[1,1,0], phase:"回溯: 撤销 3", cur:null},
+    {path:[1], used:[1,0,0], phase:"回溯: 撤销 2", cur:null},
+    {path:[1,3], used:[1,0,1], phase:"选择 3", cur:null},
+    {path:[1,3,2], used:[1,1,1], phase:"完成 [1,3,2]", cur:"[1,3,2]"},
+    {path:[1,3], used:[1,0,1], phase:"回溯: 撤销 2", cur:null},
+    {path:[1], used:[1,0,0], phase:"回溯: 撤销 3", cur:null},
+    {path:[], used:[0,0,0], phase:"回溯: 撤销 1，换选 2", cur:null},
+    {path:[2], used:[0,1,0], phase:"选择 2", cur:null},
+    {path:[2,1], used:[1,1,0], phase:"选择 1", cur:null},
+    {path:[2,1,3], used:[1,1,1], phase:"完成 [2,1,3]", cur:"[2,1,3]"},
+    {path:[2,1], used:[1,1,0], phase:"回溯: 撤销 3", cur:null},
+    {path:[2], used:[0,1,0], phase:"回溯: 撤销 1，换选 3", cur:null},
+    {path:[2,3], used:[0,1,1], phase:"选择 3", cur:null},
+    {path:[2,3,1], used:[1,1,1], phase:"完成 [2,3,1]", cur:"[2,3,1]"},
+    {path:[2,3], used:[0,1,1], phase:"回溯: 撤销 1", cur:null},
+    {path:[2], used:[0,1,0], phase:"回溯: 撤销 3，换选 1", cur:null},
+    {path:[2,1], used:[1,1,0], phase:"选择 1", cur:null},
+    {path:[2,1,3], used:[1,1,1], phase:"尝试 [2,1,3] (已有)", cur:null},
+    {path:[2,1], used:[1,1,0], phase:"回溯: 撤销 3，尝试 1(已有)", cur:null},
+    {path:[2], used:[0,1,0], phase:"回溯: 撤销 1，换选 3", cur:null},
+    {path:[3], used:[0,0,1], phase:"选择 3", cur:null},
+    {path:[3,1], used:[1,0,1], phase:"选择 1", cur:null},
+    {path:[3,1,2], used:[1,1,1], phase:"完成 [3,1,2]", cur:"[3,1,2]"},
+    {path:[3,1], used:[1,0,1], phase:"回溯: 撤销 2", cur:null},
+    {path:[3], used:[0,0,1], phase:"回溯: 撤销 1，换选 2", cur:null},
+    {path:[3,2], used:[0,1,1], phase:"选择 2", cur:null},
+    {path:[3,2,1], used:[1,1,1], phase:"完成 [3,2,1]", cur:"[3,2,1]"},
+    {path:[3,2], used:[0,1,1], phase:"回溯: 撤销 1", cur:null},
+    {path:[3], used:[0,0,1], phase:"回溯: 撤销 2", cur:null},
+    {path:[], used:[0,0,0], phase:"回溯: 撤销 3 — 完成", cur:null}
+  ];
+
+  var curStep = 0;
+  var totalSteps = 35;
+
+  function render() {
+    var s = steps[curStep];
+    var i;
+    var el;
+
+    // nums 行
+    el = document.getElementById('a46-nums');
+    el.innerHTML = '';
+    for(i=0;i<nums.length;i++){
+      var d = document.createElement('div');
+      d.className = 'letter';
+      d.textContent = nums[i];
+      if(s.used[i]===1) d.classList.add('used');
+      el.appendChild(d);
+    }
+
+    // used 行
+    el = document.getElementById('a46-used');
+    el.innerHTML = '';
+    for(i=0;i<3;i++){
+      var d = document.createElement('div');
+      d.className = 'letter';
+      d.textContent = s.used[i]===1 ? 'T' : 'F';
+      d.style.fontSize = '12px';
+      if(s.used[i]===1) d.classList.add('used');
+      el.appendChild(d);
+    }
+
+    // path 行
+    el = document.getElementById('a46-path');
+    el.innerHTML = '';
+    for(i=0;i<3;i++){
+      var d = document.createElement('div');
+      d.className = 'letter';
+      d.textContent = s.path[i]!==undefined ? s.path[i] : '_';
+      if(s.path[i]!==undefined) d.classList.add('fixed');
+      el.appendChild(d);
+    }
+
+    // path 展示行
+    el = document.getElementById('a46-path-row');
+    el.innerHTML = '<span class="anim-path-label">path:</span>';
+    for(i=0;i<3;i++){
+      var d = document.createElement('div');
+      d.className = 'letter';
+      d.textContent = s.path[i]!==undefined ? s.path[i] : '';
+      if(s.path[i]!==undefined) d.classList.add('fixed');
+      el.appendChild(d);
+    }
+
+    // 当前结果
+    el = document.getElementById('a46-current-result');
+    el.innerHTML = '';
+    if(s.cur){
+      var chip = document.createElement('span');
+      chip.className = 'result-chip fresh';
+      chip.textContent = s.cur;
+      el.appendChild(chip);
+    }
+
+    // 计数器
+    document.getElementById('a46-cur').textContent = curStep+1;
+    document.getElementById('a46-tot').textContent = totalSteps;
+    document.getElementById('a46-phase').textContent = s.phase;
+
+    // 按钮状态
+    document.getElementById('a46-prev').disabled = curStep===0;
+    document.getElementById('a46-next').disabled = curStep===totalSteps-1;
+  }
+
+  window.a46Next = function() {
+    if(curStep < totalSteps-1) {
+      var s = steps[curStep];
+      if(s.cur) allResults.push(s.cur);
+      curStep++;
+      render();
+    }
+  };
+
+  window.a46Prev = function() {
+    if(curStep > 0) {
+      curStep--;
+      var s = steps[curStep];
+      if(s.cur) allResults.pop();
+      render();
+    }
+  };
+
+  window.a46Reset = function() {
+    curStep = 0;
+    allResults = [];
+    render();
+  };
+
+  render();
+})();
+</script>
 </body>
 </html>

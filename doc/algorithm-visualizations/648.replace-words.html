@@ -54,6 +54,26 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
 
   footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+
+  /* 互动演示样式 */
+  .anim-controls { display: flex; gap: 10px; justify-content: center; margin: 24px 0 16px; }
+  .anim-controls button { font-family: 'Geist Mono', monospace; font-size: 12px; padding: 8px 18px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 6px; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+  .anim-controls button:hover { background: var(--paper-2); border-color: var(--accent); }
+  .anim-controls button:active { background: var(--accent-tint); }
+  .anim-controls button:disabled { opacity: 0.4; cursor: default; }
+  .anim-info-bar { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 16px; }
+  .anim-phase { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px 24px; margin: 0 auto; max-width: 640px; }
+  .phase-word { font-family: 'Geist Mono', monospace; font-size: 14px; color: var(--accent); font-weight: 600; }
+  .phase-arrow { color: var(--muted); margin: 0 8px; }
+  .phase-replacement { font-family: 'Geist Mono', monospace; font-size: 14px; color: #16a34a; font-weight: 600; }
+  .phase-none { font-family: 'Geist Mono', monospace; font-size: 14px; color: var(--muted); }
+  .result-chip { display: inline-block; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 4px; padding: 2px 8px; font-family: 'Geist Mono', monospace; font-size: 12px; margin: 2px; }
+  .result-chip.replaced { background: rgba(22,163,74,0.1); border-color: #16a34a; color: #16a34a; }
+  .result-chip.kept { background: var(--paper); border-color: var(--rule); color: var(--muted); }
+  .anim-result { text-align: center; margin-top: 16px; }
+  .anim-result-label { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .anim-sentence { font-family: 'Geist Mono', monospace; font-size: 14px; line-height: 1.8; }
+  .anim-nav-hint { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--soft); text-align: center; margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -221,6 +241,112 @@ func findRoot(word string, root *TrieNode) string {
   </div>
 
 </div>
+
+  <!-- 互动演示 -->
+  <section>
+    <h2>互动演示</h2>
+    <p class="section-sub">词根: <code>["cat","bat","rat"]</code>，句子: <code>"the cattle was rattled by the rabbit"</code></p>
+    <div class="anim-controls">
+      <button id="a648-reset">Reset</button>
+      <button id="a648-prev">Prev</button>
+      <button id="a648-next">Next</button>
+    </div>
+    <div class="anim-info-bar" id="a648-info">Step 0 / 7</div>
+    <div class="anim-phase" id="a648-phase">
+      <span class="phase-word">点击 Next 开始</span>
+    </div>
+    <div class="anim-result">
+      <div class="anim-result-label">Result</div>
+      <div class="anim-sentence" id="a648-result"></div>
+    </div>
+    <div class="anim-nav-hint">Use ← → or buttons to navigate</div>
+  </section>
+
+<script>
+(function(){
+  var DICTIONARY = ["cat","bat","rat"];
+  var SENTENCE = "the cattle was rattled by the rabbit";
+  var words = SENTENCE.split(" ");
+  var step = 0;
+  var total = words.length; // 7
+
+  // Trie building
+  function TrieNode(){ this.children={}; this.isEnd=false; }
+  var trieRoot = new TrieNode();
+  function insert(word){ var n=trieRoot; for(var i=0;i<word.length;i++){ var c=word[i]; if(!n.children[c]) n.children[c]=new TrieNode(); n=n.children[c]; } n.isEnd=true; }
+  DICTIONARY.forEach(insert);
+
+  function findRoot(word){
+    var n=trieRoot; var prefix="";
+    for(var i=0;i<word.length;i++){
+      var c=word[i];
+      if(!n.children[c]) return word;
+      n=n.children[c];
+      prefix+=c;
+      if(n.isEnd) return prefix;
+    }
+    return word;
+  }
+
+  function render(){
+    var info=document.getElementById("a648-info");
+    var phase=document.getElementById("a648-phase");
+    var result=document.getElementById("a648-result");
+    var prevBtn=document.getElementById("a648-prev");
+    var nextBtn=document.getElementById("a648-next");
+
+    info.textContent="Step "+(step>0?step:0)+" / "+total;
+
+    if(step===0){
+      phase.innerHTML='<span class="phase-word">点击 Next 开始</span>';
+      result.innerHTML='<span class="result-chip kept">the</span> <span class="result-chip kept">cattle</span> <span class="result-chip kept">was</span> <span class="result-chip kept">rattled</span> <span class="result-chip kept">by</span> <span class="result-chip kept">the</span> <span class="result-chip kept">rabbit</span>';
+    } else {
+      var buf=[];
+      var replaced=[];
+      for(var i=0;i<words.length;i++){
+        var root=findRoot(words[i]);
+        var isReplaced=root!==words[i];
+        if(i<step){
+          buf.push('<span class="result-chip '+(isReplaced?'replaced':'kept')+'">'+(isReplaced?root:words[i])+'</span>');
+          replaced.push({orig:words[i],root:root,replaced:isReplaced});
+        } else if(i===step){
+          buf.push('<span class="result-chip kept">'+words[i]+'</span>');
+        } else {
+          buf.push('<span class="result-chip kept">'+words[i]+'</span>');
+        }
+      }
+      result.innerHTML=buf.join(" ");
+      var curRoot=findRoot(words[step-1]);
+      var curReplaced=curRoot!==words[step-1];
+      if(curReplaced){
+        phase.innerHTML='<span class="phase-word">"'+words[step-1]+'"</span> <span class="phase-arrow">→</span> <span class="phase-replacement">"'+curRoot+'"</span>';
+      } else {
+        phase.innerHTML='<span class="phase-word">"'+words[step-1]+'"</span> <span class="phase-arrow">→</span> <span class="phase-none">保持不变（无词根匹配）</span>';
+      }
+    }
+
+    prevBtn.disabled=(step===0);
+    nextBtn.disabled=(step>=total);
+  }
+
+  window.a648Reset=function(){ step=0; render(); };
+  window.a648Next=function(){ if(step<total){ step++; render(); } };
+  window.a648Prev=function(){ if(step>0){ step--; render(); } };
+
+  document.getElementById("a648-reset").onclick=a648Reset;
+  document.getElementById("a648-next").onclick=a648Next;
+  document.getElementById("a648-prev").onclick=a648Prev;
+
+  document.addEventListener("keydown",function(e){
+    if(e.key==="ArrowRight") a648Next();
+    if(e.key==="ArrowLeft") a648Prev();
+    if(e.key==="r"||e.key==="R") a648Reset();
+  });
+
+  render();
+})();
+</script>
+
 <footer>doc/algorithm-visualizations/648.replace-words.html</footer>
 </body>
 </html>
