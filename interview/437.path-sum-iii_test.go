@@ -17,11 +17,9 @@ func TestPathSumIII(t *testing.T) {
 		},
 		Right: &TreeNode{Val: -3, Right: &TreeNode{Val: 11}},
 	}
-	// 路径: 5->2->-2=5, 5->3=8, 5->3->3=11, -3->11=8, 10->5->3=18, 10->5->3->3=21...
-	// 按 target=8: [5,3],[5,3,3],[-3,11],[10,5,3],[-2+10],[10,-3,11]
 	result := PathSumIII(root, 8)
-	if result == 0 {
-		t.Errorf("expected > 0 paths for target 8, got %d", result)
+	if result != 3 {
+		t.Errorf("PathSumIII(root, 8) = %d, want 3", result)
 	}
 }
 
