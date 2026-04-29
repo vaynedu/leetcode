@@ -90,12 +90,12 @@ func numIslandsByUF(grid [][]byte) int {
 	}
 	m, n := len(grid), len(grid[0])
 	uf := newUnionFind(grid)
-	dirs := [][]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+	dirs := [][]int{{1, 0}, {0, 1}}
 
 	for i := 0; i < m; i++ {
 		for j := 0; j < n; j++ {
 			if grid[i][j] == '1' {
-				for _, d := range dirs[:2] {
+				for _, d := range dirs {
 					ni, nj := i+d[0], j+d[1]
 					if ni >= 0 && ni < m && nj >= 0 && nj < n && grid[ni][nj] == '1' {
 						uf.union(i*n+j, ni*n+nj)
