@@ -13,11 +13,9 @@ func TestPathSumII(t *testing.T) {
 	// 路径: [5,4,7]=16, [5,4,2]=11, [5,8]=13
 	// target=11 → [5,4,2]
 	result := PathSumII(root, 11)
-	if len(result) != 1 {
-		t.Errorf("expected 1 path for target=11, got %d: %v", len(result), result)
-	}
-	if len(result) > 0 && result[0][2] != 2 {
-		t.Errorf("expected [5,4,2], got %v", result)
+	want := [][]int{{5, 4, 2}}
+	if !intSliceEq(result, want) {
+		t.Errorf("PathSumII(root, 11) = %v, want %v", result, want)
 	}
 
 	// target=9 → 无路径
