@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>题号 题名 · 图解 · LeetCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); --accent-strong: rgba(181,82,58,0.18); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section, .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2, .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .section-sub strong { color: var(--ink); font-weight: 600; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3, .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p, .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap .kw { color: #f78c6c; } .code-wrap .fn { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; } .code-wrap .hl { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .anim-controls { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev, .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-next { background: var(--accent); color: white; border: 1px solid var(--accent); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; line-height: 1.6; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .nums-display { display: flex; gap: 4px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+  .num-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 600; font-size: 13px; font-family: 'Geist Mono', monospace; transition: all 0.2s; }
+  .n-default { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .n-cur { background: var(--accent); color: white; border: 2px solid var(--accent); transform: scale(1.12); box-shadow: 0 2px 8px rgba(181,82,58,0.3); }
+  .n-window { background: #e8d5a0; color: #6b4a10; border: 1px solid #c9a84c; }
+  .n-best { background: #b8d4c0; color: #2d5a3d; border: 1px solid #7ab896; font-weight: 700; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+  @media (max-width: 640px) { body { padding: 40px 18px 72px; } section, .anim-section { padding: 22px; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <p class="eyebrow">LeetCode 000 · Algorithm Type</p>
+  <h1>题名</h1>
+  <p class="subtitle">用一句话说明核心算法直觉。</p>
+
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">题目：简述输入输出。<br>关键：<strong>写清楚为什么这个算法成立。</strong></p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>关键结构</h3>
+        <p>写题目里可利用的结构。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">选择</p>
+        <h3><span class="dot"></span>算法动作</h3>
+        <p>写每一步为什么可以这样做。</p>
+      </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) / O(1)</h3>
+        <p>写关键变量和复杂度。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>手推全过程</h2>
+    <p class="section-sub">sample = <code>[1,2,3]</code></p>
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">Step 1</span>
+        <span class="step-range">state variables</span>
+      </div>
+      <div class="nums-display">
+        <div class="num-cell n-cur">1</div>
+        <div class="num-cell n-default">2</div>
+        <div class="num-cell n-default">3</div>
+      </div>
+      <div class="kv">写普通推导。</div>
+      <div class="kv focal">写关键结论。</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">一句话说明代码模板。</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">solve</span>(nums []<span class="typ">int</span>) <span class="typ">int</span> {
+    ans := <span class="num">0</span>
+    <span class="kw">return</span> ans
+}</pre>
+  </section>
+
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">写最容易错的边界或不变量。</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">错误写法</p>
+        <pre>bad := 0</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">解释具体输入下为什么错。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">正确写法</p>
+        <pre>good := nums[0]</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">解释正确写法保持了什么不变量。</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">说明当前样例和观察目标。</p>
+    <div class="anim-info-bar">
+      <div class="anim-info-item">step: <span id="ai-step">-</span></div>
+      <div class="anim-info-item">value: <span id="ai-value">-</span></div>
+      <div class="anim-info-item">answer: <span id="ai-answer">-</span></div>
+    </div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始</div>
+    <div class="nums-display" id="ai-nums"></div>
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步</button>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心</p>
+      <h3><span class="dot"></span>算法名</h3>
+      <p>一句话总结核心动作。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">正确性</p>
+      <h3><span class="dot"></span>不变量</h3>
+      <p>一句话总结为什么不会漏答案。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">易错</p>
+      <h3><span class="dot"></span>边界</h3>
+      <p>一句话总结最重要的边界。</p>
+    </div>
+  </div>
+</div>
+<footer>doc/algorithm-visualizations/SKELETON.html</footer>
+
+<script>
+const sample = [1, 2, 3];
+let step = -1;
+let answer = 0;
+
+function render() {
+  document.getElementById('ai-nums').innerHTML = sample.map((value, index) => {
+    const cls = step === index ? 'n-cur' : 'n-default';
+    return `<div class="num-cell ${cls}">${value}</div>`;
+  }).join('');
+  document.getElementById('ai-step').textContent = step >= 0 ? step : '-';
+  document.getElementById('ai-value').textContent = step >= 0 ? sample[step] : '-';
+  document.getElementById('ai-answer').textContent = step >= 0 ? answer : '-';
+}
+
+function animReset() {
+  step = -1;
+  answer = 0;
+  document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
+  render();
+}
+
+function animNext() {
+  if (step >= sample.length - 1) return;
+  step++;
+  answer += sample[step];
+  document.getElementById('ai-desc').innerHTML = `Step ${step}: 处理 ${sample[step]}，answer=${answer}`;
+  render();
+}
+
+function animPrev() {
+  if (step <= 0) {
+    animReset();
+    return;
+  }
+  step--;
+  answer = 0;
+  for (let i = 0; i <= step; i++) answer += sample[i];
+  document.getElementById('ai-desc').innerHTML = `回退到 Step ${step}`;
+  render();
+}
+
+window.animReset = animReset;
+window.animNext = animNext;
+window.animPrev = animPrev;
+
+animReset();
+</script>
+</body>
+</html>
