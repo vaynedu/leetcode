@@ -36,12 +36,12 @@
   .code-wrap .kw  { color: #f78c6c; } .code-wrap .fn  { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
   .code-wrap .str { color: #c3e88d; } .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; }
   .code-wrap .hl  { color: #82aaff; }
-  .pitfall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pitfall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
   .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
   .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
   .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
   .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
-  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
   .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
   .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
   .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
@@ -217,7 +217,11 @@
         <p class="pit-label">✓ 正确：curSum 初始化为第一个元素</p>
         <pre>curSum := nums[<span class="num">0</span>]
 maxSum := nums[<span class="num">0</span>]
-<span class="cmt">// [-3,-1,-2]: curSum=-3,maxSum=-3 → -3,-1 → curSum=max(-4,-1)=-1,maxSum=-1 → -2 → maxSum=-1 ✓</span></pre>
+
+<span class="kw">for</span> i := <span class="num">1</span>; i < len(nums); i++ {
+    curSum = max(curSum+nums[i], nums[i])
+    maxSum = max(maxSum, curSum)
+}</pre>
         <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">初始化为第一个元素，保证至少包含一个元素，且全负数时正确。</p>
       </div>
     </div>
@@ -291,7 +295,6 @@ function animReset() {
   document.getElementById('ai-desc').innerHTML = '点击「<span>下一步</span>」开始';
   render();
 }
-  window.animReset = animReset;
 
 function animNext() {
   if (step >= nums.length - 1) return;
@@ -299,8 +302,7 @@ function animNext() {
   i = step;
   if (step === 0) {
     curSum = nums[0]; maxSum = nums[0];
-    document.getElementById('ai-desc').innerHTML = `i=0: num=${nums[0]}
-  window.animNext = animNext;，curSum=maxSum=${nums[0]}（初始化）`;
+    document.getElementById('ai-desc').innerHTML = `i=0: num=${nums[0]}，curSum=maxSum=${nums[0]}（初始化）`;
   } else {
     const prev = curSum;
     curSum = Math.max(curSum + nums[i], nums[i]);
@@ -316,7 +318,6 @@ function animNext() {
 
 function animPrev() {
   if (step <= 0) { animReset(); return; }
-  window.animPrev = animPrev;
   curSum = nums[0]; maxSum = nums[0];
   for (let k = 1; k < step; k++) {
     curSum = Math.max(curSum + nums[k], nums[k]);
@@ -328,74 +329,11 @@ function animPrev() {
   render();
 }
 
+window.animReset = animReset;
+window.animNext = animNext;
+window.animPrev = animPrev;
+
 animReset();
-
-(function(){
-  var f = [];
-  animReset();
-  if (step !== -1) f.push('Reset后step!=-1 当前='+step);
-  animReset(); animPrev();
-  if (step !== -1) f.push('Prev@start后step!=-1 当前='+step);
-  animReset();
-  for (var k = 0; k < 30; k++) {
-    var old = step;
-    animNext();
-    if (step === old && old >= 0) { f.push('Next卡住@'+step); break; }
-    if (step < 0) break;
-  }
-
-  animReset(); var pm = 0;
-  for (var k = 0; k < 15; k++) {
-    if (maxSum < pm) { f.push('maxSum递减'); break; }
-    pm = maxSum; animNext(); if (step < 0) break;
-  }
-  var ok = f.length === 0;
-  var el = document.createElement('div');
-  el.id = 'sc-result';
-  el.style = 'position:fixed;top:8px;right:8px;z-index:99999;font-family:monospace;font-size:13px;padding:12px 16px;border-radius:8px;min-width:220px;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,0.15);line-height:1.6;';
-  el.textContent = ok ? '✅ SELF-CHECK PASS' : '❌ FAIL:\n' + f.join('\n');
-  el.style.background = ok ? '#dcfce7' : '#fee2e2';
-  el.style.color = ok ? '#166534' : '#991b1b';
-  el.style.border = ok ? '2px solid #86efac' : '2px solid #fca5a5';
-  document.body.appendChild(el);
-  console.log(ok ? '%c✅ PASS' : '%c❌ FAIL: ' + f.join(' | '), ok ? 'color:#16a34a;font-weight:bold' : 'color:#dc2626;font-weight:bold');
-})();
-
-(function(){
-  var f = [];
-  animReset();
-  if (step !== -1) f.push('Reset后step!=-1 当前='+step);
-  animReset(); animPrev();
-  if (step !== -1) f.push('Prev@start后step!=-1 当前='+step);
-  animReset();
-  // 通用: step在有效范围内Next必须推进
-  var converged = false;
-  for (var k = 0; k < 30; k++) {
-    var old = step;
-    animNext();
-    if (step === old && old >= 0 && !converged) { f.push('Next卡住@'+step); break; }
-    if (step < 0) break;
-    // 对双指针收敛: 检测收敛条件(left>=right)
-    if (typeof left !== 'undefined' && typeof right !== 'undefined' && left >= right) { converged = true; break; }
-  }
-
-  animReset(); var pm = 0;
-  for (var k = 0; k < 15; k++) {
-    if (maxSum < pm) { f.push('maxSum递减'); break; }
-    pm = maxSum; animNext(); if (step < 0) break;
-  }
-  var ok = f.length === 0;
-  var el = document.getElementById('sc-result') || (function(){
-    var d = document.createElement('div'); d.id = 'sc-result';
-    d.style = 'position:fixed;top:8px;right:8px;z-index:99999;font-family:monospace;font-size:13px;padding:12px 16px;border-radius:8px;min-width:220px;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,0.15);line-height:1.6;';
-    document.body.appendChild(d); return d;
-  })();
-  el.textContent = ok ? '✅ SELF-CHECK PASS' : '❌ FAIL:\n' + f.join('\n');
-  el.style.background = ok ? '#dcfce7' : '#fee2e2';
-  el.style.color = ok ? '#166534' : '#991b1b';
-  el.style.border = ok ? '2px solid #86efac' : '2px solid #fca5a5';
-  console.log(ok ? '%c✅ PASS' : '%c❌ FAIL: ' + f.join(' | '), ok ? 'color:#16a34a;font-weight:bold' : 'color:#dc2626;font-weight:bold');
-})();
 </script>
 </body>
 </html>
