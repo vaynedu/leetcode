@@ -2,23 +2,10 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>接雨水 · 图解 · LeetCode 42</title>
+<title>42 接雨水 · 图解 · LeetCode</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --paper: #faf7f2;
-    --paper-2: #f2ede4;
-    --ink: #1c1917;
-    --muted: #57534e;
-    --soft: #78716c;
-    --rule: rgba(28,25,23,0.12);
-    --accent: #b5523a;
-    --accent-tint: rgba(181,82,58,0.08);
-    --accent-strong: rgba(181,82,58,0.18);
-    --eliminate: rgba(28,25,23,0.04);
-    --water-blue: rgba(59,130,246,0.5);
-    --water-blue-dark: rgba(37,99,235,0.6);
-  }
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); --left: #2563eb; --right: #16a34a; --water: rgba(37,99,235,0.28); --water-line: rgba(37,99,235,0.46); }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
   body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
@@ -26,569 +13,385 @@
   .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
   h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
   .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
-  section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
-  section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
-  .section-sub { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
-  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  section, .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2, .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
   .section-sub strong { color: var(--ink); font-weight: 600; }
-
-  /* ---- bar chart for water ---- */
-  .profile-chart {
-    position: relative;
-    margin: 24px 0 8px;
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3, .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p, .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .formula-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .formula-chip { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 10px; }
+  .formula-chip.water { color: #1d4ed8; background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.24); }
+  .formula-chip.best { color: white; background: var(--accent); border-color: var(--accent); }
+  .rain-chart { display: grid; grid-template-columns: repeat(12, minmax(24px, 1fr)); gap: 5px; align-items: end; height: 230px; max-width: 760px; margin: 20px auto 30px; padding: 14px 12px 24px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; }
+  .rain-slot { position: relative; height: 180px; border-bottom: 1px solid var(--rule); }
+  .rain-water { position: absolute; left: 8%; right: 8%; bottom: 0; background: var(--water); border: 1px solid var(--water-line); border-radius: 4px 4px 0 0; }
+  .rain-bar { position: absolute; left: 18%; right: 18%; bottom: 0; border-radius: 4px 4px 0 0; background: rgba(28,25,23,0.2); color: var(--muted); display: flex; justify-content: center; align-items: flex-start; padding-top: 4px; font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 600; z-index: 2; transition: all 0.18s; }
+  .rain-bar.left { background: var(--left); color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.28); }
+  .rain-bar.right { background: var(--right); color: white; box-shadow: 0 4px 12px rgba(22,163,74,0.26); }
+  .rain-bar.done { background: var(--accent); color: white; }
+  .rain-index { position: absolute; left: 0; right: 0; bottom: -18px; text-align: center; font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--soft); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap, .pit-wrong pre, .pit-right pre, .section-sub code, .kv code, .formula-chip {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
   }
-  .profile-row {
-    display: flex; gap: 4px;
-    align-items: flex-end; justify-content: center;
-    height: 200px;
-    position: relative;
-  }
-  .profile-col {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: flex-end;
-    width: 48px; position: relative;
-  }
-  .bar-fill {
-    width: 40px;
-    background: #1c1917;
-    border-radius: 4px 4px 0 0;
-    display: flex; align-items: flex-start;
-    justify-content: center;
-    padding-top: 4px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 13px; font-weight: 600; color: #ffffff;
-    position: relative; z-index: 2;
-  }
-  .water-fill {
-    width: 40px;
-    background: linear-gradient(to bottom, rgba(59,130,246,0.4), rgba(59,130,246,0.6));
-    border-left: 1px solid rgba(59,130,246,0.4);
-    border-right: 1px solid rgba(59,130,246,0.4);
-    position: relative; z-index: 1;
-    display: flex; align-items: flex-start;
-    justify-content: center;
-    padding-top: 2px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 11px; color: rgba(59,130,246,0.9);
-  }
-  .bar-index {
-    font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--soft);
-    margin-top: 4px; height: 14px;
-  }
-
-  /* pointer markers */
-  .ptr-markers {
-    display: flex; gap: 4px;
-    justify-content: center;
-    margin-top: 4px;
-  }
-  .ptr-slot { width: 48px; height: 18px; display: flex; flex-direction: column; align-items: center; }
-  .ptr-slot .arr { font-size: 11px; line-height: 1; }
-  .ptr-slot .label { font-size: 7px; font-weight: 700; font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; }
-  .ptr-slot.L .arr, .ptr-slot.L .label { color: #2563eb; }
-  .ptr-slot.R .arr, .ptr-slot.R .label { color: #16a34a; }
-  .ptr-slot.empty { opacity: 0; }
-
-  /* water height labels */
-  .water-label {
-    position: absolute;
-    font-family: 'Geist Mono', monospace;
-    font-size: 9px; color: rgba(59,130,246,0.8);
-    text-align: center; width: 40px;
-  }
-
-  /* x-axis labels */
-  .x-labels {
-    display: flex; gap: 4px;
-    justify-content: center;
-    margin-top: 4px;
-  }
-  .x-label { width: 48px; text-align: center; font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--soft); }
-
-  /* ---- step card ---- */
-  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px 24px; margin-top: 16px; }
-  .step-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
-  .step-num { font-family: 'Geist Mono', monospace; font-size: 8px; font-weight: 600; letter-spacing: 0.18em; background: var(--ink); color: var(--paper); padding: 4px 8px; border-radius: 3px; }
-  .step-range { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); }
-  .decision { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-family: 'Geist', sans-serif; font-size: 12px; line-height: 1.6; color: var(--ink); }
-  .decision .kv { padding: 6px 10px; background: rgba(28,25,23,0.03); border-left: 2px solid var(--muted); border-radius: 0 4px 4px 0; }
-  .decision .kv.focal { border-left-color: var(--accent); background: var(--accent-tint); }
-  .decision code { font-family: 'Geist Mono', monospace; font-size: 11px; }
-  .decision strong { color: var(--accent); font-weight: 600; }
-  .decision .blue { color: #2563eb; font-weight: 600; }
-  .decision .green { color: #16a34a; font-weight: 600; }
-
-  /* two-pointer state */
-  .tp-state {
-    display: flex; gap: 16px;
-    justify-content: center;
-    align-items: center;
-    margin: 12px 0;
-    flex-wrap: wrap;
-  }
-  .tp-var {
-    display: flex; gap: 8px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 12px;
-  }
-  .tp-var .name { color: var(--muted); }
-  .tp-var .val { color: var(--ink); font-weight: 600; }
-  .tp-var .val.highlight-blue { color: #2563eb; }
-  .tp-var .val.highlight-green { color: #16a34a; }
-
-  /* decision tree */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-  .col-panel { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
-  .col-title { font-family: 'Geist Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
-
-  /* summary cards */
-  .summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 32px; }
-  .card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
-  .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
-  .card h3 { font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 600; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
-  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
-  .dot.accent { background: var(--accent); }
-  .dot.blue { background: #2563eb; }
-  .dot.green { background: #16a34a; }
-  .card p { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--ink); line-height: 1.6; margin: 0; }
-  .card code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
-  .card strong { color: var(--accent); font-weight: 600; }
-
-  footer { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 48px; font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--soft); letter-spacing: 0.18em; text-transform: uppercase; }
-
-  section, .summary, footer { animation: fadeIn 0.6s ease-out backwards; }
-  section:nth-of-type(1) { animation-delay: 0.1s; }
-  section:nth-of-type(2) { animation-delay: 0.25s; }
-  section:nth-of-type(3) { animation-delay: 0.4s; }
-  .summary { animation-delay: 0.55s; }
-  footer { animation-delay: 0.7s; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-
-  .think-card { background: var(--accent-tint); border-left: 3px solid var(--accent); border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
-  .think-title { font-family: 'Geist Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
-  .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
-  .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
-
+  .code-wrap .kw { color: #f78c6c; } .code-wrap .fn { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; } .code-wrap .hl { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .anim-controls { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev, .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-next { background: var(--accent); color: white; border: 1px solid var(--accent); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; line-height: 1.6; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .result-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .result-chip { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 9px; background: var(--paper); }
+  .result-chip.water { color: #1d4ed8; border-color: rgba(37,99,235,0.28); background: rgba(37,99,235,0.08); }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+  @media (max-width: 760px) { body { padding: 40px 18px 72px; } section, .anim-section { padding: 22px; } .rain-chart { gap: 3px; padding-left: 8px; padding-right: 8px; } .rain-bar { left: 8%; right: 8%; font-size: 9px; } }
 </style>
 </head>
 <body>
 <div class="container">
-  <header>
-    <p class="eyebrow">LEETCODE 42 · TRAPPING RAIN WATER</p>
-    <h1>接雨水</h1>
-    <p class="subtitle">双指针夹逼 ·短板决定水高 ·每格独立计算</p>
-  </header>
+  <p class="eyebrow">LeetCode 42 · Two Pointers + Boundary Max</p>
+  <h1>接雨水</h1>
+  <p class="subtitle">每个位置的水量由左右最高墙的较小值决定；双指针每次结算较低侧。</p>
 
-  <!-- Section 1: 问题描述 -->
-  
-<div class="think-card">
-  <div class="think-title">💡 核心思路</div>
-  <div class="think-insight">每一列上方能装的水 = min(左边最高, 右边最高) - 当前高度</div>
-  <div class="think-mnemonic">口诀：木桶原理，每列独立算</div>
-</div>
-
-<section>
-    <h2>① 问题描述</h2>
-    <p class="section-sub">每个柱子高度 = <code>height[i]</code>，柱子之间能存多少水？水高 = <strong>左右两边最高柱子的较小值 − 当前柱高</strong>。</p>
-
-    <div style="background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:24px; margin-top:24px;">
-      <div style="text-align:center; font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:16px; letter-spacing:0.12em; text-transform:uppercase;">height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]</div>
-
-      <!-- Static bar chart with water -->
-      <div class="profile-row">
-        <!-- col 0: h=0, water=0 -->
-        <div class="profile-col">
-          <div class="bar-fill" style="height:10px;">0</div>
-          <div style="height:0px;"></div>
-          <div class="bar-index">0</div>
-        </div>
-        <!-- col 1: h=1, water=0 -->
-        <div class="profile-col">
-          <div class="bar-fill" style="height:25px;">1</div>
-          <div style="height:0px;"></div>
-          <div class="bar-index">1</div>
-        </div>
-        <!-- col 2: h=0, water=1 -->
-        <div class="profile-col">
-          <div class="water-fill" style="height:25px;">1</div>
-          <div class="bar-fill" style="height:10px;">0</div>
-          <div class="bar-index">2</div>
-        </div>
-        <!-- col 3: h=2, water=0 -->
-        <div class="profile-col">
-          <div class="bar-fill" style="height:50px;">2</div>
-          <div style="height:0px;"></div>
-          <div class="bar-index">3</div>
-        </div>
-        <!-- col 4: h=1, water=1 -->
-        <div class="profile-col">
-          <div class="water-fill" style="height:50px;">1</div>
-          <div class="bar-fill" style="height:25px;">1</div>
-          <div class="bar-index">4</div>
-        </div>
-        <!-- col 5: h=0, water=0 -->
-        <div class="profile-col">
-          <div class="water-fill" style="height:50px;"></div>
-          <div class="bar-fill" style="height:10px;">0</div>
-          <div class="bar-index">5</div>
-        </div>
-        <!-- col 6: h=1, water=1 -->
-        <div class="profile-col">
-          <div class="water-fill" style="height:50px;">1</div>
-          <div class="bar-fill" style="height:25px;">1</div>
-          <div class="bar-index">6</div>
-        </div>
-        <!-- col 7: h=3, water=0 -->
-        <div class="profile-col">
-          <div class="bar-fill" style="height:75px;">3</div>
-          <div style="height:0px;"></div>
-          <div class="bar-index">7</div>
-        </div>
-        <!-- col 8: h=2, water=1 -->
-        <div class="profile-col">
-          <div class="water-fill" style="height:50px;">1</div>
-          <div class="bar-fill" style="height:50px;">2</div>
-          <div class="bar-index">8</div>
-        </div>
-        <!-- col 9: h=1, water=0 -->
-        <div class="profile-col">
-          <div class="water-fill" style="height:50px;"></div>
-          <div class="bar-fill" style="height:25px;">1</div>
-          <div class="bar-index">9</div>
-        </div>
-        <!-- col 10: h=2, water=1 -->
-        <div class="profile-col">
-          <div class="water-fill" style="height:50px;">1</div>
-          <div class="bar-fill" style="height:50px;">2</div>
-          <div class="bar-index">10</div>
-        </div>
-        <!-- col 11: h=1, water=0 -->
-        <div class="profile-col">
-          <div class="water-fill" style="height:0px;"></div>
-          <div class="bar-fill" style="height:25px;">1</div>
-          <div class="bar-index">11</div>
-        </div>
+  <section>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：给定柱子高度，计算下雨后能接多少水。<br>
+      关键：<strong>位置 i 的水量 = min(左侧最高墙, 右侧最高墙) - height[i]，双指针用 leftMax/rightMax 在线结算。</strong>
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>每格独立结算</h3>
+        <p>水不是按区间一次算，而是每个位置看左右最高边界。</p>
       </div>
-
-      <!-- Legend -->
-      <div style="display:flex; gap:24px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
-        <div style="display:flex; align-items:center; gap:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#1c1917;">
-          <div style="width:16px;height:16px;background:#1c1917;border-radius:2px;"></div>柱子
-        </div>
-        <div style="display:flex; align-items:center; gap:6px; font-family:'Geist Mono',monospace; font-size:10px; color:rgba(59,130,246,0.9);">
-          <div style="width:16px;height:16px;background:rgba(59,130,246,0.4);border-radius:2px;"></div>水
-        </div>
+      <div class="insight-card">
+        <p class="card-eyebrow">选择</p>
+        <h3><span class="dot"></span>处理较低侧</h3>
+        <p>较低侧的另一边已经有足够边界，可以用当前侧历史最高墙结算。</p>
       </div>
-    </div>
-
-    <div style="margin-top:16px; padding:12px 16px; background:var(--accent-tint); border:1px solid rgba(181,82,58,0.3); border-radius:6px; font-family:'Geist Mono',monospace; font-size:12px; line-height:1.8; text-align:center;">
-      水量分布：<strong>index=2,4,6,8,10</strong> 各有 1 格水 → <strong style="color:var(--accent);">Total = 6</strong>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>每个下标只被一个指针处理一次，只维护两个最高墙。</p>
+      </div>
     </div>
   </section>
 
-  <!-- Section 2: 双指针核心思想 -->
   <section>
-    <h2>② 核心思想：双指针夹逼</h2>
-    <p class="section-sub">每个位置的水高由左右两边的最高柱子决定。<strong>双指针</strong>从两端向中间逼近，哪边的高度小，就先处理哪边。</p>
+    <h2>手推全过程</h2>
+    <p class="section-sub">样例：<code>height = [0,1,0,2,1,0,1,3,2,1,2,1]</code>，最终水量为 <code>6</code>。</p>
 
-    <div class="two-col">
-      <div class="col-panel">
-        <div class="col-title" style="color:#2563eb;">为什么先处理短边？</div>
-        <div style="font-family:'Geist',sans-serif; font-size:12px; line-height:1.7; color:var(--ink);">
-          <p>当前位置的水高 = <code>min(maxLeft, maxRight) - height[i]</code></p>
-          <p>如果 <code>maxLeft &lt; maxRight</code>，则水高由 <code>maxLeft</code> 决定。</p>
-          <p style="margin-top:8px; padding:8px 12px; background:rgba(37,99,235,0.08); border-radius:4px; color:#2563eb; font-weight:500;">
-            此时左边的 maxLeft 已经是最终答案，<br>不需要再看右边了。
-          </p>
-          <p style="margin-top:8px;">同理，<code>maxRight &lt; maxLeft</code> 时，右边的 maxRight 已确定。</p>
-        </div>
-      </div>
-      <div class="col-panel">
-        <div class="col-title" style="color:#16a34a;">伪代码</div>
-        <div style="font-family:'Geist Mono',monospace; font-size:11px; line-height:1.9; color:var(--ink);">
-          left=0, right=n-1<br>
-          maxL=0, maxR=0<br>
-          <br>
-          <span style="color:#2563eb;">while left &lt; right:</span><br>
-          &nbsp;&nbsp;<span style="color:#2563eb;">if maxL &lt; maxR:</span><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;水[left] = maxL - h[left]<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;maxL = max(maxL, h[left])<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;left++<br>
-          &nbsp;&nbsp;<span style="color:#16a34a;">else:</span><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;水[right] = maxR - h[right]<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;maxR = max(maxR, h[right])<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;right--
-        </div>
-      </div>
-    </div>
-
-    <div style="margin-top:16px; padding:12px 16px; background:rgba(28,25,23,0.04); border-radius:6px; border-left:3px solid var(--accent); font-family:'Geist Mono',monospace; font-size:12px; line-height:1.8;">
-      <strong style="color:var(--accent);">一句话：</strong>谁小谁先结算，因为它的 max 已经确定，不会再变了。
-    </div>
-  </section>
-
-  <!-- Section 3: 完整Trace -->
-  <section>
-    <h2>③ 完整 Trace</h2>
-    <p class="section-sub">height = <code>[0,1,0,2,1,0,1,3,2,1,2,1]</code></p>
-
-    <!-- Step 1 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">初始</span>
-        <span class="step-range">left=0, right=11, maxL=0, maxR=0</span>
-      </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">0</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">11</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val">0</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val">0</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
-      </div>
-      <div class="decision">
-        <div class="kv">maxL(0) &lt; maxR(0) → 先处理 left</div>
-        <div class="kv">height[0]=0, water = maxL - h = 0-0 = <strong>0</strong></div>
-        <div class="kv">maxL = max(0,0) = <strong>0</strong>, left++ → left=<strong>1</strong></div>
-      </div>
-    </div>
-
-    <!-- Step 2 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 1</span>
-        <span class="step-range">left=1, right=11, maxL=0, maxR=0</span>
+        <span class="step-range">left=0, right=11</span>
       </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">1</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">11</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val">0</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val">0</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      <div class="formula-row">
+        <span class="formula-chip">height[left]=0</span>
+        <span class="formula-chip">height[right]=1</span>
+        <span class="formula-chip">处理 left</span>
+        <span class="formula-chip">leftMax=0</span>
       </div>
-      <div class="decision">
-        <div class="kv">maxL(0) &lt; maxR(0) → 先处理 left</div>
-        <div class="kv">height[1]=1, water = 0-1 = <strong>0</strong>（负数取0）</div>
-        <div class="kv">maxL = max(0,1) = <strong>1</strong>, left++ → left=<strong>2</strong></div>
-      </div>
+      <div class="kv">左侧更低，右边至少有高度 1 的边界，当前位置只需要看 leftMax。</div>
+      <div class="kv focal">height[0] 更新 leftMax，不接水。</div>
     </div>
 
-    <!-- Step 3 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 2</span>
-        <span class="step-range">left=2, right=11, maxL=1, maxR=0</span>
+        <span class="step-range">left=2, right=10</span>
       </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">2</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">11</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">1</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">0</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      <div class="formula-row">
+        <span class="formula-chip">leftMax=1</span>
+        <span class="formula-chip">height[2]=0</span>
+        <span class="formula-chip water">water += 1</span>
       </div>
-      <div class="decision">
-        <div class="kv"><span class="blue">maxL(1)</span> &gt; <span class="green">maxR(0)</span> → 先处理 right</div>
-        <div class="kv">height[11]=1, maxR = max(0,1) = <strong>1</strong>, right-- → right=<strong>10</strong></div>
-      </div>
+      <div class="kv">下标 2 左边最高墙是 1，右边还有更高墙。</div>
+      <div class="kv focal">当前位置能接 <code>1 - 0 = 1</code> 格水。</div>
     </div>
 
-    <!-- Step 4 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 3</span>
-        <span class="step-range">left=2, right=10, maxL=1, maxR=1</span>
+        <span class="step-range">left=4, right=10</span>
       </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">2</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">10</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">1</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">1</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      <div class="formula-row">
+        <span class="formula-chip">leftMax=2</span>
+        <span class="formula-chip">height[4]=1</span>
+        <span class="formula-chip water">water += 1</span>
       </div>
-      <div class="decision">
-        <div class="kv"><span class="blue">maxL(1)</span> == <span class="green">maxR(1)</span> → 任意处理 right</div>
-        <div class="kv">height[10]=2, maxR = max(1,2) = <strong>2</strong>, right-- → right=<strong>9</strong></div>
-      </div>
+      <div class="kv">遇到高度 2 后，左侧最高墙提高到 2。</div>
+      <div class="kv focal">下标 4 能接 <code>2 - 1 = 1</code> 格水。</div>
     </div>
 
-    <!-- Step 5 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 4</span>
-        <span class="step-range">left=2, right=9, maxL=1, maxR=2</span>
+        <span class="step-range">left=5, right=10</span>
       </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">2</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">1</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">0</span></div>
+      <div class="formula-row">
+        <span class="formula-chip">leftMax=2</span>
+        <span class="formula-chip">height[5]=0</span>
+        <span class="formula-chip water">water += 2</span>
       </div>
-      <div class="decision">
-        <div class="kv"><span class="blue">maxL(1)</span> &lt; <span class="green">maxR(2)</span> → 先处理 left</div>
-        <div class="kv focal">height[2]=0, water += 1-0 = <strong>+1</strong> ✓</div>
-        <div class="kv">maxL = max(1,0) = <strong>1</strong>, left++ → left=<strong>3</strong></div>
-      </div>
+      <div class="kv">这是样例里单格接水最多的位置。</div>
+      <div class="kv focal">累计水量来到 <code>4</code>。</div>
     </div>
 
-    <!-- Step 6 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 5</span>
-        <span class="step-range">left=3, right=9, maxL=1, maxR=2</span>
+        <span class="step-range">right=9</span>
       </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">3</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">1</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">1</span></div>
+      <div class="formula-row">
+        <span class="formula-chip">rightMax=2</span>
+        <span class="formula-chip">height[9]=1</span>
+        <span class="formula-chip water">water += 1</span>
+        <span class="formula-chip best">total = 6</span>
       </div>
-      <div class="decision">
-        <div class="kv"><span class="blue">maxL(1)</span> &lt; <span class="green">maxR(2)</span> → 处理 left</div>
-        <div class="kv">height[3]=2, water += max(1,2)-2 = 0</div>
-        <div class="kv">maxL = max(1,2) = <strong>2</strong>, left++ → left=<strong>4</strong></div>
-      </div>
-    </div>
-
-    <!-- Step 7 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 6</span>
-        <span class="step-range">left=4, right=9, maxL=2, maxR=2</span>
-      </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">4</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">2</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">1</span></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><span class="blue">maxL(2)</span> == <span class="green">maxR(2)</span> → 任意处理 left</div>
-        <div class="kv">height[4]=1, water += max(2,1)-1 = <strong>+1</strong> (min=2)</div>
-        <div class="kv">maxL = max(2,1) = <strong>2</strong>, left++ → left=<strong>5</strong></div>
-      </div>
-    </div>
-
-    <!-- Step 8 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 7</span>
-        <span class="step-range">left=5, right=9, maxL=2, maxR=2</span>
-      </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">5</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">2</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">2</span></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><span class="blue">maxL(2)</span> == <span class="green">maxR(2)</span> → 处理 left</div>
-        <div class="kv">height[5]=0, water += 2-0 = <strong>+1</strong>（注意：min(2,2)-0=2，但实际只有1格水）</div>
-      </div>
-      <div style="margin-top:8px; padding:8px 12px; background:rgba(28,25,23,0.04); border-radius:4px; font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted);">
-        <strong>等等！</strong>这里有问题。看原图 index=5 的水高应该是 0。为什么？<br>
-        因为 index=5 左边最高是 index=3 的 h=2，右边最高是 index=7 的 h=3，min=2，h=0 → 应该存 2 格水？<br>
-        实际上原图 index=5 的水格是因为 h=0 柱子本身占位，水高 = min(2,3) - 0 = 2。但原图只显示了 1 格水高？<br>
-        <strong>答：</strong>原图 index=5 的水面高度是 max(左边水高=2，右边柱子高=0)，所以水面=2，水格=2-0=2。原图显示可能因空间不足而简化。
-      </div>
-      <div class="decision" style="margin-top:8px;">
-        <div class="kv focal">修正：height[5]=0, water += min(2,3)-0 = <strong>+2</strong></div>
-        <div class="kv">maxL = max(2,0) = <strong>2</strong>, left++ → left=<strong>6</strong></div>
-      </div>
-    </div>
-
-    <!-- Step 9 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 8</span>
-        <span class="step-range">left=6, right=9, maxL=2, maxR=2</span>
-      </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">6</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">2</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">5</span></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><span class="blue">maxL(2)</span> == <span class="green">maxR(2)</span> → 处理 left</div>
-        <div class="kv focal">height[6]=1, water += 2-1 = <strong>+1</strong></div>
-        <div class="kv">maxL = max(2,1) = <strong>2</strong>, left++ → left=<strong>7</strong></div>
-      </div>
-    </div>
-
-    <!-- Step 10 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 9</span>
-        <span class="step-range">left=7, right=9, maxL=2, maxR=2</span>
-      </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">7</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">2</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">6</span></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><span class="blue">maxL(2)</span> &lt; <span class="green">maxR(2)</span> → 处理 left</div>
-        <div class="kv">height[7]=3, water += 0</div>
-        <div class="kv">maxL = max(2,3) = <strong>3</strong>, left++ → left=<strong>8</strong></div>
-      </div>
-    </div>
-
-    <!-- Step 11 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 10</span>
-        <span class="step-range">left=8, right=9, maxL=3, maxR=2</span>
-      </div>
-      <div class="tp-state">
-        <div class="tp-var"><span class="name">left=</span><span class="val highlight-blue">8</span></div>
-        <div class="tp-var"><span class="name">right=</span><span class="val highlight-green">9</span></div>
-        <div class="tp-var"><span class="name">maxL=</span><span class="val highlight-blue">3</span></div>
-        <div class="tp-var"><span class="name">maxR=</span><span class="val highlight-green">2</span></div>
-        <div class="tp-var"><span class="name">water=</span><span class="val">6</span></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><span class="green">maxR(2)</span> &lt; <span class="blue">maxL(3)</span> → 处理 right</div>
-        <div class="kv">height[9]=1, water += 2-1 = <strong>+0</strong>（2-1=1，但图上水格为0？）</div>
-        <div class="kv">maxR = max(2,1) = <strong>2</strong>, right-- → right=<strong>8</strong></div>
-      </div>
-      <div style="margin-top:8px; padding:8px 12px; background:rgba(28,25,23,0.04); border-radius:4px; font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted);">
-        <strong>注意：</strong>height[9]=1 的水高 = min(maxL=3, maxR=2) - 1 = 2-1 = 1。原图 index=9 没有水格是因为显示空间不足（bar高度限制）。
-      </div>
-    </div>
-
-    <!-- Done -->
-    <div style="margin-top:16px; padding:12px 16px; background:var(--accent-tint); border:1px solid rgba(181,82,58,0.3); border-radius:6px; font-family:'Geist Mono',monospace; font-size:12px; line-height:1.8;">
-      <strong style="color:var(--accent);">left=8, right=8 → 相遇，退出循环</strong><br>
-      Water = 0+0+0+1+1+0+1+1+1+0+1+0 = <strong style="color:var(--accent);">6</strong> ✓
+      <div class="kv">右侧更低时对称处理，用 rightMax 结算。</div>
+      <div class="kv focal">左右都只向内移动，最终总水量为 6。</div>
     </div>
   </section>
 
-  <!-- Summary -->
-  <div class="summary">
-    <div class="card">
-      <p class="card-eyebrow">核心公式</p>
-      <h3><span class="dot accent"></span>每格独立计算</h3>
-      <p>water[i] = min(maxLeft[i], maxRight[i]) − height[i]<br>（如果结果 &lt; 0，则为 0）</p>
+  <section>
+    <h2>Go 代码</h2>
+    <p class="section-sub">双指针优化版：不需要预处理左右最大数组。</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">trap</span>(height []<span class="typ">int</span>) <span class="typ">int</span> {
+    <span class="kw">if</span> len(height) == <span class="num">0</span> {
+        <span class="kw">return</span> <span class="num">0</span>
+    }
+
+    left, right := <span class="num">0</span>, len(height)-<span class="num">1</span>
+    leftMax, rightMax := <span class="num">0</span>, <span class="num">0</span>
+    water := <span class="num">0</span>
+
+    <span class="kw">for</span> left &lt; right {
+        <span class="kw">if</span> height[left] &lt; height[right] {
+            <span class="kw">if</span> height[left] &gt;= leftMax {
+                leftMax = height[left]
+            } <span class="kw">else</span> {
+                water += leftMax - height[left]
+            }
+            left++
+        } <span class="kw">else</span> {
+            <span class="kw">if</span> height[right] &gt;= rightMax {
+                rightMax = height[right]
+            } <span class="kw">else</span> {
+                water += rightMax - height[right]
+            }
+            right--
+        }
+    }
+    <span class="kw">return</span> water
+}</pre>
+  </section>
+
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">接雨水最常见的错误，是把“当前两端高度”误当成“历史最高边界”。</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">错误：用当前两端直接相减</p>
+        <pre>water += height[right] - height[left]</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">水量取决于历史最高墙，不是当前两端柱子的差值。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">正确：用 leftMax/rightMax</p>
+        <pre>if height[left] &lt; leftMax {
+    water += leftMax - height[left]
+} else {
+    leftMax = height[left]
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">处理左侧时，当前位置由左侧历史最高墙限制。</p>
+      </div>
+      <div class="pit-wrong">
+        <p class="pit-label">错误：负水量也累加</p>
+        <pre>water += leftMax - height[left]
+leftMax = max(leftMax, height[left])</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">当当前柱子高于 leftMax 时，这会加负数，导致总量减少。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">正确：先判断更新墙还是接水</p>
+        <pre>if height[left] &gt;= leftMax {
+    leftMax = height[left]
+} else {
+    water += leftMax - height[left]
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">高柱子变成新边界，低洼处才产生水量。</p>
+      </div>
     </div>
-    <div class="card">
-      <p class="card-eyebrow">双指针优化</p>
-      <h3><span class="dot blue"></span>谁小谁先结算</h3>
-      <p>不记录所有 maxLeft/maxRight，<br>而是跟踪 maxL 和 maxR，<br>哪个小就先算哪边。</p>
+  </section>
+
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">逐步观察较低侧如何被结算：更新边界或累加水量。</p>
+    <div class="anim-info-bar">
+      <div class="anim-info-item">step: <span id="ai-step">-</span></div>
+      <div class="anim-info-item">left: <span id="ai-left">-</span></div>
+      <div class="anim-info-item">right: <span id="ai-right">-</span></div>
+      <div class="anim-info-item">leftMax: <span id="ai-leftmax">-</span></div>
+      <div class="anim-info-item">rightMax: <span id="ai-rightmax">-</span></div>
+      <div class="anim-info-item">water: <span id="ai-water">-</span></div>
     </div>
-    <div class="card">
-      <p class="card-eyebrow">复杂度</p>
-      <h3><span class="dot accent"></span>O(n) / O(1)</h3>
-      <p>时间 O(n)，只遍历一次。<br>空间 O(1)，无额外数组。</p>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始。</div>
+    <div class="rain-chart" id="ai-chart"></div>
+    <div class="result-list" id="ai-results"></div>
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步</button>
     </div>
   </div>
 
-  <footer>Time · O(n) &nbsp;·&nbsp; Space · O(1) &nbsp;·&nbsp; Two pointers</footer>
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心算法</p>
+      <h3><span class="dot"></span>较低侧先结算</h3>
+      <p>低侧的另一边已有足够边界，所以当前格水量可确定。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">正确性直觉</p>
+      <h3><span class="dot"></span>维护历史最高墙</h3>
+      <p>leftMax/rightMax 表示已扫描两侧最高墙，被处理位置无需回头。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">易错关键点</p>
+      <h3><span class="dot"></span>不能加负水量</h3>
+      <p>遇到更高柱子先更新最高墙，只有低于最高墙时才累加水。</p>
+    </div>
+  </div>
 </div>
+<footer>doc/algorithm-visualizations/42.trapping-rain-water.html</footer>
+
+<script>
+const heights = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1];
+const frames = [
+  { left: 0, right: 11, side: 'left', leftMax: 0, rightMax: 0, add: 0, water: 0, done: [0], desc: '左侧更低，height[0]=0，更新 leftMax=0。' },
+  { left: 1, right: 11, side: 'left', leftMax: 1, rightMax: 0, add: 0, water: 0, done: [0,1], desc: '左侧 height[1]=1 更高，更新 leftMax=1。' },
+  { left: 2, right: 11, side: 'left', leftMax: 1, rightMax: 0, add: 1, water: 1, done: [0,1,2], desc: 'height[2]=0 低于 leftMax，接水 1。' },
+  { left: 3, right: 11, side: 'right', leftMax: 1, rightMax: 1, add: 0, water: 1, done: [0,1,2,11], desc: '右侧更低或相等，height[11]=1，更新 rightMax=1。' },
+  { left: 3, right: 10, side: 'right', leftMax: 1, rightMax: 2, add: 0, water: 1, done: [0,1,2,10,11], desc: 'height[10]=2 更高，更新 rightMax=2。' },
+  { left: 3, right: 9, side: 'right', leftMax: 1, rightMax: 2, add: 1, water: 2, done: [0,1,2,9,10,11], desc: 'height[9]=1 低于 rightMax，接水 1。' },
+  { left: 3, right: 8, side: 'right', leftMax: 1, rightMax: 2, add: 0, water: 2, done: [0,1,2,8,9,10,11], desc: 'height[8]=2 持平 rightMax，不接水。' },
+  { left: 3, right: 7, side: 'left', leftMax: 2, rightMax: 2, add: 0, water: 2, done: [0,1,2,3,8,9,10,11], desc: '左侧 height[3]=2，更新 leftMax=2。' },
+  { left: 4, right: 7, side: 'left', leftMax: 2, rightMax: 2, add: 1, water: 3, done: [0,1,2,3,4,8,9,10,11], desc: 'height[4]=1 低于 leftMax，接水 1。' },
+  { left: 5, right: 7, side: 'left', leftMax: 2, rightMax: 2, add: 2, water: 5, done: [0,1,2,3,4,5,8,9,10,11], desc: 'height[5]=0 低于 leftMax，接水 2。' },
+  { left: 6, right: 7, side: 'left', leftMax: 2, rightMax: 2, add: 1, water: 6, done: [0,1,2,3,4,5,6,8,9,10,11], desc: 'height[6]=1 低于 leftMax，接水 1，最终 water=6。' }
+];
+const waterByIndex = { 2: 1, 4: 1, 5: 2, 6: 1, 9: 1 };
+let animIndex = -1;
+
+function activeFrame() {
+  if (animIndex < 0) {
+    return { left: 0, right: heights.length - 1, side: '-', leftMax: 0, rightMax: 0, add: 0, water: 0, done: [], desc: '初始状态：left=0，right=11，leftMax=0，rightMax=0。' };
+  }
+  return frames[animIndex];
+}
+
+function barHeight(v) {
+  return Math.max(8, v * 44);
+}
+
+function waterHeight(i, frame) {
+  if (!frame.done.includes(i)) return 0;
+  return waterByIndex[i] ? waterByIndex[i] * 44 : 0;
+}
+
+function renderChart(frame) {
+  document.getElementById('ai-chart').innerHTML = heights.map((v, i) => {
+    const isLeft = i === frame.left;
+    const isRight = i === frame.right;
+    const isDone = frame.done.includes(i);
+    let cls = 'rain-bar';
+    if (isLeft) cls += ' left';
+    else if (isRight) cls += ' right';
+    else if (isDone) cls += ' done';
+    const wh = waterHeight(i, frame);
+    const water = wh > 0 ? `<div class="rain-water" style="height:${wh}px;bottom:${barHeight(v)}px;">${waterByIndex[i]}</div>` : '';
+    return `<div class="rain-slot">
+      ${water}
+      <div class="${cls}" style="height:${barHeight(v)}px;">${v}</div>
+      <div class="rain-index">${i}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderResults() {
+  const shown = animIndex < 0 ? [] : frames.slice(0, animIndex + 1).filter(frame => frame.add > 0);
+  document.getElementById('ai-results').innerHTML = shown.map(frame => {
+    return `<div class="result-chip water">${frame.side} +${frame.add}, total=${frame.water}</div>`;
+  }).join('');
+}
+
+function render() {
+  const frame = activeFrame();
+  document.getElementById('ai-step').textContent = animIndex < 0 ? 'init' : String(animIndex + 1);
+  document.getElementById('ai-left').textContent = `${frame.left} (h=${heights[frame.left]})`;
+  document.getElementById('ai-right').textContent = `${frame.right} (h=${heights[frame.right]})`;
+  document.getElementById('ai-leftmax').textContent = String(frame.leftMax);
+  document.getElementById('ai-rightmax').textContent = String(frame.rightMax);
+  document.getElementById('ai-water').textContent = String(frame.water);
+  document.getElementById('ai-desc').innerHTML = animIndex < 0
+    ? `初始：点击「<span>下一步</span>」开始结算较低侧。`
+    : `${frame.desc} 本步新增：<span>${frame.add}</span>，累计 water=<span>${frame.water}</span>。`;
+  renderChart(frame);
+  renderResults();
+}
+
+function animReset() {
+  animIndex = -1;
+  render();
+}
+
+function animNext() {
+  if (animIndex < frames.length - 1) {
+    animIndex++;
+    render();
+  }
+}
+
+function animPrev() {
+  if (animIndex > -1) {
+    animIndex--;
+    render();
+  }
+}
+
+window.animReset = animReset;
+window.animNext = animNext;
+window.animPrev = animPrev;
+
+animReset();
+</script>
 </body>
 </html>
