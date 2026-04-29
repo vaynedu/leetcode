@@ -2,859 +2,373 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>装水容器 · 图解 · LeetCode 11</title>
+<title>11 盛最多水的容器 · 图解 · LeetCode</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --paper: #faf7f2;
-    --paper-2: #f2ede4;
-    --ink: #1c1917;
-    --muted: #57534e;
-    --soft: #78716c;
-    --rule: rgba(28,25,23,0.12);
-    --accent: #b5523a;
-    --accent-tint: rgba(181,82,58,0.08);
-    --accent-strong: rgba(181,82,58,0.18);
-    --blue: #2563eb;
-    --green: #16a34a;
-  }
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); --accent-strong: rgba(181,82,58,0.18); --left: #2563eb; --right: #16a34a; --water: rgba(37,99,235,0.24); }
   * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Geist', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  body {
-    background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px);
-    background-size: 22px 22px;
-    padding: 64px 32px 96px;
-  }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
   .container { max-width: 960px; margin: 0 auto; }
-
-  /* typography */
-  .eyebrow {
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--muted);
-    margin: 0 0 12px;
-  }
-  h1 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 2.25rem; font-weight: 400;
-    margin: 0 0 12px; line-height: 1.15;
-  }
-  .subtitle {
-    font-family: 'Instrument Serif', serif;
-    font-style: italic; font-size: 1.125rem;
-    color: var(--muted); margin: 0 0 48px;
-  }
-  h2 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 1.5rem; font-weight: 400;
-    margin: 0 0 8px;
-  }
-  .section-sub {
-    font-size: 12px; color: var(--muted);
-    margin: 0 0 24px; line-height: 1.6;
-  }
-  .section-sub code {
-    font-family: 'Geist Mono', monospace; font-size: 12px;
-    background: rgba(28,25,23,0.05); padding: 1px 5px;
-    border-radius: 3px; color: var(--ink);
-  }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section, .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2, .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
   .section-sub strong { color: var(--ink); font-weight: 600; }
-
-  /* sections */
-  section {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-radius: 8px; padding: 32px;
-    margin-bottom: 32px;
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3, .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p, .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .formula-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  .formula-chip { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 10px; }
+  .formula-chip.best { color: white; background: var(--accent); border-color: var(--accent); }
+  .formula-chip.move { color: #1d4ed8; background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.24); }
+  .bars { display: grid; grid-template-columns: repeat(9, minmax(28px, 1fr)); gap: 6px; align-items: end; height: 220px; max-width: 620px; margin: 20px auto 30px; padding: 14px 12px 24px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; }
+  .bar-slot { position: relative; height: 180px; border-bottom: 1px solid var(--rule); }
+  .bar-water { position: absolute; left: 0; right: 0; bottom: 0; background: var(--water); border: 1px solid rgba(37,99,235,0.18); border-radius: 4px 4px 0 0; }
+  .bar { position: absolute; left: 16%; right: 16%; bottom: 0; border-radius: 4px 4px 0 0; background: rgba(28,25,23,0.18); color: var(--muted); display: flex; justify-content: center; align-items: flex-start; padding-top: 5px; font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; transition: all 0.18s; }
+  .bar.left { background: var(--left); color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.28); }
+  .bar.right { background: var(--right); color: white; box-shadow: 0 4px 12px rgba(22,163,74,0.26); }
+  .bar.best { background: var(--accent); color: white; }
+  .bar-index { position: absolute; left: 0; right: 0; bottom: -18px; text-align: center; font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--soft); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap, .pit-wrong pre, .pit-right pre, .section-sub code, .kv code, .formula-chip {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
   }
-
-  /* insight grid */
-  .insight-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px; margin-top: 24px;
-  }
-  .card {
-    background: #ffffff;
-    border: 1px solid var(--rule);
-    border-radius: 6px; padding: 20px;
-  }
-  .card-eyebrow {
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--muted);
-    margin: 0 0 8px;
-  }
-  .card h3 {
-    font-family: 'Geist', sans-serif;
-    font-size: 12px; font-weight: 600;
-    margin: 0 0 8px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
-  .dot.accent { background: var(--accent); }
-  .dot.blue { background: var(--blue); }
-  .dot.green { background: var(--green); }
-  .card p { font-size: 12px; color: var(--ink); line-height: 1.6; margin: 0; }
-  .card code {
-    font-family: 'Geist Mono', monospace; font-size: 12px;
-    background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px;
-  }
-  .card strong { color: var(--accent); font-weight: 600; }
-
-  /* chart — 200px container, 20px/unit scale */
-  .chart-area {
-    display: flex; align-items: flex-end;
-    justify-content: center; gap: 6px;
-    height: 200px; margin: 24px 0 8px;
-    position: relative;
-  }
-  .bar-group {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 4px; position: relative;
-  }
-  .bar {
-    width: 36px; border-radius: 4px 4px 0 0;
-    display: flex; align-items: flex-start; justify-content: center;
-    padding-top: 6px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 12px; font-weight: 600; color: #ffffff;
-    transition: all 0.4s ease; position: relative;
-  }
-  .bar.blue { background: var(--blue); }
-  .bar.green { background: var(--green); }
-  .bar.neutral { background: rgba(28,25,23,0.15); color: var(--muted); }
-  .bar.water {
-    background: linear-gradient(to bottom, rgba(59,130,246,0.4), rgba(59,130,246,0.6));
-  }
-  .bar-label {
-    font-family: 'Geist Mono', monospace;
-    font-size: 11px; color: var(--muted); margin-top: 4px;
-  }
-  .bar-index {
-    position: absolute; bottom: -18px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; color: var(--soft);
-  }
-
-  /* water fill */
-  .water-fill {
-    border-radius: 0 0 4px 4px;
-    background: linear-gradient(to bottom, rgba(59,130,246,0.3), rgba(59,130,246,0.5));
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Geist Mono', monospace; font-weight: 600; color: var(--blue);
-  }
-
-  /* step cards */
-  .step {
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 6px; padding: 20px 24px;
-    margin-top: 16px;
-  }
-  .step-head {
-    display: flex; align-items: baseline;
-    gap: 12px; margin-bottom: 12px;
-  }
-  .step-num {
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; font-weight: 600; letter-spacing: 0.18em;
-    background: var(--ink); color: var(--paper);
-    padding: 4px 8px; border-radius: 3px;
-  }
-  .step-range {
-    font-family: 'Geist Mono', monospace;
-    font-size: 12px; color: var(--muted);
-  }
-  .decision { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-  .kv {
-    padding: 8px 12px;
-    background: rgba(28,25,23,0.03);
-    border-left: 2px solid var(--muted);
-    border-radius: 0 4px 4px 0;
-    font-size: 12px; line-height: 1.6; color: var(--ink);
-  }
-  .kv.focal { border-left-color: var(--accent); background: var(--accent-tint); }
-  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; }
-  .kv strong { color: var(--accent); font-weight: 600; }
-  .kv .blue { color: var(--blue); font-weight: 600; }
-  .kv .green { color: var(--green); font-weight: 600; }
-
-  /* code block */
-  .code-wrap {
-    background: #1c1917;
-    border-radius: 8px;
-    padding: 24px 28px;
-    overflow-x: auto;
-    margin-top: 16px;
-  }
-  .code-wrap pre {
-    margin: 0; font-family: 'Geist Mono', monospace;
-    font-size: 13px; line-height: 1.7; color: #e7e5e4;
-  }
-  .kw  { color: #f97316; }  /* orange - keywords */
-  .fn  { color: #60a5fa; }  /* light blue - functions */
-  .typ { color: #a78bfa; }  /* purple - types */
-  .str { color: #86efac; }  /* green - strings */
-  .num { color: #fcd34d; }  /* yellow - numbers */
-  .cmt { color: #78716c; font-style: italic; }  /* gray - comments */
-  .hl  { color: #fbbf24; }  /* amber - highlight */
-
-  /* pitfall grid */
-  .pitfall-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 16px; margin-top: 16px;
-  }
-  .pit-wrong {
-    background: #fee2e2; border: 1px solid #fca5a5;
-    border-radius: 6px; padding: 16px;
-  }
-  .pit-right {
-    background: #dcfce7; border: 1px solid #86efac;
-    border-radius: 6px; padding: 16px;
-  }
-  .pit-tag {
-    font-family: 'Geist Mono', monospace; font-size: 10px;
-    font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
-  }
-  .pit-wrong .pit-tag { color: #dc2626; }
-  .pit-right .pit-tag { color: #16a34a; }
-  .pit-code {
-    font-family: 'Geist Mono', monospace; font-size: 12px;
-    background: rgba(0,0,0,0.06); padding: 6px 10px;
-    border-radius: 4px; margin-bottom: 8px;
-  }
-  .pit-exp { font-size: 11px; line-height: 1.6; color: var(--ink); }
-
-  /* anim section */
-  .anim-section {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-radius: 8px; padding: 32px;
-    margin-bottom: 32px;
-  }
-  .anim-controls {
-    display: flex; gap: 10px; margin-bottom: 20px;
-  }
-  .anim-btn {
-    padding: 8px 20px; border-radius: 6px;
-    font-family: 'Geist Mono', monospace; font-size: 12px;
-    font-weight: 600; cursor: pointer; border: none;
-    transition: all 0.2s;
-  }
-  .anim-btn.prev { background: var(--paper-2); color: var(--ink); border: 1px solid var(--rule); }
-  .anim-btn.reset { background: var(--accent-tint); color: var(--accent); border: 1px solid rgba(181,82,58,0.3); }
-  .anim-btn.next { background: var(--accent); color: #fff; }
-  .anim-btn:hover { opacity: 0.85; }
-  .anim-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .anim-info-bar {
-    display: flex; gap: 20px; margin-bottom: 12px;
-    font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted);
-  }
-  .anim-phase {
-    font-size: 13px; color: var(--ink); margin-bottom: 16px;
-    font-family: 'Geist', sans-serif;
-  }
-  .anim-input-row {
-    display: flex; gap: 6px; justify-content: center;
-    margin-bottom: 4px; flex-wrap: wrap;
-  }
-  .anim-cell {
-    width: 36px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Geist Mono', monospace; font-size: 11px;
-    background: rgba(28,25,23,0.05); border-radius: 4px;
-    position: relative;
-  }
-  .anim-cell.left-ptr { background: rgba(37,99,235,0.15); color: var(--blue); font-weight: 600; }
-  .anim-cell.right-ptr { background: rgba(22,163,74,0.15); color: var(--green); font-weight: 600; }
-  .anim-cell.left-cur { background: var(--blue); color: #fff; }
-  .anim-cell.right-cur { background: var(--green); color: #fff; }
-
-  /* timeline */
-  .anim-timeline-wrap {
-    position: relative; height: 200px;
-    margin: 24px 0 8px;
-    display: flex; align-items: flex-end; justify-content: center; gap: 6px;
-  }
-  .tl-bar {
-    width: 36px; border-radius: 4px 4px 0 0;
-    display: flex; align-items: flex-start; justify-content: center;
-    padding-top: 6px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 12px; font-weight: 600; color: #ffffff;
-    position: relative;
-  }
-  .tl-bar.neutral { background: rgba(28,25,23,0.15); color: var(--muted); }
-  .tl-bar.blue { background: var(--blue); }
-  .tl-bar.green { background: var(--green); }
-  .tl-water {
-    border-radius: 0 0 4px 4px;
-    background: linear-gradient(to bottom, rgba(59,130,246,0.3), rgba(59,130,246,0.5));
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; color: var(--blue);
-  }
-  .tl-index {
-    position: absolute; bottom: -18px;
-    font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--soft);
-  }
-
-  .result-list {
-    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
-  }
-  .result-chip {
-    padding: 4px 10px; border-radius: 20px;
-    font-family: 'Geist Mono', monospace; font-size: 10px;
-    background: var(--paper); border: 1px solid var(--rule);
-    color: var(--muted);
-  }
-  .result-chip.best {
-    background: var(--accent-tint); border-color: rgba(181,82,58,0.3);
-    color: var(--accent); font-weight: 600;
-  }
-
-  /* footer */
-  footer {
-    border-top: 1px solid var(--rule);
-    padding-top: 16px; margin-top: 48px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; color: var(--soft);
-    letter-spacing: 0.18em; text-transform: uppercase;
-    text-align: center;
-  }
-
-  /* animation */
-  section, .anim-section, footer { animation: fadeIn 0.6s ease-out backwards; }
-  section:nth-of-type(1) { animation-delay: 0.1s; }
-  section:nth-of-type(2) { animation-delay: 0.25s; }
-  section:nth-of-type(3) { animation-delay: 0.4s; }
-  .anim-section { animation-delay: 0.55s; }
-  footer { animation-delay: 0.7s; }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: none; }
-  }
+  .code-wrap .kw { color: #f78c6c; } .code-wrap .fn { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; } .code-wrap .hl { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .anim-controls { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev, .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-next { background: var(--accent); color: white; border: 1px solid var(--accent); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; line-height: 1.6; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .result-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .result-chip { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 9px; background: var(--paper); }
+  .result-chip.best { color: white; border-color: var(--accent); background: var(--accent); }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+  @media (max-width: 760px) { body { padding: 40px 18px 72px; } section, .anim-section { padding: 22px; } .bars { gap: 4px; padding-left: 8px; padding-right: 8px; } .bar { left: 8%; right: 8%; font-size: 10px; } }
 </style>
 </head>
 <body>
 <div class="container">
+  <p class="eyebrow">LeetCode 11 · Two Pointers</p>
+  <h1>盛最多水的容器</h1>
+  <p class="subtitle">从最大宽度开始向内收敛：面积由短板决定，所以每一步移动较短的那一边。</p>
 
-  <header>
-    <p class="eyebrow">LEETCODE 11 · CONTAINER WITH MOST WATER</p>
-    <h1>装水容器</h1>
-    <p class="subtitle">双指针左右夹逼 · 短板决定高度 · 移动短边指针</p>
-  </header>
-
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 1: 核心洞察
-  ══════════════════════════════════════════════════════ -->
   <section>
     <h2>核心洞察</h2>
     <p class="section-sub">
-      每根柱子的高度 = <code>height[i]</code>，两柱子之间的水容量 = <strong>宽度 × 短板高度</strong>。
-      双指针从两端向中间收敛，宽度必定减小，所以要找更高的短板来增大面积。
+      题目：选两个下标 <code>i &lt; j</code>，最大化 <code>min(height[i], height[j]) * (j - i)</code>。<br>
+      关键：<strong>宽度收缩不可避免，只有移动短板，才可能换来更高的有效高度。</strong>
     </p>
-
-    <!-- mini insight chart -->
-    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:24px;margin-top:24px;">
-      <div style="text-align:center;font-family:'Geist Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;letter-spacing:0.12em;text-transform:uppercase;">height = [1, 8, 6, 2, 5, 4, 8, 3, 7]</div>
-      <div class="chart-area">
-        <div class="bar-group"><div class="bar neutral" style="height:20px;">1</div><div class="bar-index">0</div></div>
-        <div class="bar-group"><div class="bar blue" style="height:160px;">8</div><div class="bar-index">1</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:120px;">6</div><div class="bar-index">2</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:40px;">2</div><div class="bar-index">3</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:100px;">5</div><div class="bar-index">4</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:80px;">4</div><div class="bar-index">5</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:160px;">8</div><div class="bar-index">6</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:60px;">3</div><div class="bar-index">7</div></div>
-        <div class="bar-group"><div class="bar green" style="height:140px;">7</div><div class="bar-index">8</div></div>
-      </div>
-      <div style="display:flex;justify-content:center;gap:6px;margin-top:4px;">
-        <div style="display:flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--blue);">
-          <div style="width:10px;height:10px;border-radius:50%;background:var(--blue);"></div>left = 1 (h=8)
-        </div>
-        <div style="width:1px;height:16px;background:var(--rule);"></div>
-        <div style="display:flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--green);">
-          <div style="width:10px;height:10px;border-radius:50%;background:var(--green);"></div>right = 8 (h=7)
-        </div>
-      </div>
-    </div>
-
-    <div class="decision" style="margin-top:16px;">
-      <div class="kv">宽度 = <code>right − left</code> = 8 − 1 = <strong>7</strong></div>
-      <div class="kv">高度 = <code>min(height[left], height[right])</code> = min(8, 7) = <strong>7</strong></div>
-      <div class="kv focal">面积 = 7 × 7 = <strong>49</strong> ← 最大面积</div>
-    </div>
-
-    <div class="insight-grid" style="margin-top:32px;">
-      <div class="card">
+    <div class="insight-grid">
+      <div class="insight-card">
         <p class="card-eyebrow">观察</p>
-        <h3><span class="dot accent"></span>短板效应</h3>
-        <p>面积由短边决定，<br>长边再高也没用。</p>
+        <h3><span class="dot"></span>短板决定装水高度</h3>
+        <p>两根柱子再远，水面高度也只能到较矮柱子的高度。</p>
       </div>
-      <div class="card">
-        <p class="card-eyebrow">贪心选择</p>
-        <h3><span class="dot blue"></span>移动短边</h3>
-        <p>短边内移才可能<br>遇到更高的短板。</p>
+      <div class="insight-card">
+        <p class="card-eyebrow">选择</p>
+        <h3><span class="dot"></span>每轮移动短板</h3>
+        <p>移动长板只会让宽度变小，短板上限不变，不可能更优。</p>
       </div>
-      <div class="card">
+      <div class="insight-card">
         <p class="card-eyebrow">复杂度</p>
-        <h3><span class="dot green"></span>O(n)</h3>
-        <p>两指针最多各走 n 步，<br>不回头，线性时间。</p>
+        <h3><span class="dot"></span>O(n) 时间 O(1) 空间</h3>
+        <p>左右指针只向中间移动，每个位置最多被访问一次。</p>
       </div>
-    </div>
-
-    <div style="margin-top:24px;padding:12px 16px;background:var(--accent-tint);border-left:3px solid var(--accent);border-radius:6px;font-family:'Geist Mono',monospace;font-size:12px;line-height:1.8;">
-      <strong style="color:var(--accent);">口诀：</strong>短边内移 → 才有可能变大
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 2: 手推全过程
-  ══════════════════════════════════════════════════════ -->
   <section>
     <h2>手推全过程</h2>
-    <p class="section-sub">height = <code>[1, 8, 6, 2, 5, 4, 8, 3, 7]</code>，初始 left=0, right=8</p>
+    <p class="section-sub">样例：<code>height = [1,8,6,2,5,4,8,3,7]</code></p>
 
-    <!-- Step 1 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 1</span>
-        <span class="step-range">L=0 (h=1) &nbsp; R=8 (h=7)</span>
+        <span class="step-range">left=0, right=8</span>
       </div>
-      <div class="chart-area">
-        <div class="bar-group"><div class="bar blue" style="height:20px;">1</div><div class="bar-index">0</div></div>
-        <div class="bar-group"><div class="water-fill" style="height:20px;width:200px;font-size:11px;">h=1×w=8=8</div></div>
-        <div class="bar-group"><div class="bar green" style="height:140px;">7</div><div class="bar-index">8</div></div>
+      <div class="formula-row">
+        <span class="formula-chip">width = 8</span>
+        <span class="formula-chip">min(1, 7) = 1</span>
+        <span class="formula-chip">area = 8</span>
+        <span class="formula-chip move">1 &lt; 7，left++</span>
       </div>
-      <div class="decision">
-        <div class="kv"><code>area = 8 × min(1,7) = 8</code></div>
-        <div class="kv"><code>max = 8</code></div>
-        <div class="kv"><span class="blue">1 &lt; 7</span> → <span class="blue">left++</span></div>
-      </div>
+      <div class="kv">当前最大面积更新为 <code>8</code>。</div>
+      <div class="kv focal">左边 1 是短板，以它为左边界的其它组合宽度更小，高度最多还是 1，可以排除。</div>
     </div>
 
-    <!-- Step 2 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 2</span>
-        <span class="step-range">L=1 (h=8) &nbsp; R=8 (h=7)</span>
+        <span class="step-range">left=1, right=8</span>
       </div>
-      <div class="chart-area">
-        <div class="bar-group"><div class="bar blue" style="height:160px;">8</div><div class="bar-index">1</div></div>
-        <div class="bar-group"><div class="water-fill" style="height:140px;width:200px;font-size:14px;color:var(--accent);font-weight:700;">✓ area = 7×7 = <strong style="color:var(--accent)">49</strong></div></div>
-        <div class="bar-group"><div class="bar green" style="height:140px;">7</div><div class="bar-index">8</div></div>
+      <div class="formula-row">
+        <span class="formula-chip">width = 7</span>
+        <span class="formula-chip">min(8, 7) = 7</span>
+        <span class="formula-chip best">area = 49</span>
+        <span class="formula-chip move">8 &gt; 7，right--</span>
       </div>
-      <div class="decision">
-        <div class="kv focal"><code>area = 7 × 7 = 49</code> ← <strong>max 更新！</strong></div>
-        <div class="kv"><span class="blue">8 &gt; 7</span> → <span class="green">right--</span></div>
-      </div>
+      <div class="kv">发现当前最优：下标 <code>1</code> 和 <code>8</code>，面积 <code>7 * 7 = 49</code>。</div>
+      <div class="kv focal">右边 7 是短板，继续尝试把右边界换成更高的柱子。</div>
     </div>
 
-    <!-- Step 3 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 3</span>
-        <span class="step-range">L=1 (h=8) &nbsp; R=7 (h=3)</span>
+        <span class="step-range">left=1, right=7</span>
       </div>
-      <div class="chart-area">
-        <div class="bar-group"><div class="bar blue" style="height:160px;">8</div><div class="bar-index">1</div></div>
-        <div class="bar-group"><div class="water-fill" style="height:60px;width:174px;">h=3×w=6=18</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:60px;">3</div><div class="bar-index">7</div></div>
+      <div class="formula-row">
+        <span class="formula-chip">width = 6</span>
+        <span class="formula-chip">min(8, 3) = 3</span>
+        <span class="formula-chip">area = 18</span>
+        <span class="formula-chip move">8 &gt; 3，right--</span>
       </div>
-      <div class="decision">
-        <div class="kv"><code>area = 6 × 3 = 18</code> &lt; 49，不更新</div>
-        <div class="kv"><span class="blue">8 &gt; 3</span> → <span class="green">right--</span></div>
-      </div>
+      <div class="kv">面积小于 <code>49</code>，最大值不变。</div>
+      <div class="kv focal">右边 3 更短，保留左边 8，继续向内找更高右边界。</div>
     </div>
 
-    <!-- Step 4 -->
     <div class="step">
       <div class="step-head">
         <span class="step-num">Step 4</span>
-        <span class="step-range">L=1 (h=8) &nbsp; R=6 (h=8)</span>
+        <span class="step-range">left=1, right=6</span>
       </div>
-      <div class="chart-area">
-        <div class="bar-group"><div class="bar blue" style="height:160px;">8</div><div class="bar-index">1</div></div>
-        <div class="bar-group"><div class="water-fill" style="height:160px;width:148px;">h=8×w=5=40</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:160px;">8</div><div class="bar-index">6</div></div>
+      <div class="formula-row">
+        <span class="formula-chip">width = 5</span>
+        <span class="formula-chip">min(8, 8) = 8</span>
+        <span class="formula-chip">area = 40</span>
+        <span class="formula-chip move">相等，移动任意一边</span>
       </div>
-      <div class="decision">
-        <div class="kv"><code>area = 5 × 8 = 40</code> &lt; 49，不更新</div>
-        <div class="kv"><span class="blue">8 == 8</span> → <span class="green">right--</span></div>
-      </div>
-    </div>
-
-    <!-- Step 5 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 5</span>
-        <span class="step-range">L=1 (h=8) &nbsp; R=5 (h=4)</span>
-      </div>
-      <div class="chart-area">
-        <div class="bar-group"><div class="bar blue" style="height:160px;">8</div><div class="bar-index">1</div></div>
-        <div class="bar-group"><div class="water-fill" style="height:80px;width:122px;">h=4×w=4=16</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:80px;">4</div><div class="bar-index">5</div></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><code>area = 4 × 4 = 16</code> &lt; 49，不更新</div>
-        <div class="kv"><span class="blue">8 &gt; 4</span> → <span class="green">right--</span></div>
-      </div>
-    </div>
-
-    <!-- Step 6 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 6</span>
-        <span class="step-range">L=1 (h=8) &nbsp; R=4 (h=5)</span>
-      </div>
-      <div class="chart-area">
-        <div class="bar-group"><div class="bar blue" style="height:160px;">8</div><div class="bar-index">1</div></div>
-        <div class="bar-group"><div class="water-fill" style="height:100px;width:96px;">h=5×w=3=15</div></div>
-        <div class="bar-group"><div class="bar neutral" style="height:100px;">5</div><div class="bar-index">4</div></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><code>area = 3 × 5 = 15</code> &lt; 49，不更新</div>
-        <div class="kv"><span class="blue">8 &gt; 5</span> → <span class="green">right--</span></div>
-      </div>
-    </div>
-
-    <!-- 后续 -->
-    <div style="margin-top:16px;padding:12px 16px;background:var(--accent-tint);border:1px solid rgba(181,82,58,0.3);border-radius:6px;font-family:'Geist Mono',monospace;font-size:12px;line-height:1.8;">
-      <strong style="color:var(--accent);">后续步骤类似：</strong>持续右移 right，每次 area 都 ≤ 49。<br>
-      最终 <strong style="color:var(--accent);">maxArea = 49</strong>（left=1, right=8，height=[8,7]，宽度=7，高度=7）
+      <div class="kv">高度更高了，但宽度已经从 7 缩到 5，所以面积仍然小于 49。</div>
+      <div class="kv focal">相等时移动任意一边都可以；代码里用 <code>else</code> 移动右边。</div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 3: Go 代码
-  ══════════════════════════════════════════════════════ -->
   <section>
     <h2>Go 代码</h2>
-    <p class="section-sub">双指针夹逼，O(n) 时间，O(1) 空间</p>
-    <div class="code-wrap">
-<pre><span class="cmt">// LeetCode 11. Container With Most Water</span>
-<span class="kw">func</span> <span class="fn">maxArea</span>(<span class="typ">height</span> []<span class="typ">int</span>) <span class="typ">int</span> {
-    <span class="typ">left</span>, <span class="typ">right</span> := <span class="num">0</span>, <span class="typ">len</span>(<span class="typ">height</span>)<span class="num">-1</span>
-    <span class="typ">max</span> := <span class="num">0</span>
+    <p class="section-sub">双指针从两端向内收敛，每轮先计算面积，再移动较短边。</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">maxArea</span>(height []<span class="typ">int</span>) <span class="typ">int</span> {
+    left, right := <span class="num">0</span>, len(height)-<span class="num">1</span>
+    best := <span class="num">0</span>
 
-    <span class="kw">for</span> <span class="typ">left</span> <span class="hl">&lt; right</span> {
-        <span class="cmt">// 短板决定高度</span>
-        <span class="typ">h</span> := <span class="typ">min</span>(<span class="typ">height</span>[<span class="typ">left</span>], <span class="typ">height</span>[<span class="typ">right</span>])
-        <span class="typ">w</span> := <span class="typ">right</span> <span class="hl">- left</span>
-        <span class="typ">area</span> := <span class="typ">h</span> * <span class="typ">w</span>
-
-        <span class="kw">if</span> <span class="typ">area</span> > <span class="typ">max</span> {
-            <span class="typ">max</span> = <span class="typ">area</span>
+    <span class="kw">for</span> left &lt; right {
+        width := right - left
+        h := height[left]
+        <span class="kw">if</span> height[right] &lt; h {
+            h = height[right]
         }
 
-        <span class="cmt">// 移动短边指针</span>
-        <span class="kw">if</span> <span class="typ">height</span>[<span class="typ">left</span>] <span class="hl">&lt; height</span>[<span class="typ">right</span>] {
-            <span class="typ">left</span>++
+        area := width * h
+        <span class="kw">if</span> area &gt; best {
+            best = area
+        }
+
+        <span class="cmt">// 宽度必然变小，只移动短边才可能提高有效高度</span>
+        <span class="kw">if</span> height[left] &lt; height[right] {
+            left++
         } <span class="kw">else</span> {
-            <span class="typ">right</span>--
+            right--
         }
     }
-    <span class="kw">return</span> <span class="typ">max</span>
+    <span class="kw">return</span> best
 }</pre>
-    </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 4: 易错点
-  ══════════════════════════════════════════════════════ -->
   <section>
     <h2>易错点</h2>
-    <p class="section-sub">双指针的决策逻辑和边界条件容易出错</p>
-
+    <p class="section-sub">这题的核心不是会写双指针，而是能解释为什么移动短板不会漏答案。</p>
     <div class="pitfall-grid">
       <div class="pit-wrong">
-        <div class="pit-tag">❌ 错误：移动长边指针</div>
-        <div class="pit-code">// 错误：长边不动，短边内移 ← 对
-// 但写成：长边内移 ← 错！
-<span class="kw">if</span> height[left] &gt; height[right] {
-    right--  // ← 这样会漏掉最优解
-}</div>
-        <div class="pit-exp">如果 height[left] &gt; height[right]，<br>说明 left 是长边，此时让 right--（移动短边）。<br>如果写成 left++（移动长边），面积只会更小。</div>
+        <p class="pit-label">错误：移动长板</p>
+        <pre>if height[left] &lt; height[right] {
+    right--
+} else {
+    left++
+}</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">移动长板时，短板高度没有变高，宽度却变小，可能错过真正答案 49。</p>
       </div>
       <div class="pit-right">
-        <div class="pit-tag">✓ 正确：统一移动短边</div>
-        <div class="pit-code"><span class="kw">if</span> height[left] &lt; height[right] {
-    left++   <span class="cmt">// 短边内移</span>
-} <span class="kw">else</span> {
-    right--  <span class="cmt">// 短边内移（包含相等的情况）</span>
-}</div>
-        <div class="pit-exp">不管谁长谁短，统一移动较短的那一边。<br>相等时移动任意一边都行，用 else 覆盖。</div>
+        <p class="pit-label">正确：移动短板</p>
+        <pre>if height[left] &lt; height[right] {
+    left++
+} else {
+    right--
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">短板内移后，才有机会遇到更高的柱子，抵消宽度减少。</p>
       </div>
-    </div>
-
-    <div class="pitfall-grid" style="margin-top:16px;">
       <div class="pit-wrong">
-        <div class="pit-tag">❌ 错误：循环条件写成 left &lt;= right</div>
-        <div class="pit-code"><span class="kw">for</span> left &lt;= right {  <span class="cmt">// ← left==right 时会多算一次</span>
-    ...
-}</div>
-        <div class="pit-exp">left == right 时，单柱子没有宽度，面积为 0。<br>且 left == right 时再移动会重复计算。<br>用 left &lt; right 确保不重叠。</div>
+        <p class="pit-label">错误：高度取 max</p>
+        <pre>area := max(height[left], height[right]) *
+        (right - left)</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">容器水面会被较矮柱子限制，取高柱会把面积算大。</p>
       </div>
       <div class="pit-right">
-        <div class="pit-tag">✓ 正确：left &lt; right（左闭右开逻辑）</div>
-        <div class="pit-code"><span class="kw">for</span> left &lt; right {  <span class="cmt">// ← 正确</span>
-    ...
-}</div>
-        <div class="pit-exp">双指针区间是 [left, right]，不重叠。<br>当 left == right 时已经相遇，无需再计算。<br>这是标准的左闭右开区间逻辑。</div>
+        <p class="pit-label">正确：高度取 min</p>
+        <pre>h := min(height[left], height[right])
+area := h * (right - left)</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">宽度来自两个下标距离，高度来自短板。</p>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 5: 互动演示
-  ══════════════════════════════════════════════════════ -->
   <div class="anim-section">
     <h2>互动演示</h2>
-    <p class="section-sub">点击「下一步」手动推进双指针，感受面积变化</p>
-
-    <div class="anim-controls">
-      <button class="anim-btn prev" onclick="animPrev()" id="btnPrev" disabled>← 上一步</button>
-      <button class="anim-btn reset" onclick="animReset()">重置</button>
-      <button class="anim-btn next" onclick="animNext()" id="btnNext">下一步 →</button>
-    </div>
-
+    <p class="section-sub">逐步观察双指针：每次计算当前容器面积，然后移动较短的一边。</p>
     <div class="anim-info-bar">
-      <span>阶段：<strong id="phase">—</strong></span>
-      <span>当前区间：<strong id="interval">—</strong></span>
-      <span>当前面积：<strong id="curArea">—</strong></span>
-      <span>最大面积：<strong id="maxArea">—</strong></span>
+      <div class="anim-info-item">step: <span id="ai-step">-</span></div>
+      <div class="anim-info-item">left: <span id="ai-left">-</span></div>
+      <div class="anim-info-item">right: <span id="ai-right">-</span></div>
+      <div class="anim-info-item">area: <span id="ai-area">-</span></div>
+      <div class="anim-info-item">best: <span id="ai-best">-</span></div>
     </div>
-
-    <div class="anim-phase" id="phaseDesc">点击「下一步」开始</div>
-
-    <div class="anim-input-row" id="inputRow"></div>
-
-    <div class="anim-timeline-wrap" id="timeline"></div>
-
-    <div class="result-list" id="resultList"></div>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始。</div>
+    <div class="bars" id="ai-bars"></div>
+    <div class="result-list" id="ai-results"></div>
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步</button>
+    </div>
   </div>
 
-  <footer>Time · O(n) &nbsp;·&nbsp; Space · O(1) &nbsp;·&nbsp; Two Pointers, Inward</footer>
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心算法</p>
+      <h3><span class="dot"></span>双指针两端收敛</h3>
+      <p>从最大宽度开始，每轮计算面积，再移动较短边。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">正确性直觉</p>
+      <h3><span class="dot"></span>短板组合可整批排除</h3>
+      <p>短板不变且宽度变小，面积不可能更大，所以能安全移动短板。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">易错关键点</p>
+      <h3><span class="dot"></span>面积高度取 min</h3>
+      <p>装水高度由较矮的柱子决定，不能用较高柱子计算。</p>
+    </div>
+  </div>
 </div>
+<footer>doc/algorithm-visualizations/11.container-with-most-water.html</footer>
 
 <script>
 const heights = [1, 8, 6, 2, 5, 4, 8, 3, 7];
-const CONTAINER_H = 200;  // px —统一容器高度
-const SCALE = 20;          // px per unit — 20px/unit 比例尺
-// 比例尺验证：max=8 → 8*20=160px ≤ 200px ✓
+const frames = [
+  { left: 0, right: 8, width: 8, h: 1, area: 8, best: 8, move: 'left++', desc: '左边 1 是短板，移动 left。' },
+  { left: 1, right: 8, width: 7, h: 7, area: 49, best: 49, move: 'right--', desc: '右边 7 是短板，面积更新为 49。' },
+  { left: 1, right: 7, width: 6, h: 3, area: 18, best: 49, move: 'right--', desc: '右边 3 更短，面积不更新。' },
+  { left: 1, right: 6, width: 5, h: 8, area: 40, best: 49, move: 'right--', desc: '两边同高，移动任意一边；这里移动 right。' },
+  { left: 1, right: 5, width: 4, h: 4, area: 16, best: 49, move: 'right--', desc: '右边 4 是短板，继续右移。' },
+  { left: 1, right: 4, width: 3, h: 5, area: 15, best: 49, move: 'right--', desc: '右边 5 是短板，面积仍不超过 49。' },
+  { left: 1, right: 3, width: 2, h: 2, area: 4, best: 49, move: 'right--', desc: '右边 2 是短板，继续收缩。' },
+  { left: 1, right: 2, width: 1, h: 6, area: 6, best: 49, move: 'right--', desc: '最后一个合法容器，最终 best=49。' }
+];
+let animIndex = -1;
 
-let left = 0, right = heights.length - 1;
-let maxA = 0;
-let history = [];
-let step = -1;
-
-function barH(v) { return v * SCALE; }  // 20px/unit
-
-function animReset() {
-  left = 0; right = heights.length - 1;
-  maxA = 0; step = -1; history = [];
-  render();
-  document.getElementById('btnPrev').disabled = true;
-  document.getElementById('btnNext').disabled = false;
-}
-  window.animReset = animReset;
-
-function animNext() {
-  if (left >= right) return;
-  const h = Math.min(heights[left], heights[right]);
-  const w = right - left;
-  const area = h * w;
-  const prevMax = maxA;
-  if (area > maxA) maxA = area;
-  history.push({ left, right, h, w, area, maxA, improved: area > prevMax }
-  window.animNext = animNext;);
-  step++;
-
-  // 移动短边指针
-  if (heights[left] < heights[right]) {
-    left++;
-  } else {
-    right--;
+function activeFrame() {
+  if (animIndex < 0) {
+    return { left: 0, right: heights.length - 1, width: 8, h: 1, area: 0, best: 0, move: '-', desc: '初始状态：left=0，right=8，从最大宽度开始。' };
   }
-
-  render();
-  document.getElementById('btnPrev').disabled = false;
-  if (left >= right) document.getElementById('btnNext').disabled = true;
+  return frames[animIndex];
 }
 
-function animPrev() {
-  if (step < 0) return;
-  const prev = history[step];  // 恢复指针状态
-  left = prev.left; right = prev.right; maxA = prev.maxA;
-  step--;
-  render();
-  document.getElementById('btnNext').disabled = false;
-  if (step < 0) {
-    animReset();
-  }
-  window.animPrev = animPrev; else {
-    document.getElementById('btnPrev').disabled = false;
-  }
+function barHeight(v) {
+  return v * 22;
+}
+
+function renderBars(frame) {
+  const bestPair = animIndex >= 1;
+  document.getElementById('ai-bars').innerHTML = heights.map((v, i) => {
+    const isLeft = i === frame.left;
+    const isRight = i === frame.right;
+    const isBest = bestPair && (i === 1 || i === 8);
+    const inWater = animIndex >= 0 && i > frame.left && i < frame.right;
+    let cls = 'bar';
+    if (isLeft) cls += ' left';
+    else if (isRight) cls += ' right';
+    else if (isBest) cls += ' best';
+    const water = inWater ? `<div class="bar-water" style="height:${barHeight(frame.h)}px;"></div>` : '';
+    return `<div class="bar-slot">
+      ${water}
+      <div class="${cls}" style="height:${barHeight(v)}px;">${v}</div>
+      <div class="bar-index">${i}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderResults() {
+  const shown = animIndex < 0 ? [] : frames.slice(0, animIndex + 1);
+  document.getElementById('ai-results').innerHTML = shown.map((frame, i) => {
+    const cls = frame.area === frame.best && frame.best === 49 ? 'result-chip best' : 'result-chip';
+    return `<div class="${cls}">Step ${i + 1}: area=${frame.area}, best=${frame.best}</div>`;
+  }).join('');
 }
 
 function render() {
-  // phase info
-  if (step < 0) {
-    document.getElementById('phase').textContent = '—';
-    document.getElementById('interval').textContent = '—';
-    document.getElementById('curArea').textContent = '—';
-    document.getElementById('maxArea').textContent = '—';
-    document.getElementById('phaseDesc').textContent = '点击「下一步」开始';
-  } else {
-    const s = history[step];
-    document.getElementById('phase').textContent = `Step ${step + 1}`;
-    document.getElementById('interval').textContent = `[${s.left}, ${s.right}]`;
-    document.getElementById('curArea').textContent = s.area;
-    document.getElementById('maxArea').textContent = s.maxA;
-    const imp = s.improved ? ' → max 更新！' : ' → 不更新';
-    document.getElementById('phaseDesc').textContent =
-      `L=${s.left}(h=${heights[s.left]}), R=${s.right}(h=${heights[s.right]})，` +
-      `宽=${s.w}，高=${s.h}，面积=${s.area}${imp}`;
-  }
-
-  // input row
-  const row = document.getElementById('inputRow');
-  row.innerHTML = heights.map((v, i) => {
-    let cls = 'anim-cell';
-    if (step >= 0) {
-      const s = history[step];
-      if (i === s.left) cls += ' left-cur';
-      else if (i === s.right) cls += ' right-cur';
-    }
-    return `<div class="${cls}">${v}</div>`;
-  }).join('');
-
-  // timeline
-  const tl = document.getElementById('timeline');
-  tl.innerHTML = heights.map((v, i) => {
-    let cls = 'tl-bar neutral';
-    let waterHtml = '';
-    if (step >= 0) {
-      const s = history[step];
-      if (i === s.left) cls = 'tl-bar blue';
-      else if (i === s.right) cls = 'tl-bar green';
-      if (i > s.left && i < s.right) {
-        const wh = barH(Math.min(heights[s.left], heights[s.right]));
-        waterHtml = `<div class="tl-water" style="height:${wh}px;width:36px;"></div>`;
-      }
-    }
-    return `<div class="bar-group" style="position:relative;">
-      <div class="${cls}" style="height:${barH(v)}px;">${v}</div>
-      ${waterHtml}
-      <div class="tl-index">${i}</div>
-    </div>`;
-  }).join('');
-
-  // result chips
-  const rl = document.getElementById('resultList');
-  rl.innerHTML = history.map((s, i) => {
-    const best = (i === step && s.improved) || (i === history.length - 1 && s.maxA === 49);
-    return `<div class="result-chip${best ? ' best' : ''}">Step${i+1}: ${s.area}</div>`;
-  }).join('');
+  const frame = activeFrame();
+  document.getElementById('ai-step').textContent = animIndex < 0 ? 'init' : String(animIndex + 1);
+  document.getElementById('ai-left').textContent = `${frame.left} (h=${heights[frame.left]})`;
+  document.getElementById('ai-right').textContent = `${frame.right} (h=${heights[frame.right]})`;
+  document.getElementById('ai-area').textContent = animIndex < 0 ? '-' : String(frame.area);
+  document.getElementById('ai-best').textContent = String(frame.best);
+  document.getElementById('ai-desc').innerHTML = animIndex < 0
+    ? `初始：从最宽的区间开始，点击「<span>下一步</span>」计算面积。`
+    : `width=${frame.width}，height=${frame.h}，area=${frame.area}，${frame.desc} 下一步动作：<span>${frame.move}</span>`;
+  renderBars(frame);
+  renderResults();
 }
 
-// init
-render();
+function animReset() {
+  animIndex = -1;
+  render();
+}
 
-(function(){
-  var f = [];
-  animReset();
-  if (step !== -1) f.push('Reset后step!=-1 当前='+step);
-  animReset(); animPrev();
-  if (step !== -1) f.push('Prev@start后step!=-1 当前='+step);
-  animReset();
-  for (var k = 0; k < 30; k++) {
-    var old = step;
-    animNext();
-    if (step === old && old >= 0) { f.push('Next卡住@'+step); break; }
-    if (step < 0) break;
+function animNext() {
+  if (animIndex < frames.length - 1) {
+    animIndex++;
+    render();
   }
+}
 
-  (function(){
-    var s0 = {l: left, r: right};
-    animNext();
-    if (left <= s0.l) f.push('left未右移: '+s0.l+'->'+left);
-    if (right >= s0.r) f.push('right未左移: '+s0.r+'->'+right);
-  })();
-  animReset(); var pm = 0;
-  for (var k = 0; k < 20; k++) {
-    if (maxA < pm) { f.push('maxA递减'); break; }
-    pm = maxA; animNext(); if (step < 0) break;
+function animPrev() {
+  if (animIndex > -1) {
+    animIndex--;
+    render();
   }
-  animReset();
-  for (var k = 0; k < 20; k++) { animNext(); if (left >= right) break; }
-  if (left < right) f.push('未收敛');
-  var ok = f.length === 0;
-  var el = document.createElement('div');
-  el.id = 'sc-result';
-  el.style = 'position:fixed;top:8px;right:8px;z-index:99999;font-family:monospace;font-size:13px;padding:12px 16px;border-radius:8px;min-width:220px;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,0.15);line-height:1.6;';
-  el.textContent = ok ? '✅ SELF-CHECK PASS' : '❌ FAIL:\n' + f.join('\n');
-  el.style.background = ok ? '#dcfce7' : '#fee2e2';
-  el.style.color = ok ? '#166534' : '#991b1b';
-  el.style.border = ok ? '2px solid #86efac' : '2px solid #fca5a5';
-  document.body.appendChild(el);
-  console.log(ok ? '%c✅ PASS' : '%c❌ FAIL: ' + f.join(' | '), ok ? 'color:#16a34a;font-weight:bold' : 'color:#dc2626;font-weight:bold');
-})();
+}
 
-(function(){
-  var f = [];
-  animReset();
-  if (step !== -1) f.push('Reset后step!=-1 当前='+step);
-  animReset(); animPrev();
-  if (step !== -1) f.push('Prev@start后step!=-1 当前='+step);
-  animReset();
-  // 通用: step在有效范围内Next必须推进
-  var converged = false;
-  for (var k = 0; k < 30; k++) {
-    var old = step;
-    animNext();
-    if (step === old && old >= 0 && !converged) { f.push('Next卡住@'+step); break; }
-    if (step < 0) break;
-    // 对双指针收敛: 检测收敛条件(left>=right)
-    if (typeof left !== 'undefined' && typeof right !== 'undefined' && left >= right) { converged = true; break; }
-  }
+window.animReset = animReset;
+window.animNext = animNext;
+window.animPrev = animPrev;
 
-  (function(){
-    var s0 = {l: left, r: right};
-    animNext();
-    if (left <= s0.l) f.push('left未右移: '+s0.l+'->'+left);
-    if (right >= s0.r) f.push('right未左移: '+s0.r+'->'+right);
-  })();
-  animReset(); var pm = 0;
-  for (var k = 0; k < 20; k++) {
-    if (maxA < pm) { f.push('maxA递减'); break; }
-    pm = maxA; animNext(); if (step < 0) break;
-    if (left >= right) break;
-  }
-  animReset();
-  for (var k = 0; k < 20; k++) { animNext(); if (left >= right) break; }
-  if (left < right) f.push('未收敛');
-  var ok = f.length === 0;
-  var el = document.getElementById('sc-result') || (function(){
-    var d = document.createElement('div'); d.id = 'sc-result';
-    d.style = 'position:fixed;top:8px;right:8px;z-index:99999;font-family:monospace;font-size:13px;padding:12px 16px;border-radius:8px;min-width:220px;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,0.15);line-height:1.6;';
-    document.body.appendChild(d); return d;
-  })();
-  el.textContent = ok ? '✅ SELF-CHECK PASS' : '❌ FAIL:\n' + f.join('\n');
-  el.style.background = ok ? '#dcfce7' : '#fee2e2';
-  el.style.color = ok ? '#166534' : '#991b1b';
-  el.style.border = ok ? '2px solid #86efac' : '2px solid #fca5a5';
-  console.log(ok ? '%c✅ PASS' : '%c❌ FAIL: ' + f.join(' | '), ok ? 'color:#16a34a;font-weight:bold' : 'color:#dc2626;font-weight:bold');
-})();
+animReset();
 </script>
-
 </body>
 </html>
