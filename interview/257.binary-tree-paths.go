@@ -23,15 +23,6 @@ func pathsRec(node *TreeNode, path []int, result *[]string) {
 	path = append(path, node.Val)
 	// 叶子节点：收集路径
 	if node.Left == nil && node.Right == nil {
-		// 转换 int slice → "1->2->3" 格式
-		s := ""
-		for i, v := range path {
-			if i > 0 {
-				s += "->"
-			}
-			s += string(rune('0' + v)) // 只适合个位数，更好的方式用 strconv
-		}
-		// 用简单方式拼接
 		b := ""
 		for i, v := range path {
 			if i > 0 {
