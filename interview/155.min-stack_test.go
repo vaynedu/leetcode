@@ -18,3 +18,18 @@ func TestMinStack(t *testing.T) {
 		t.Errorf("GetMin() = %d, want -2", got)
 	}
 }
+
+func TestMinStackDuplicateMinimum(t *testing.T) {
+	s := NewMinStack()
+	s.Push(2)
+	s.Push(1)
+	s.Push(1)
+	s.Pop()
+	if got := s.GetMin(); got != 1 {
+		t.Errorf("GetMin() after popping duplicate minimum = %d, want 1", got)
+	}
+	s.Pop()
+	if got := s.GetMin(); got != 2 {
+		t.Errorf("GetMin() after popping all minimums = %d, want 2", got)
+	}
+}
