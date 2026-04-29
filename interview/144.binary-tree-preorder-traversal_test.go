@@ -9,7 +9,7 @@ func TestPreorder144(t *testing.T) {
 	}
 	result := Preorder144(root)
 	expected := []int{1, 2, 4, 5, 3}
-	if len(result) != len(expected) {
+	if !intEq(result, expected) {
 		t.Errorf("got %v, want %v", result, expected)
 	}
 }
@@ -21,7 +21,7 @@ func TestPreorder144Iter(t *testing.T) {
 	}
 	result := Preorder144Iter(root)
 	expected := []int{1, 2, 4, 5, 3}
-	if len(result) != len(expected) {
+	if !intEq(result, expected) {
 		t.Errorf("got %v, want %v", result, expected)
 	}
 }
