@@ -9,7 +9,7 @@ func TestPostorder145(t *testing.T) {
 	}
 	result := Postorder145(root)
 	expected := []int{4, 5, 2, 3, 1}
-	if len(result) != len(expected) {
+	if !intEq(result, expected) {
 		t.Errorf("got %v, want %v", result, expected)
 	}
 }
@@ -21,7 +21,7 @@ func TestPostorder145Iter(t *testing.T) {
 	}
 	result := Postorder145Iter(root)
 	expected := []int{4, 5, 2, 3, 1}
-	if len(result) != len(expected) {
+	if !intEq(result, expected) {
 		t.Errorf("got %v, want %v", result, expected)
 	}
 }
