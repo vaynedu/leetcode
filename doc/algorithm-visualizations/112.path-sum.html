@@ -38,6 +38,10 @@
   .path-node.bad { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
   .path-arrow { color: var(--soft); font-family: 'Geist Mono', monospace; font-size: 12px; }
   .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap, .pit-wrong pre, .pit-right pre, .section-sub code, .kv code, .result-chip {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+  }
   .code-wrap .kw { color: #f78c6c; } .code-wrap .fn { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
   .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; } .code-wrap .hl { color: #82aaff; }
   .pitfall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }

@@ -178,6 +178,15 @@ footer 显示当前 HTML 路径，便于浏览器里确认文件。
 | 正文 | Geist |
 | 代码/数字 | Geist Mono |
 
+代码显示必须禁用字体连字，避免 Go 里的 `!=` 被渲染成 `≠`、`==` 等操作符被替换成非源码字符：
+
+```css
+.code-wrap, .pit-wrong pre, .pit-right pre, .section-sub code, .kv code {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+```
+
 ### 布局
 
 - `.container` 最大宽度 960px。
