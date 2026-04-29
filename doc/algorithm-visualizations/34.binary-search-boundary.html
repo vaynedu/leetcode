@@ -2,725 +2,337 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>二分查找边界 · 图解 · LeetCode 34</title>
+<title>34 查找第一个和最后一个位置 · 图解 · LeetCode</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --paper: #faf7f2;
-    --paper-2: #f2ede4;
-    --ink: #1c1917;
-    --muted: #57534e;
-    --soft: #78716c;
-    --rule: rgba(28,25,23,0.12);
-    --accent: #b5523a;
-    --accent-tint: rgba(181,82,58,0.08);
-    --accent-strong: rgba(181,82,58,0.18);
-    --eliminate: rgba(28,25,23,0.04);
-  }
+  :root { --paper: #faf7f2; --paper-2: #f2ede4; --ink: #1c1917; --muted: #57534e; --soft: #78716c; --rule: rgba(28,25,23,0.12); --accent: #b5523a; --accent-tint: rgba(181,82,58,0.08); --accent-strong: rgba(181,82,58,0.18); --blue: #2563eb; --green: #16a34a; }
   * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Geist', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  body {
-    background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px);
-    background-size: 22px 22px;
-    padding: 64px 32px 96px;
-  }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(rgba(28,25,23,0.08) 1px, transparent 1px); background-size: 22px 22px; padding: 64px 32px 96px; }
   .container { max-width: 960px; margin: 0 auto; }
-  .eyebrow {
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--muted);
-    margin: 0 0 12px;
-  }
-  h1 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 2.25rem; font-weight: 400;
-    margin: 0 0 12px; line-height: 1.15;
-  }
-  .subtitle {
-    font-family: 'Instrument Serif', serif;
-    font-style: italic; font-size: 1.125rem;
-    color: var(--muted); margin: 0 0 48px;
-  }
-  section {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-radius: 8px; padding: 32px;
-    margin-bottom: 32px;
-  }
-  section h2 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 1.5rem; font-weight: 400;
-    margin: 0 0 8px;
-  }
-  .section-sub {
-    font-family: 'Geist', sans-serif;
-    font-size: 12px; color: var(--muted);
-    margin: 0 0 24px; line-height: 1.6;
-  }
-  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 2.25rem; font-weight: 400; margin: 0 0 12px; line-height: 1.15; }
+  .subtitle { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.125rem; color: var(--muted); margin: 0 0 48px; }
+  section, .anim-section { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 32px; margin-bottom: 32px; }
+  section h2, .anim-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.5rem; font-weight: 400; margin: 0 0 8px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+  .section-sub code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
   .section-sub strong { color: var(--ink); font-weight: 600; }
-
-  /* Array cells */
-  .array-row {
-    display: flex; gap: 4px;
-    align-items: center; justify-content: center;
-    margin: 16px 0; flex-wrap: wrap;
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .insight-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  .card-eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .insight-card h3, .summary .card h3 { font-family: 'Instrument Serif', serif; font-size: 1rem; font-weight: 400; margin: 0 0 8px; }
+  .insight-card p, .summary .card p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; margin: 12px 0; }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .step-num { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .step-range { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+  .kv { font-size: 13px; color: var(--muted); margin: 4px 0; line-height: 1.5; }
+  .kv code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
+  .kv.focal { color: var(--accent); font-weight: 600; }
+  .array-row { display: grid; grid-template-columns: repeat(6, minmax(42px, 1fr)); gap: 6px; margin: 16px 0; }
+  .num-cell { min-height: 50px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .num-cell .idx { font-size: 8px; color: var(--soft); font-weight: 400; margin-top: 3px; }
+  .num-cell.active { border-color: rgba(37,99,235,0.35); background: rgba(37,99,235,0.08); color: var(--ink); }
+  .num-cell.mid { border-color: var(--accent); background: var(--accent-strong); color: var(--accent); box-shadow: 0 4px 12px rgba(181,82,58,0.18); }
+  .num-cell.bound { border-color: var(--accent); background: var(--accent); color: white; }
+  .num-cell.drop { opacity: 0.38; text-decoration: line-through; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .logic-chip { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 10px; }
+  .logic-chip.move { color: #1d4ed8; background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.24); }
+  .logic-chip.keep { color: #166534; background: #dcfce7; border-color: #86efac; }
+  .logic-chip.result { color: white; background: var(--accent); border-color: var(--accent); }
+  .code-wrap { background: var(--ink); color: #e8e4dc; border-radius: 8px; padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.75; margin: 0; font-family: 'Geist Mono', monospace; }
+  .code-wrap, .pit-wrong pre, .pit-right pre, .section-sub code, .kv code, .logic-chip {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
   }
-  .cell {
-    width: 56px; height: 56px;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    background: #ffffff;
-    border: 1px solid var(--ink);
-    border-radius: 4px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 20px; font-weight: 500;
-    position: relative;
-  }
-  .cell span.idx {
-    position: absolute;
-    bottom: 3px;
-    font-size: 8px; color: var(--soft);
-  }
-  .cell.eliminated {
-    background: var(--eliminate);
-    border-color: var(--rule);
-    color: var(--soft);
-  }
-  .cell.eliminated span.idx { color: var(--soft); }
-  .cell.searching {
-    background: var(--accent-strong);
-    border-color: var(--accent);
-    border-width: 2px;
-    animation: pulse 1.8s ease-in-out infinite;
-  }
-  .cell.left-bound {
-    background: var(--accent-tint);
-    border-color: var(--accent);
-  }
-  .cell.right-bound {
-    background: var(--accent-tint);
-    border-color: var(--accent);
-  }
-  .cell.left-found {
-    background: var(--accent);
-    color: var(--paper);
-    border-color: var(--accent);
-  }
-  .cell.right-found {
-    background: var(--accent);
-    color: var(--paper);
-    border-color: var(--accent);
-  }
-  .cell.focus {
-    background: var(--accent-strong);
-    border-color: var(--accent);
-    border-width: 2px;
-  }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(181,82,58,0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(181,82,58,0); }
-  }
-
-  /* Pointer row */
-  .pointer-row {
-    display: flex; gap: 4px;
-    justify-content: center;
-    margin-top: 4px; flex-wrap: wrap;
-  }
-  .ptr-slot {
-    width: 56px; height: 28px;
-    display: flex; flex-direction: column; align-items: center;
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; color: var(--muted);
-  }
-  .ptr-slot .arr { font-size: 12px; line-height: 1; }
-  .ptr-slot .label { font-weight: 600; letter-spacing: 0.08em; }
-  .ptr-slot.L .arr, .ptr-slot.L .label { color: #2563eb; }
-  .ptr-slot.R .arr, .ptr-slot.R .label { color: #16a34a; }
-  .ptr-slot.M .arr, .ptr-slot.M .label { color: var(--accent); }
-
-  /* Interval bar */
-  .interval-bar {
-    display: flex; gap: 4px;
-    justify-content: center;
-    margin: 4px 0 16px; flex-wrap: wrap;
-  }
-  .ibar {
-    width: 56px; height: 8px;
-    display: flex; align-items: center;
-    justify-content: center;
-  }
-  .ibar.active {
-    background: rgba(181,82,58,0.3);
-    border-radius: 2px;
-  }
-
-  /* Step card */
-  .step {
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 20px 24px;
-    margin-top: 16px;
-  }
-  .step-head {
-    display: flex; align-items: baseline;
-    gap: 12px; margin-bottom: 12px;
-  }
-  .step-num {
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; font-weight: 600; letter-spacing: 0.18em;
-    background: var(--ink); color: var(--paper);
-    padding: 4px 8px; border-radius: 3px;
-  }
-  .step-sub {
-    font-family: 'Geist Mono', monospace;
-    font-size: 11px; color: var(--muted);
-  }
-  .decision {
-    display: flex; flex-wrap: wrap; gap: 10px;
-    margin-top: 12px;
-    font-family: 'Geist', sans-serif;
-    font-size: 12px; line-height: 1.6;
-    color: var(--ink);
-  }
-  .decision .kv {
-    padding: 8px 12px;
-    background: rgba(28,25,23,0.03);
-    border-left: 2px solid var(--muted);
-    border-radius: 0 4px 4px 0;
-  }
-  .decision .kv.focal {
-    border-left-color: var(--accent);
-    background: var(--accent-tint);
-  }
-  .decision code {
-    font-family: 'Geist Mono', monospace;
-    font-size: 12px;
-  }
-  .decision strong { color: var(--accent); font-weight: 600; }
-  .decision .blue { color: #2563eb; font-weight: 600; }
-  .decision .green { color: #16a34a; font-weight: 600; }
-
-  /* boundary result */
-  .result-box {
-    display: flex; gap: 16px;
-    justify-content: center;
-    margin: 16px 0;
-  }
-  .result-cell {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 8px;
-  }
-  .result-label {
-    font-family: 'Geist Mono', monospace;
-    font-size: 10px; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.12em;
-  }
-  .result-value {
-    width: 64px; height: 64px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-    font-family: 'Geist Mono', monospace;
-    font-size: 24px; font-weight: 700;
-  }
-  .result-value.left {
-    background: var(--accent-strong);
-    border: 2px solid var(--accent);
-    color: var(--accent);
-  }
-  .result-value.right {
-    background: var(--accent-strong);
-    border: 2px solid var(--accent);
-    color: var(--accent);
-  }
-  .result-value.final {
-    background: var(--accent);
-    color: var(--paper);
-  }
-  .result-desc {
-    font-family: 'Geist Mono', monospace;
-    font-size: 9px; color: var(--muted);
-    text-align: center;
-  }
-
-  /* two-column compare */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px; margin-top: 16px;
-  }
-  .col-panel {
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 20px;
-  }
-  .col-title {
-    font-family: 'Geist Mono', monospace;
-    font-size: 9px; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--muted);
-    margin: 0 0 12px;
-  }
-  .col-title.left-col { color: #2563eb; }
-  .col-title.right-col { color: #16a34a; }
-
-  /* rule table */
-  .rule-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 12px;
-  }
-  .rule-table th {
-    background: rgba(28,25,23,0.06);
-    padding: 8px 12px;
-    text-align: left;
-    font-size: 9px; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--muted);
-    border-bottom: 1px solid var(--rule);
-  }
-  .rule-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--rule);
-    color: var(--ink);
-  }
-  .rule-table td:first-child { color: var(--accent); font-weight: 600; }
-  .rule-table code { font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
-
-  /* summary cards */
-  .summary {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px; margin-top: 32px;
-  }
-  .card {
-    background: #ffffff;
-    border: 1px solid var(--rule);
-    border-radius: 6px; padding: 20px;
-  }
-  .card-eyebrow {
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--muted);
-    margin: 0 0 8px;
-  }
-  .card h3 {
-    font-family: 'Geist', sans-serif;
-    font-size: 12px; font-weight: 600;
-    margin: 0 0 8px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
-  .dot.ink { background: var(--ink); }
-  .dot.accent { background: var(--accent); }
-  .dot.muted { background: var(--muted); }
-  .dot.blue { background: #2563eb; }
-  .dot.green { background: #16a34a; }
-  .card p { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--ink); line-height: 1.6; margin: 0; }
-  .card code { font-family: 'Geist Mono', monospace; font-size: 12px; background: rgba(28,25,23,0.05); padding: 1px 5px; border-radius: 3px; }
-  .card strong { color: var(--accent); font-weight: 600; }
-
-  footer {
-    border-top: 1px solid var(--rule);
-    padding-top: 16px; margin-top: 48px;
-    font-family: 'Geist Mono', monospace;
-    font-size: 8px; color: var(--soft);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-
-  /* animations */
-  section, .summary, footer { animation: fadeIn 0.6s ease-out backwards; }
-  section:nth-of-type(1) { animation-delay: 0.1s; }
-  section:nth-of-type(2) { animation-delay: 0.25s; }
-  section:nth-of-type(3) { animation-delay: 0.4s; }
-  .summary { animation-delay: 0.55s; }
-  footer { animation-delay: 0.7s; }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: none; }
-  }
-
-  .think-card { background: var(--accent-tint); border-left: 3px solid var(--accent); border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
-  .think-title { font-family: 'Geist Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
-  .think-insight { font-size: 14px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
-  .think-mnemonic { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; display: inline-block; }
-
+  .code-wrap .kw { color: #f78c6c; } .code-wrap .fn { color: #ffcb6b; } .code-wrap .typ { color: #89ddff; }
+  .code-wrap .num { color: #f78c6c; } .code-wrap .cmt { color: #546e7a; font-style: italic; } .code-wrap .hl { color: #82aaff; }
+  .pitfall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+  .pit-wrong { background: #fee2e2; border: 1px solid #dc2626; border-radius: 6px; padding: 16px; }
+  .pit-right { background: #dcfce7; border: 1px solid #16a34a; border-radius: 6px; padding: 16px; }
+  .pit-label { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; margin: 0 0 8px; }
+  .pit-wrong .pit-label { color: #dc2626; } .pit-right .pit-label { color: #16a34a; }
+  .pit-wrong pre, .pit-right pre { font-size: 12px; margin: 0; line-height: 1.6; font-family: 'Geist Mono', monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pit-wrong pre { color: #991b1b; } .pit-right pre { color: #166534; }
+  .anim-controls { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+  .anim-btn { padding: 8px 20px; border-radius: 6px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .anim-btn-prev, .anim-btn-reset { background: var(--paper); color: var(--muted); border: 1px solid var(--rule); }
+  .anim-btn-next { background: var(--accent); color: white; border: 1px solid var(--accent); }
+  .anim-info-bar { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; flex-wrap: wrap; }
+  .anim-info-item { color: var(--muted); }
+  .anim-info-item span { color: var(--accent); font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .anim-phase { font-size: 13px; color: var(--muted); margin: 8px 0 16px; line-height: 1.6; }
+  .anim-phase span { color: var(--accent); font-weight: 600; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .summary .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
+  footer { text-align: center; font-size: 11px; color: var(--soft); padding: 32px; margin-top: 32px; border-top: 1px solid var(--rule); }
+  @media (max-width: 760px) { body { padding: 40px 18px 72px; } section, .anim-section { padding: 22px; } .array-row { gap: 4px; } .num-cell { min-height: 44px; font-size: 12px; } }
 </style>
 </head>
 <body>
 <div class="container">
-  <header>
-    <p class="eyebrow">LEETCODE 34 · FIND FIRST AND LAST POSITION</p>
-    <h1>二分查找边界</h1>
-    <p class="subtitle">左边界找"第一个 ≥ target" · 右边界找"第一个 > target"</p>
-  </header>
+  <p class="eyebrow">LeetCode 34 · Binary Search Boundary</p>
+  <h1>查找第一个和最后一个位置</h1>
+  <p class="subtitle">把“找 target”转成两次 lowerBound：第一个不小于 target，和第一个大于 target。</p>
 
-  <!-- Section 1: 两个边界 -->
-  
-<div class="think-card">
-  <div class="think-title">💡 核心思路</div>
-  <div class="think-insight">找左边界：right=mid；找右边界：left=mid+1，最后用左右指针收尾</div>
-  <div class="think-mnemonic">口诀：左边界 right=mid，右边界 left=mid+1</div>
-</div>
-
-<section>
-    <h2>① 两个边界是什么</h2>
-    <p class="section-sub">在排序数组中，target 可能出现多次。<strong>左边界</strong>是第一个 ≥ target 的位置，<strong>右边界</strong>是最后一个 ≤ target 的位置。</p>
-
-    <div class="array-row" style="margin-top:24px;">
-      <div class="cell">5<span class="idx">0</span></div>
-      <div class="cell">7<span class="idx">1</span></div>
-      <div class="cell">7<span class="idx">2</span></div>
-      <div class="cell left-bound">8<span class="idx">3</span></div>
-      <div class="cell right-bound">8<span class="idx">4</span></div>
-      <div class="cell">10<span class="idx">5</span></div>
-    </div>
-    <div style="display:flex; gap:16px; justify-content:center; font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted);">
-      <span style="color:#2563eb;">↑ 左边界 index=3</span>
-      <span>|</span>
-      <span style="color:#16a34a;">↑ 右边界 index=4</span>
-    </div>
-
-    <div class="result-box">
-      <div class="result-cell">
-        <div class="result-value left">3</div>
-        <div class="result-label">leftBound</div>
-        <div class="result-desc">first ≥ 8</div>
-      </div>
-      <div style="font-size:24px; color:var(--muted); display:flex; align-items:center;">→</div>
-      <div class="result-cell">
-        <div class="result-value right">4</div>
-        <div class="result-label">rightBound</div>
-        <div class="result-desc">last ≤ 8</div>
-      </div>
-      <div style="font-size:24px; color:var(--muted); display:flex; align-items:center;">→</div>
-      <div class="result-cell">
-        <div class="result-value final">[3, 4]</div>
-        <div class="result-label">答案</div>
-        <div class="result-desc">target 出现两次</div>
-      </div>
-    </div>
-
-    <table class="rule-table">
-      <tr><th>边界</th><th>目标</th><th>收缩条件</th><th>区间</th></tr>
-      <tr>
-        <td>左边界</td>
-        <td>first ≥ target</td>
-        <td><code>nums[mid] &lt; target</code> → <span class="blue">left=mid+1</span><br>else → <span class="green">right=mid</span></td>
-        <td>[left, right)</td>
-      </tr>
-      <tr>
-        <td>右边界</td>
-        <td>first &gt; target</td>
-        <td><code>nums[mid] &le; target</code> → <span class="blue">left=mid+1</span><br>else → <span class="green">right=mid</span></td>
-        <td>[left, right)</td>
-      </tr>
-    </table>
-
-    <div style="margin-top:20px; padding:12px 16px; background:rgba(28,25,23,0.04); border-radius:6px; border-left:3px solid var(--accent); font-family:'Geist Mono',monospace; font-size:12px; color:var(--ink);">
-      <strong style="color:var(--accent);">唯一区别：</strong>等号往哪边走。<br>
-      左边界：<code>nums[mid] &lt; target</code> 才 left+1（= 时往左缩）<br>
-      右边界：<code>nums[mid] &le; target</code> 才 left+1（= 时往右扩）
-    </div>
-  </section>
-
-  <!-- Section 2: 左边界 Trace -->
   <section>
-    <h2>② 左边界：lowerBound(nums, 8)</h2>
-    <p class="section-sub">找 <strong>第一个 ≥ 8</strong> 的位置。<code>right = len(nums)</code>，左闭右开区间。</p>
-
-    <!-- Step 1 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 1</span>
-        <span class="step-sub">[left=0, right=6)</span>
+    <h2>核心洞察</h2>
+    <p class="section-sub">
+      题目：排序数组中找 target 的起始和结束位置。<br>
+      关键：<strong>不要找到任意 target 就停；先找左边界 <code>lowerBound(target)</code>，再找右边界 <code>lowerBound(target+1)-1</code>。</strong>
+    </p>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <p class="card-eyebrow">观察</p>
+        <h3><span class="dot"></span>边界比命中更重要</h3>
+        <p>普通二分只能找到某个 target，不能保证是第一个或最后一个。</p>
       </div>
-      <div class="array-row">
-        <div class="cell searching">5<span class="idx">0</span></div>
-        <div class="cell">7<span class="idx">1</span></div>
-        <div class="cell">7<span class="idx">2</span></div>
-        <div class="cell">8<span class="idx">3</span></div>
-        <div class="cell">8<span class="idx">4</span></div>
-        <div class="cell">10<span class="idx">5</span></div>
+      <div class="insight-card">
+        <p class="card-eyebrow">不变量</p>
+        <h3><span class="dot"></span>答案始终在 [left,right)</h3>
+        <p>左闭右开区间里，<code>right</code> 不参与搜索，收缩时可以写 <code>right=mid</code>。</p>
       </div>
-      <div class="pointer-row">
-        <div class="ptr-slot L"><span class="arr">↑</span><span class="label">L</span></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot M"><span class="arr">↑</span><span class="label">M</span></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot R"><span class="arr">↑</span><span class="label">R</span></div>
+      <div class="insight-card">
+        <p class="card-eyebrow">复杂度</p>
+        <h3><span class="dot"></span>O(log n) 时间 O(1) 空间</h3>
+        <p>两次二分，每次都把搜索区间缩小一半。</p>
       </div>
-      <div class="interval-bar">
-        <div class="ibar active"></div><div class="ibar active"></div><div class="ibar active"></div>
-        <div class="ibar active"></div><div class="ibar active"></div><div class="ibar active"></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><code>mid = (0+6)/2 = 3</code></div>
-        <div class="kv"><code>nums[3] = 8</code></div>
-        <div class="kv">8 &lt; 8 ？<strong style="color:#16a34a;"> 否</strong> → <span class="green">right = mid = 3</span></div>
-      </div>
-    </div>
-
-    <!-- Step 2 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 2</span>
-        <span class="step-sub">[left=0, right=3)</span>
-      </div>
-      <div class="array-row">
-        <div class="cell focus">5<span class="idx">0</span></div>
-        <div class="cell searching">7<span class="idx">1</span></div>
-        <div class="cell">7<span class="idx">2</span></div>
-        <div class="cell eliminated">8<span class="idx">3</span></div>
-        <div class="cell eliminated">8<span class="idx">4</span></div>
-        <div class="cell eliminated">10<span class="idx">5</span></div>
-      </div>
-      <div class="pointer-row">
-        <div class="ptr-slot L"><span class="arr">↑</span><span class="label">L</span></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot M"><span class="arr">↑</span><span class="label">M</span></div>
-        <div class="ptr-slot R"><span class="arr">↑</span><span class="label">R</span></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-      </div>
-      <div class="interval-bar">
-        <div class="ibar active"></div><div class="ibar active"></div><div class="ibar active"></div>
-        <div class="ibar"></div><div class="ibar"></div><div class="ibar"></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><code>mid = (0+3)/2 = 1</code></div>
-        <div class="kv"><code>nums[1] = 7</code></div>
-        <div class="kv">7 &lt; 8 ？<strong style="color:#2563eb;"> 是</strong> → <span class="blue">left = mid+1 = 2</span></div>
-      </div>
-    </div>
-
-    <!-- Step 3 -->
-    <div class="step">
-      <div class="step-head">
-        <span class="step-num">Step 3</span>
-        <span class="step-sub">[left=2, right=3)</span>
-      </div>
-      <div class="array-row">
-        <div class="cell eliminated">5<span class="idx">0</span></div>
-        <div class="cell eliminated">7<span class="idx">1</span></div>
-        <div class="cell searching left-found">7<span class="idx">2</span></div>
-        <div class="cell eliminated">8<span class="idx">3</span></div>
-        <div class="cell eliminated">8<span class="idx">4</span></div>
-        <div class="cell eliminated">10<span class="idx">5</span></div>
-      </div>
-      <div class="pointer-row">
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot L M"><span class="arr">↑</span><span class="label">L=M</span></div>
-        <div class="ptr-slot R"><span class="arr">↑</span><span class="label">R</span></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-      </div>
-      <div class="interval-bar">
-        <div class="ibar"></div><div class="ibar"></div>
-        <div class="ibar active"></div>
-        <div class="ibar"></div><div class="ibar"></div><div class="ibar"></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><code>mid = (2+3)/2 = 2</code></div>
-        <div class="kv"><code>nums[2] = 7</code></div>
-        <div class="kv">7 &lt; 8 ？<strong style="color:#2563eb;"> 是</strong> → <span class="blue">left = mid+1 = 3</span></div>
-      </div>
-    </div>
-
-    <!-- Done -->
-    <div style="margin-top:16px; padding:12px 16px; background:var(--accent-tint); border:1px solid rgba(181,82,58,0.3); border-radius:6px; font-family:'Geist Mono',monospace; font-size:12px;">
-      <strong style="color:var(--accent);">退出：</strong>left=3, right=3 → left == right → <strong style="color:var(--accent);">leftBound = 3</strong>
     </div>
   </section>
 
-  <!-- Section 3: 右边界 Trace -->
   <section>
-    <h2>③ 右边界：lowerBound(nums, 9) − 1</h2>
-    <p class="section-sub">找 <strong>第一个 > 8</strong> 的位置，等价于 <code>lowerBound(nums, 8+1)</code>，再减一得到右边界。</p>
+    <h2>手推全过程</h2>
+    <p class="section-sub">样例：<code>nums=[5,7,7,8,8,10]</code>，<code>target=8</code></p>
 
-    <!-- Step 1 -->
     <div class="step">
       <div class="step-head">
-        <span class="step-num">Step 1</span>
-        <span class="step-sub">[left=0, right=6)</span>
+        <span class="step-num">Left 1</span>
+        <span class="step-range">lowerBound(8), [0,6), mid=3</span>
       </div>
-      <div class="array-row">
-        <div class="cell searching">5<span class="idx">0</span></div>
-        <div class="cell">7<span class="idx">1</span></div>
-        <div class="cell">7<span class="idx">2</span></div>
-        <div class="cell">8<span class="idx">3</span></div>
-        <div class="cell">8<span class="idx">4</span></div>
-        <div class="cell">10<span class="idx">5</span></div>
+      <div class="chip-row">
+        <span class="logic-chip keep">nums[3]=8 >= 8</span>
+        <span class="logic-chip">mid 可能就是第一个 8</span>
+        <span class="logic-chip result">right = mid = 3</span>
       </div>
-      <div class="pointer-row">
-        <div class="ptr-slot L"><span class="arr">↑</span><span class="label">L</span></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot M"><span class="arr">↑</span><span class="label">M</span></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot R"><span class="arr">↑</span><span class="label">R</span></div>
-      </div>
-      <div class="interval-bar">
-        <div class="ibar active"></div><div class="ibar active"></div><div class="ibar active"></div>
-        <div class="ibar active"></div><div class="ibar active"></div><div class="ibar active"></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><code>mid = 3, nums[3] = 8</code></div>
-        <div class="kv">8 ≤ 9 ？<strong style="color:#2563eb;"> 是</strong> → <span class="blue">left = mid+1 = 4</span></div>
-      </div>
+      <div class="kv focal">找左边界时，等于 target 也要往左缩，不能越过第一个 target。</div>
     </div>
 
-    <!-- Step 2 -->
     <div class="step">
       <div class="step-head">
-        <span class="step-num">Step 2</span>
-        <span class="step-sub">[left=4, right=6)</span>
+        <span class="step-num">Left 2</span>
+        <span class="step-range">[0,3), mid=1</span>
       </div>
-      <div class="array-row">
-        <div class="cell eliminated">5<span class="idx">0</span></div>
-        <div class="cell eliminated">7<span class="idx">1</span></div>
-        <div class="cell eliminated">7<span class="idx">2</span></div>
-        <div class="cell eliminated">8<span class="idx">3</span></div>
-        <div class="cell searching">8<span class="idx">4</span></div>
-        <div class="cell">10<span class="idx">5</span></div>
+      <div class="chip-row">
+        <span class="logic-chip move">nums[1]=7 < 8</span>
+        <span class="logic-chip">mid 和左边都不可能是答案</span>
+        <span class="logic-chip result">left = mid + 1 = 2</span>
       </div>
-      <div class="pointer-row">
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot L"><span class="arr">↑</span><span class="label">L</span></div>
-        <div class="ptr-slot M"><span class="arr">↑</span><span class="label">M</span></div>
-      </div>
-      <div class="interval-bar">
-        <div class="ibar"></div><div class="ibar"></div><div class="ibar"></div><div class="ibar"></div>
-        <div class="ibar active"></div><div class="ibar active"></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><code>mid = 5, nums[5] = 10</code></div>
-        <div class="kv">10 ≤ 9 ？<strong style="color:#16a34a;"> 否</strong> → <span class="green">right = mid = 5</span></div>
-      </div>
+      <div class="kv">继续收缩后最终得到 <code>lowerBound(8)=3</code>。</div>
     </div>
 
-    <!-- Step 3 -->
     <div class="step">
       <div class="step-head">
-        <span class="step-num">Step 3</span>
-        <span class="step-sub">[left=4, right=5)</span>
+        <span class="step-num">Right</span>
+        <span class="step-range">lowerBound(9)</span>
       </div>
-      <div class="array-row">
-        <div class="cell eliminated">5<span class="idx">0</span></div>
-        <div class="cell eliminated">7<span class="idx">1</span></div>
-        <div class="cell eliminated">7<span class="idx">2</span></div>
-        <div class="cell eliminated">8<span class="idx">3</span></div>
-        <div class="cell searching right-found">8<span class="idx">4</span></div>
-        <div class="cell eliminated">10<span class="idx">5</span></div>
+      <div class="chip-row">
+        <span class="logic-chip move">找第一个 >= 9 的位置</span>
+        <span class="logic-chip result">lowerBound(9)=5</span>
+        <span class="logic-chip result">rightBound = 5 - 1 = 4</span>
       </div>
-      <div class="pointer-row">
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot"></div>
-        <div class="ptr-slot L M"><span class="arr">↑</span><span class="label">L=M</span></div>
-        <div class="ptr-slot"></div>
-      </div>
-      <div class="interval-bar">
-        <div class="ibar"></div><div class="ibar"></div><div class="ibar"></div><div class="ibar"></div>
-        <div class="ibar active"></div>
-        <div class="ibar"></div>
-      </div>
-      <div class="decision">
-        <div class="kv"><code>mid = 4, nums[4] = 8</code></div>
-        <div class="kv">8 ≤ 9 ？<strong style="color:#2563eb;"> 是</strong> → <span class="blue">left = mid+1 = 5</span></div>
-      </div>
-    </div>
-
-    <!-- Done -->
-    <div style="margin-top:16px; padding:12px 16px; background:var(--accent-tint); border:1px solid rgba(181,82,58,0.3); border-radius:6px; font-family:'Geist Mono',monospace; font-size:12px;">
-      <strong style="color:var(--accent);">退出：</strong>left=5, right=5 → left == right<br>
-      <strong style="color:var(--accent);">lowerBound(9) = 5</strong> → rightBound = 5 − 1 = <strong style="color:var(--accent);">4</strong>
+      <div class="kv focal">右边界不是单独写一套复杂逻辑，而是“第一个大于 target 的位置减一”。</div>
     </div>
   </section>
 
-  <!-- Section 4: 完整结果 + 对比 -->
   <section>
-    <h2>④ 两个边界一起看</h2>
-    <p class="section-sub">左边界和右边界的区别只在一个符号。左边界的 "=" 往左走，右边界的 "=" 往右走。</p>
+    <h2>Go 代码</h2>
+    <p class="section-sub">复用一个 <code>lowerBound</code>，避免左右边界写两套容易出错的二分。</p>
+    <pre class="code-wrap"><span class="fn">func</span> <span class="hl">SearchRange</span>(nums []<span class="typ">int</span>, target <span class="typ">int</span>) []<span class="typ">int</span> {
+    <span class="kw">if</span> len(nums) == <span class="num">0</span> {
+        <span class="kw">return</span> []<span class="typ">int</span>{-<span class="num">1</span>, -<span class="num">1</span>}
+    }
 
-    <div class="two-col">
-      <div class="col-panel">
-        <div class="col-title left-col">● 左边界 lowerBound(8)</div>
-        <div style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted); margin-bottom:12px;">
-          条件：<code>nums[mid] &lt; target</code>
-        </div>
-        <div style="font-family:'Geist Mono',monospace; font-size:11px; line-height:1.8;">
-          7 &lt; 8 → left = mid+1 <span style="color:#2563eb;">→ 往右缩</span><br>
-          8 &lt; 8 → 否 → right = mid <span style="color:#16a34a;">→ 往左缩</span><br>
-          退出 left=3
-        </div>
-        <div style="margin-top:12px; padding:8px 12px; background:var(--accent-tint); border-radius:4px; font-family:'Geist Mono',monospace; font-size:11px;">
-          <strong style="color:var(--accent);">leftBound = 3</strong>
-        </div>
-      </div>
-      <div class="col-panel">
-        <div class="col-title right-col">● 右边界 lowerBound(9) − 1</div>
-        <div style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted); margin-bottom:12px;">
-          条件：<code>nums[mid] &le; target</code>
-        </div>
-        <div style="font-family:'Geist Mono',monospace; font-size:11px; line-height:1.8;">
-          7 ≤ 8 → left = mid+1 <span style="color:#2563eb;">→ 往右扩</span><br>
-          10 ≤ 8 → 否 → right = mid <span style="color:#16a34a;">→ 往左缩</span><br>
-          8 ≤ 8 → left = mid+1 <span style="color:#2563eb;">→ 往右扩</span><br>
-          退出 left=5 → −1
-        </div>
-        <div style="margin-top:12px; padding:8px 12px; background:var(--accent-tint); border-radius:4px; font-family:'Geist Mono',monospace; font-size:11px;">
-          <strong style="color:var(--accent);">rightBound = 4</strong>
-        </div>
-      </div>
-    </div>
+    left := lowerBound(nums, target)
+    <span class="kw">if</span> left == len(nums) || nums[left] != target {
+        <span class="kw">return</span> []<span class="typ">int</span>{-<span class="num">1</span>, -<span class="num">1</span>}
+    }
 
-    <div style="margin-top:20px; padding:16px; background:var(--paper); border:1px solid var(--rule); border-radius:6px; text-align:center;">
-      <div style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted); margin-bottom:12px;">最终结果</div>
-      <div style="font-family:'Geist Mono',monospace; font-size:20px; color:var(--accent); font-weight:700;">[3, 4]</div>
-      <div style="font-family:'Geist Mono',monospace; font-size:10px; color:var(--muted); margin-top:8px;">nums[3]=8, nums[4]=8</div>
+    right := lowerBound(nums, target+<span class="num">1</span>) - <span class="num">1</span>
+    <span class="kw">return</span> []<span class="typ">int</span>{left, right}
+}
+
+<span class="fn">func</span> <span class="hl">lowerBound</span>(nums []<span class="typ">int</span>, target <span class="typ">int</span>) <span class="typ">int</span> {
+    left, right := <span class="num">0</span>, len(nums) <span class="cmt">// [left, right)</span>
+    <span class="kw">for</span> left &lt; right {
+        mid := left + (right-left)/<span class="num">2</span>
+        <span class="kw">if</span> nums[mid] &lt; target {
+            left = mid + <span class="num">1</span>
+        } <span class="kw">else</span> {
+            right = mid <span class="cmt">// mid 可能就是第一个 >= target</span>
+        }
+    }
+    <span class="kw">return</span> left
+}</pre>
+  </section>
+
+  <section>
+    <h2>易错点</h2>
+    <p class="section-sub">边界二分最容易错在“找到就返回”和“左闭右开里丢掉 mid”。</p>
+    <div class="pitfall-grid">
+      <div class="pit-wrong">
+        <p class="pit-label">错误：命中 target 就返回</p>
+        <pre>if nums[mid] == target {
+    return mid
+}</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">这只能找到某个 8，不能保证同时得到最左和最右边界。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">正确：继续压缩到边界</p>
+        <pre>if nums[mid] < target {
+    left = mid + 1
+} else {
+    right = mid
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">即使命中 target，mid 也可能不是第一个 target，要保留它继续往左找。</p>
+      </div>
+      <div class="pit-wrong">
+        <p class="pit-label">错误：左闭右开写 right=mid-1</p>
+        <pre>if nums[mid] >= target {
+    right = mid - 1
+}</pre>
+        <p style="font-size:11px;color:#991b1b;margin:8px 0 0;line-height:1.5;">在 [left,right) 模板里，mid 可能就是答案，减一会把答案丢掉。</p>
+      </div>
+      <div class="pit-right">
+        <p class="pit-label">正确：保留 mid</p>
+        <pre>if nums[mid] >= target {
+    right = mid
+}</pre>
+        <p style="font-size:11px;color:#166534;margin:8px 0 0;line-height:1.5;">right 是开区间边界，收缩到 mid 才能保留候选答案。</p>
+      </div>
     </div>
   </section>
 
-  <!-- Summary -->
-  <div class="summary">
-    <div class="card">
-      <p class="card-eyebrow">左边界</p>
-      <h3><span class="dot blue"></span>first ≥ target</h3>
-      <p><code>nums[mid] &lt; target</code> → <span class="blue">left=mid+1</span><br>
-      else → <span class="green">right=mid</span></p>
+  <div class="anim-section">
+    <h2>互动演示</h2>
+    <p class="section-sub">观察 lowerBound 如何一步步收缩左闭右开区间。</p>
+    <div class="anim-info-bar">
+      <div class="anim-info-item">phase: <span id="ai-phase">-</span></div>
+      <div class="anim-info-item">left: <span id="ai-left">-</span></div>
+      <div class="anim-info-item">mid: <span id="ai-mid">-</span></div>
+      <div class="anim-info-item">right: <span id="ai-right">-</span></div>
+      <div class="anim-info-item">answer: <span id="ai-answer">-</span></div>
     </div>
-    <div class="card">
-      <p class="card-eyebrow">右边界</p>
-      <h3><span class="dot green"></span>first &gt; target</h3>
-      <p><code>nums[mid] &le; target</code> → <span class="blue">left=mid+1</span><br>
-      else → <span class="green">right=mid</span></p>
-    </div>
-    <div class="card">
-      <p class="card-eyebrow">记忆口诀</p>
-      <h3><span class="dot accent"></span>等号往哪走</h3>
-      <p>左边界：<strong>= 往左缩</strong>（找第一个，所以不能越过）<br>
-      右边界：<strong>= 往右扩</strong>（找第一个大于，所以要跳过）</p>
+    <div class="anim-phase" id="ai-desc">点击「<span>下一步</span>」开始。</div>
+    <div class="array-row" id="ai-array"></div>
+    <div class="chip-row" id="ai-actions"></div>
+    <div class="anim-controls">
+      <button class="anim-btn anim-btn-prev" onclick="animPrev()">上一步</button>
+      <button class="anim-btn anim-btn-reset" onclick="animReset()">重置</button>
+      <button class="anim-btn anim-btn-next" onclick="animNext()">下一步</button>
     </div>
   </div>
 
-  <footer>Time · O(log n) &nbsp;·&nbsp; Space · O(1) &nbsp;·&nbsp; Two binary searches</footer>
+  <div class="summary">
+    <div class="card">
+      <p class="card-eyebrow">核心算法</p>
+      <h3><span class="dot"></span>两次 lowerBound</h3>
+      <p>左边界是 <code>lowerBound(target)</code>，右边界是 <code>lowerBound(target+1)-1</code>。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">正确性直觉</p>
+      <h3><span class="dot"></span>命中也不停止</h3>
+      <p>边界搜索要找第一个满足条件的位置，命中 target 时仍要收缩。</p>
+    </div>
+    <div class="card">
+      <p class="card-eyebrow">易错关键点</p>
+      <h3><span class="dot"></span>[left,right) 保留 mid</h3>
+      <p><code>nums[mid] >= target</code> 时写 <code>right=mid</code>，不能写 <code>mid-1</code>。</p>
+    </div>
+  </div>
 </div>
+<footer>doc/algorithm-visualizations/34.binary-search-boundary.html</footer>
+
+<script>
+const nums = [5, 7, 7, 8, 8, 10];
+const frames = [
+  { phase: 'lowerBound(8)', left: 0, mid: 3, right: 6, active: [0,1,2,3,4,5], drop: [3,4,5], bound: null, answer: '-', actions: ['nums[3]=8 >= 8', 'right = mid = 3'], desc: 'mid 可能就是第一个 8，所以保留 mid，把 right 收到 3。' },
+  { phase: 'lowerBound(8)', left: 0, mid: 1, right: 3, active: [0,1,2], drop: [0,1], bound: null, answer: '-', actions: ['nums[1]=7 < 8', 'left = mid + 1 = 2'], desc: '7 太小，mid 和左侧都不可能是第一个不小于 8 的位置。' },
+  { phase: 'lowerBound(8)', left: 2, mid: 2, right: 3, active: [2], drop: [2], bound: 3, answer: 'leftBound=3', actions: ['nums[2]=7 < 8', 'left = 3', 'lowerBound(8)=3'], desc: 'left 和 right 相遇，左边界为 3。' },
+  { phase: 'lowerBound(9)', left: 0, mid: 3, right: 6, active: [0,1,2,3,4,5], drop: [0,1,2,3], bound: null, answer: 'leftBound=3', actions: ['nums[3]=8 < 9', 'left = 4'], desc: '找第一个大于 8 的位置，等价于找 lowerBound(9)。' },
+  { phase: 'lowerBound(9)', left: 4, mid: 5, right: 6, active: [4,5], drop: [5], bound: null, answer: 'leftBound=3', actions: ['nums[5]=10 >= 9', 'right = 5'], desc: '10 已经不小于 9，mid 可能是第一个大于 8 的位置。' },
+  { phase: 'lowerBound(9)', left: 4, mid: 4, right: 5, active: [4], drop: [4], bound: 4, answer: '[3,4]', actions: ['nums[4]=8 < 9', 'left = 5', 'rightBound=5-1=4'], desc: 'lowerBound(9)=5，所以右边界是 4，答案 [3,4]。' }
+];
+let animIndex = -1;
+
+function activeFrame() {
+  if (animIndex < 0) {
+    return { phase: 'init', left: 0, mid: '-', right: 6, active: [0,1,2,3,4,5], drop: [], bound: null, answer: '-', actions: [], desc: '初始：先执行 lowerBound(8)，搜索区间为 [0,6)。' };
+  }
+  return frames[animIndex];
+}
+
+function renderArray(frame) {
+  document.getElementById('ai-array').innerHTML = nums.map((v, i) => {
+    let cls = 'num-cell';
+    if (frame.active.includes(i)) cls += ' active';
+    if (frame.drop.includes(i)) cls += ' drop';
+    if (i === frame.mid) cls += ' mid';
+    if (i === frame.bound) cls += ' bound';
+    return `<div class="${cls}">${v}<span class="idx">${i}</span></div>`;
+  }).join('');
+}
+
+function renderActions(frame) {
+  document.getElementById('ai-actions').innerHTML = frame.actions.map(action => {
+    let cls = 'logic-chip';
+    if (action.includes('<')) cls += ' move';
+    if (action.includes('>=')) cls += ' keep';
+    if (action.includes('Bound') || action.includes('[3,4]') || action.includes('lowerBound')) cls += ' result';
+    return `<span class="${cls}">${action}</span>`;
+  }).join('');
+}
+
+function render() {
+  const frame = activeFrame();
+  document.getElementById('ai-phase').textContent = frame.phase;
+  document.getElementById('ai-left').textContent = String(frame.left);
+  document.getElementById('ai-mid').textContent = String(frame.mid);
+  document.getElementById('ai-right').textContent = String(frame.right);
+  document.getElementById('ai-answer').textContent = frame.answer;
+  document.getElementById('ai-desc').innerHTML = animIndex < 0
+    ? `初始：点击「<span>下一步</span>」开始收缩区间。`
+    : frame.desc;
+  renderArray(frame);
+  renderActions(frame);
+}
+
+function animReset() {
+  animIndex = -1;
+  render();
+}
+
+function animNext() {
+  if (animIndex < frames.length - 1) {
+    animIndex++;
+    render();
+  }
+}
+
+function animPrev() {
+  if (animIndex > -1) {
+    animIndex--;
+    render();
+  }
+}
+
+window.animReset = animReset;
+window.animNext = animNext;
+window.animPrev = animPrev;
+
+animReset();
+</script>
 </body>
 </html>
