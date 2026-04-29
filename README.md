@@ -16,21 +16,28 @@ leetcode/
 ├── algo_template/               # 算法模板（学习核心）
 │   ├── sliding-window/          # 滑动窗口模板 + PROBLEMS.md
 │   ├── binary-search/           # 二分查找模板 + PROBLEMS.md
+│   ├── two-pointers/            # 双指针模式总纲
 │   ├── backtrack/               # 回溯模板 + PROBLEMS.md
 │   ├── dp/                      # 动态规划模板 + PROBLEMS.md
 │   ├── trie/                    # 前缀树模板 + PROBLEMS.md
 │   ├── binary-tree/             # 二叉树模板 + PROBLEMS.md
 │   ├── queue/                   # 队列/BFS 模板 + PROBLEMS.md
+│   ├── stack/                   # 栈/单调栈模式总纲
+│   ├── heap/                    # 堆/优先队列模式总纲
+│   ├── graph/                   # 图/BFS/拓扑排序模式总纲
 │   ├── tree/                    # 树遍历模板 + PROBLEMS.md
 │   ├── array/                   # 数组技巧
 │   ├── greedy/                 # 贪心
-│   └── skills/                  # 学习方法论
+│   └── skills/                  # 算法面试整理旧技能与辅助脚本
 ├── doc/
 │   └── algorithm-visualizations/ # 可视化图解 HTML
 │       ├── index.html           # 可视化看板（入口）
-│       ├── 11.container-with-most-water.html
-│       ├── 112.path-sum.html
-│       └── ...                 # 15+ 个图解
+│       ├── TEMPLATE.md          # 图解页面规范
+│       ├── SKELETON.html        # 新图解起始骨架
+│       ├── 53.maximum-subarray.html # 当前风格基准
+│       └── ...                 # 60+ 个图解
+├── skills/                      # 本仓库可版本化的 Codex 技能
+│   └── algorithm-visualization/ # 算法图示生成/维护技能
 └── model/                       # 数据结构模型（辅助）
 ```
 
@@ -40,9 +47,9 @@ leetcode/
 
 | 类别 | 数量 |
 |------|------|
-| 面试高频题 | 62 道 |
-| 可视化图解 | 16 个 |
-| 算法模板 | 10 个方向 |
+| 面试高频题 | 100 道 |
+| 可视化图解 | 61 个 |
+| 算法模板 | 14 个方向 |
 
 ---
 
@@ -51,6 +58,7 @@ leetcode/
 ### 第一步：选一个模板开始
 
 每个模板目录下有 `PROBLEMS.md`，列出该模板对应的所有面试题，按难度排序。
+如果要按面试优先级训练，先看 `interview/高频题清单.md`。
 
 ```
 滑动窗口 → 8 题   → doc: 11/76/239/3/438/567/643/904
@@ -121,9 +129,79 @@ go test ./algo_template/sliding-window/ -v
 
 ### 添加可视化图解
 
-参考 `doc/algorithm-visualizations/TEMPLATE.md` 规范，
-创建 `doc/algorithm-visualizations/XXX.problem-name.html`，
-然后在看板 `cards` 数组注册。
+1. 从 `doc/algorithm-visualizations/SKELETON.html` 复制新文件：
+   ```bash
+   cp doc/algorithm-visualizations/SKELETON.html doc/algorithm-visualizations/XXX.problem-name.html
+   ```
+2. 按 `doc/algorithm-visualizations/TEMPLATE.md` 填充页面：
+   - Hero
+   - 核心洞察
+   - 手推全过程
+   - Go 代码
+   - 易错点
+   - 互动演示
+   - Summary
+   - Footer
+3. 风格以 `doc/algorithm-visualizations/53.maximum-subarray.html` 为基准。
+4. 在看板 `doc/algorithm-visualizations/index.html` 的 `cards` 数组注册。
+5. 修改后验证 JS 和 HTML 结构：
+   ```bash
+   node -e 'const fs=require("fs"); const s=fs.readFileSync("doc/algorithm-visualizations/XXX.problem-name.html","utf8"); const m=s.match(/<script>([\s\S]*?)<\/script>/); if (m) new Function(m[1]); console.log("js syntax ok")'
+   ```
+   ```bash
+   python3 -c 'from pathlib import Path
+s=Path("doc/algorithm-visualizations/XXX.problem-name.html").read_text()
+inscript=False; depth=0
+for line in s.splitlines():
+    if "<script" in line: inscript=True
+    if not inscript:
+        depth += line.count("<div") - line.count("</div>")
+    if "</script>" in line: inscript=False
+assert depth == 0, depth
+print("div depth ok")'
+   ```
+
+### Codex 技能
+
+本仓库把可复用的 agent 工作流放在 `skills/`：
+
+```
+skills/
+└── algorithm-visualization/
+    └── SKILL.md
+```
+
+`algorithm-visualization` 用于创建、调整、调试 `doc/algorithm-visualizations/*.html`，会强制沿用 `53.maximum-subarray.html` 的页面风格和 `TEMPLATE.md` / `SKELETON.html` 的结构约定。
+
+本机 Codex 自动发现用的安装副本位于：
+
+```
+~/.codex/skills/algorithm-visualization/SKILL.md
+```
+
+### Commit 规范
+
+修改具体算法题时，按“一题一 commit”组织，方便回溯和面试前速记。
+
+推荐格式：
+
+```bash
+feat: {题号}.{题目名称} - {本次修改核心}
+```
+
+示例：
+
+```bash
+feat: 3.无重复最长子串 - 统一可视化模板并修复窗口 trace
+feat: 53.最大子数组和 - 移除自检浮层并修复易错点布局
+```
+
+如果是跨题型的基础设施修改，比如 README、模板、技能、看板，可单独提交：
+
+```bash
+docs: 完善算法模式总览
+docs: 更新算法可视化模板规范
+```
 
 ---
 
