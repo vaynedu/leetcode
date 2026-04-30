@@ -1,121 +1,121 @@
-# Binary Tree Training System Design
+# 二叉树训练系统设计
 
-## Goal
+## 目标
 
-Build the binary tree topic into the first long-term algorithm training system in this repository.
+把二叉树专题建设成本仓库第一个长期算法训练系统样板。
 
-The system should serve four purposes at once:
+这个系统同时服务四件事：
 
-- Interview readiness: high-frequency problems, clear explanations, and concise recall.
-- Algorithm understanding: traversal choices, recursion invariants, return-value design, and proof of coverage.
-- Practice: focused exercises with tests and review paths.
-- Visualization: interactive explanations for problems where state transitions are hard to see from code alone.
+- 面试冲刺：覆盖高频题，沉淀清晰解释和快速回忆材料。
+- 算法理解：建立遍历选择、递归不变量、返回值设计、覆盖性证明。
+- 日常练习：用聚焦题单、测试和复习路径维持手感。
+- 可视化理解：只在状态变化难以从代码直接看懂时，用交互图解辅助理解。
 
-This is not a full binary tree encyclopedia. The scope is limited to common, high-frequency, high-training-value problems.
+这不是二叉树大全。范围只覆盖常见、高频、有训练价值的题目。
 
-## Scope
+## 范围
 
-The first version should cover representative binary tree problems from `interview/` and `doc/algorithm-visualizations/`.
+第一版从 `interview/` 和 `doc/algorithm-visualizations/` 中挑选代表性二叉树题。
 
-Priority groups:
+优先覆盖这些能力分组：
 
-- Basic traversal: preorder, inorder, postorder, level order.
-- Depth and path problems: max depth, path sum, path collection, path aggregation.
-- Structure mutation: invert tree, flatten tree, merge two binary trees.
-- BST reasoning: validate BST, kth smallest, BST iterator.
-- Construction and encoding: build tree, serialize and deserialize tree.
-- Lowest common ancestor: standard LCA and variants.
-- Return-value recursion: diameter, max path sum, subtree checks.
+- 基础遍历：前序、中序、后序、层序。
+- 深度与路径：最大深度、路径和、路径收集、路径聚合。
+- 结构修改：翻转二叉树、展开为链表、合并二叉树。
+- BST 推理：验证 BST、第 K 小、BST 迭代器。
+- 构造与编码：构造二叉树、序列化与反序列化。
+- 最近公共祖先：标准 LCA 和变体。
+- 返回值递归：直径、最大路径和、子树判断。
 
-Problems outside these groups can stay in the repository, but they should not drive this system unless they are common in interviews or teach a reusable binary tree pattern.
+其他树相关题可以继续保留在仓库中，但除非它们面试常见，或者能训练可迁移的二叉树模式，否则不作为这个系统的建设重点。
 
-## Deliverables
+## 交付物
 
-1. Binary tree gap inventory
+1. 二叉树缺口清单
 
-   Create a compact inventory of common binary tree problems with these columns:
+   创建一份紧凑清单，覆盖常见二叉树题，并记录：
 
-   - Problem number and title
-   - Training category
-   - Go solution status
-   - Test status
-   - Markdown note status
-   - Four-question structure status
-   - Visualization status
-   - Priority
-   - Next action
+   - 题号和题名
+   - 训练分类
+   - Go 题解状态
+   - 测试状态
+   - Markdown 笔记状态
+   - 四问结构状态
+   - 可视化状态
+   - 优先级
+   - 下一步动作
 
-2. Representative problem sample
+2. 代表题样板
 
-   Use `617.merge-two-binary-trees` as the first complete sample because it is already modified in the working tree and has clear training value:
+   以 `617.merge-two-binary-trees` 作为第一个完整样板。原因是它当前已经在工作树中有修改，而且训练价值清晰：
 
-   - Synchronous recursion over two trees
-   - Empty-node branching
-   - In-place mutation versus new-node construction
-   - Recursion termination and coverage proof
+   - 两棵树同步递归
+   - 空节点分支处理
+   - 原地修改与新建节点的取舍
+   - 递归终止条件和覆盖性证明
 
-3. Binary tree training index
+3. 二叉树训练索引
 
-   Add or update a binary tree topic document that organizes common problems by skill, not by problem number. The document should help answer:
+   新增或更新一个二叉树专题文档，按能力组织常见题，而不是按题号堆列表。这个文档需要帮助学习者回答：
 
-   - What pattern does this problem train?
-   - Which traversal or recursion shape should I consider?
-   - What should the recursive call return?
-   - What are the common mistakes?
-   - Which problem should I practice next?
+   - 这道题训练什么模式？
+   - 应该考虑哪种遍历或递归形态？
+   - 递归函数应该返回什么？
+   - 常见错误在哪里？
+   - 下一题应该练什么？
 
-4. Problem note standard
+4. 单题笔记标准
 
-   Common binary tree notes should converge on this structure:
+   常见二叉树题的笔记最终收敛到这套结构：
 
-   - Recognition signals
-   - Core invariant
-   - Decision process
-   - Why the solution does not miss answers
-   - Interview explanation
-   - Common mistakes
-   - Complexity
-   - Related transfer problems
+   - 识别信号
+   - 核心不变量
+   - 决策流程
+   - 为什么不会漏答案
+   - 面试表达
+   - 易错点
+   - 复杂度
+   - 同类迁移题
 
-5. Visualization policy
+5. 可视化策略
 
-   Do not visualize every binary tree problem. Prioritize visualizations when they clarify recursion state, subtree returns, path accumulation, tree mutation, or serialization state.
+   不给所有二叉树题都做可视化。优先选择那些图解能明显帮助理解的问题，例如递归状态、子树返回值、路径累积、树结构修改、序列化过程。
 
-## Execution Order
+## 执行顺序
 
-1. Inventory common binary tree problems and classify gaps.
-2. Complete `617.merge-two-binary-trees` as the first representative sample.
-3. Create or update the binary tree training index from the inventory.
-4. Upgrade the highest-value problem notes and tests in small batches.
-5. Add visualizations only for problems where diagrams materially improve understanding.
+1. 盘点常见二叉树题，并分类记录缺口。
+2. 完成 `617.merge-two-binary-trees` 这个代表题样板。
+3. 基于盘点结果创建或更新二叉树训练索引。
+4. 小批量升级最高价值题目的笔记和测试。
+5. 只给真正需要图解的题补可视化。
 
-Each concrete problem change should follow the repository rule: one problem, one commit.
+每个具体算法题的修改继续遵守仓库规则：一个题目一个 commit。
 
-## Non-Goals
+## 非目标
 
-- Do not cover every tree-related LeetCode problem.
-- Do not rewrite unrelated algorithm templates.
-- Do not create visualizations just to increase count.
-- Do not mix many problem upgrades into one commit.
-- Do not optimize for file count over learning value.
+- 不覆盖所有树相关 LeetCode 题。
+- 不重写无关算法模板。
+- 不为了增加数量而创建可视化页面。
+- 不把多道题升级混在一个 commit 中。
+- 不以文件数量为目标，而以学习价值为目标。
 
-## Success Criteria
+## 成功标准
 
-The binary tree topic is successful when a learner can:
+二叉树专题成功后，学习者应该能够：
 
-- Pick a common binary tree problem and know which pattern it belongs to.
-- Explain why a traversal or recursive return value is correct.
-- Run focused tests for the implementation.
-- Review the problem through a consistent note format.
-- Use visualizations for the few problems where code alone is not enough.
-- Move from one problem to the next through a deliberate training path.
+- 拿到一道常见二叉树题，判断它属于哪个训练模式。
+- 解释为什么选择某种遍历或递归返回值。
+- 运行对应实现的聚焦测试。
+- 用统一笔记结构复习题目。
+- 在少数关键题上借助可视化理解代码之外的状态变化。
+- 沿着明确训练路径，从一道题迁移到下一道题。
 
-## First Implementation Plan Boundary
+## 第一阶段边界
 
-The first implementation plan should stop at:
+第一阶段实现计划只覆盖：
 
-- Producing the binary tree gap inventory.
-- Finishing the `617.merge-two-binary-trees` sample.
-- Drafting the first version of the binary tree training index.
+- 产出二叉树缺口清单。
+- 完成 `617.merge-two-binary-trees` 样板。
+- 起草第一版二叉树训练索引。
 
-Later batches can upgrade additional notes, tests, and visualizations based on the inventory.
+后续批次再根据清单继续升级其他题目的笔记、测试和可视化。
